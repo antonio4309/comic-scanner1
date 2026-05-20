@@ -182,6 +182,19 @@
 
     .lk-divider { border: none; border-top: 1px solid var(--border); margin: 0; }
 
+    /* eBay sold link */
+    .ebay-link {
+      font-size: 10px;
+      color: var(--muted);
+      text-decoration: none;
+      border-bottom: 1px dotted rgba(255,255,255,0.2);
+      transition: color .15s, border-color .15s;
+      display: inline-flex;
+      align-items: center;
+      gap: 3px;
+    }
+    .ebay-link:hover { color: var(--green); border-color: var(--green); }
+
     .sidebar {
       border-right: 1px solid var(--border);
       display: flex;
@@ -1331,6 +1344,7 @@ function renderList() {
         ${c.keyInfo && c.keyInfo !== 'Unknown' && c.keyInfo ? `<div class="comic-range">${escapeHtml(c.keyInfo)}</div>` : ''}
         ${c.conditionReason ? `<div class="comic-range">Condition${c.conditionGrade ? ' ~' + escapeHtml(c.conditionGrade) : ''}: ${escapeHtml(c.conditionReason)}</div>` : ''}
         ${range ? `<div class="comic-range">${escapeHtml(range)}</div>` : ''}
+        ${c.ebayResults?.[0]?.url ? `<div class="comic-range"><a href="${escapeHtml(c.ebayResults[0].url)}" target="_blank" rel="noopener" class="ebay-link">🔗 View last sold on eBay</a></div>` : ''}
         <div class="comic-badges">
           ${c.isKeyIssue || c.firstAppearance ? `<span class="cbadge cbadge-key" title="${escapeHtml(c.keyInfo)}">⭐ Key Issue</span>` : ''}
           ${c.firstAppearance ? `<span class="cbadge cbadge-first" title="${escapeHtml(c.firstAppearance)}">1st ${escapeHtml(c.firstAppearance.replace(/^First (full )?appearance of /i,''))}</span>` : ''}
@@ -1701,9 +1715,11 @@ function renderLookupResult(c, ebay, thumbSrc) {
   const condVal  = [c.condition, c.conditionGrade ? '~'+c.conditionGrade : ''].filter(Boolean).join(' · ');
   const editionStr = c.edition && c.edition !== 'Unknown' ? c.edition : '';
 
+  const lastSoldUrl = ebay?.results?.[0]?.url || '';
   const ebayHtml = ebay?.found
     ? `<div class="lk-card-val">£${ebay.median}</div>
-       <div class="lk-card-sub">£${ebay.min} – £${ebay.max} · ${ebay.count} sold<br>Whatnot est. £${Math.ceil(ebay.median * 1.15)}</div>`
+       <div class="lk-card-sub">£${ebay.min} – £${ebay.max} · ${ebay.count} sold<br>Whatnot est. £${Math.ceil(ebay.median * 1.15)}</div>
+       ${lastSoldUrl ? `<div style="margin-top:8px"><a href="${escapeHtml(lastSoldUrl)}" target="_blank" rel="noopener" class="ebay-link">🔗 View last sold listing</a></div>` : ''}`
     : `<div class="lk-card-val" style="color:var(--muted);font-size:14px">No data</div>
        <div class="lk-card-sub">No UK sold results found</div>`;
 
