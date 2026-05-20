@@ -345,6 +345,24 @@
       line-height: 1;
     }
 
+    .listing-toggle { display: inline-flex; margin-top: 4px; }
+    .listing-toggle button {
+      font-size: 10px;
+      padding: 2px 9px;
+      border: 1px solid var(--border2);
+      background: var(--surface2);
+      color: var(--muted);
+      cursor: pointer;
+      font-weight: 600;
+      border-radius: 0;
+      transition: background .12s, color .12s;
+      white-space: nowrap;
+    }
+    .listing-toggle button:first-child { border-radius: 4px 0 0 4px; }
+    .listing-toggle button:last-child  { border-radius: 0 4px 4px 0; border-left: none; }
+    .listing-toggle button.active { background: var(--green); color: #000; border-color: var(--green-dark); }
+    .listing-toggle button:not(.active):hover { background: #2e2e2e; color: var(--text); }
+
 
     .pending-grid {
       display: grid;
@@ -549,6 +567,7 @@
           <label>Listing type</label>
           <select id="listing-type">
             <option value="Buy it Now">Buy it Now</option>
+            <option value="Auction">Auction</option>
           </select>
         </div>
       </div>
@@ -1066,6 +1085,10 @@ function renderList() {
         ${c.keyInfo && c.keyInfo !== 'Unknown' ? `<div class="comic-range">${escapeHtml(c.keyInfo)}</div>` : ''}
         ${c.conditionReason ? `<div class="comic-range">Condition: ${escapeHtml(c.conditionReason)}</div>` : ''}
         ${range ? `<div class="comic-range">${escapeHtml(range)}</div>` : ''}
+        <div class="listing-toggle">
+          <button class="${c.listingType === 'Buy it Now' ? 'active' : ''}" onclick="setListingType(${c.id}, 'Buy it Now')">Buy it Now</button>
+          <button class="${c.listingType === 'Auction' ? 'active' : ''}" onclick="setListingType(${c.id}, 'Auction')">Auction</button>
+        </div>
       </div>
       ${priceHtml}
       <button class="del-btn" onclick="deleteComic(${c.id})" title="Remove">×</button>
@@ -1132,6 +1155,12 @@ function savePrice(id) {
 
 function cancelEditPrice() {
   editingPriceId = null;
+  renderList();
+}
+
+function setListingType(id, type) {
+  const comic = comics.find(c => c.id === id);
+  if (comic) comic.listingType = type;
   renderList();
 }
 
@@ -1211,7 +1240,7 @@ function buildCSV() {
       title,
       desc,
       c.qty || 1,
-      'Buy it Now',
+      c.listingType || 'Buy it Now',
       getWhatnotPrice(c) || '',
       'Bagged and boarded raw comic',
       'Yes',
