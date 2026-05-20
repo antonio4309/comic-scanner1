@@ -82,6 +82,8 @@ async function searchSoldWithFindingAPI(searchTerm) {
 
   if (!appId) return null;
 
+  const ninetyDaysAgo = new Date(Date.now() - 90 * 24 * 60 * 60 * 1000).toISOString();
+
   const ebayUrl = [
     'https://svcs.ebay.co.uk/services/search/FindingService/v1',
     '?OPERATION-NAME=findCompletedItems',
@@ -94,7 +96,11 @@ async function searchSoldWithFindingAPI(searchTerm) {
     '&categoryId=259104',
     '&itemFilter(0).name=SoldItemsOnly',
     '&itemFilter(0).value=true',
-    '&sortOrder=EndTimeSoonest',
+    '&itemFilter(1).name=EndTimeFrom',
+    `&itemFilter(1).value=${ninetyDaysAgo}`,
+    '&itemFilter(2).name=LocatedIn',
+    '&itemFilter(2).value=GB',
+    '&sortOrder=StartTimeNewest',
     '&paginationInput.entriesPerPage=50'
   ].join('');
 
@@ -119,6 +125,7 @@ async function searchSoldWithFindingAPI(searchTerm) {
     url: item.viewItemURL?.[0] || '',
     image: item.galleryURL?.[0] || '',
     condition: item.condition?.[0]?.conditionDisplayName?.[0] || '',
+    endDate: item.listingInfo?.[0]?.endTime?.[0] || '',
     sold: true
   }));
 }
@@ -153,11 +160,12 @@ async function searchActiveWithBrowseAPI(searchTerm) {
   const res = await fetch(
     `https://api.ebay.com/buy/browse/v1/item_summary/search?q=${encodeURIComponent(
       searchTerm
-    )}&limit=50`,
+    )}&limit=50&category_ids=259104&filter=buyingOptions%3A%7BFIXED_PRICE%7D`,
     {
       headers: {
         Authorization: `Bearer ${tokenData.access_token}`,
-        'X-EBAY-C-MARKETPLACE-ID': 'EBAY_GB'
+        'X-EBAY-C-MARKETPLACE-ID': 'EBAY_GB',
+        'X-EBAY-C-ENDUSERCTX': 'contextualLocation=country%3DGB'
       }
     }
   );
