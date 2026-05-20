@@ -380,6 +380,26 @@
       margin-top: 3px;
     }
 
+    .comic-badges { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 5px; }
+    .cbadge {
+      display: inline-flex;
+      align-items: center;
+      gap: 3px;
+      font-size: 10px;
+      font-weight: 700;
+      border-radius: 4px;
+      padding: 2px 6px;
+      white-space: nowrap;
+    }
+    .cbadge-key    { background: rgba(255,182,39,0.15);  color: #ffb627; border: 1px solid rgba(255,182,39,0.4); }
+    .cbadge-first  { background: rgba(255,100,50,0.15);  color: #ff7043; border: 1px solid rgba(255,100,50,0.35); }
+    .cbadge-slab   { background: rgba(59,130,246,0.15);  color: #7ab4f7; border: 1px solid rgba(59,130,246,0.35); }
+    .cbadge-sig    { background: rgba(168,85,247,0.15);  color: #c084fc; border: 1px solid rgba(168,85,247,0.35); }
+    .cbadge-news   { background: rgba(20,184,166,0.15);  color: #2dd4bf; border: 1px solid rgba(20,184,166,0.35); }
+    .cbadge-variant{ background: rgba(236,72,153,0.15);  color: #f472b6; border: 1px solid rgba(236,72,153,0.35); }
+    .cbadge-low    { background: rgba(251,146,60,0.15);  color: #fb923c; border: 1px solid rgba(251,146,60,0.35); }
+    .cbadge-dup    { background: rgba(240,160,48,0.1);   color: var(--amber); border: 1px solid rgba(240,160,48,0.3); }
+
 
     .pending-grid {
       display: grid;
@@ -889,13 +909,26 @@ async function scanAndAdd() {
         id: Date.now() + i,
         title: newTitle,
         issue: newIssue,
-        publisher: identified.publisher || 'Unknown',
-        year: identified.year || 'Unknown',
-        keyInfo: identified.keyInfo || 'Unknown',
-        importantCharacters: identified.importantCharacters || 'Unknown',
-        condition: finalCondition,
+        publisher:       identified.publisher       || 'Unknown',
+        year:            identified.year            || 'Unknown',
+        edition:         identified.edition         || 'Unknown',
+        isVariant:       !!identified.isVariant,
+        variantDetails:  identified.variantDetails  || '',
+        isSlabbed:       !!identified.isSlabbed,
+        slabCompany:     identified.slabCompany     || '',
+        slabGrade:       identified.slabGrade       || '',
+        hasSig:          !!identified.hasSig,
+        sigDetails:      identified.sigDetails      || '',
+        keyInfo:         identified.keyInfo         || '',
+        firstAppearance: identified.firstAppearance || '',
+        isKeyIssue:      !!identified.isKeyIssue,
+        lowPrintRun:     !!identified.lowPrintRun,
+        printRunNote:    identified.printRunNote    || '',
+        importantCharacters: identified.importantCharacters || '',
+        condition:       finalCondition,
+        conditionGrade:  identified.conditionGrade  || '',
         conditionReason: identified.conditionReason || '',
-        confidence: identified.confidence || 'Low',
+        confidence:      identified.confidence      || 'Low',
         qty,
         customPrice,
         listingType: document.getElementById('listing-type').value || 'Buy it Now',
@@ -1121,10 +1154,20 @@ function renderList() {
       <div class="comic-info">
         <div class="comic-title">${escapeHtml(c.title)}${c.issue && c.issue !== 'Unknown' ? ' #' + escapeHtml(c.issue) : ''}</div>
         <div class="comic-sub">${escapeHtml(sub)}</div>
-        ${c.keyInfo && c.keyInfo !== 'Unknown' ? `<div class="comic-range">${escapeHtml(c.keyInfo)}</div>` : ''}
-        ${c.conditionReason ? `<div class="comic-range">Condition: ${escapeHtml(c.conditionReason)}</div>` : ''}
+        ${c.keyInfo && c.keyInfo !== 'Unknown' && c.keyInfo ? `<div class="comic-range">${escapeHtml(c.keyInfo)}</div>` : ''}
+        ${c.conditionReason ? `<div class="comic-range">Condition${c.conditionGrade ? ' ~' + escapeHtml(c.conditionGrade) : ''}: ${escapeHtml(c.conditionReason)}</div>` : ''}
         ${range ? `<div class="comic-range">${escapeHtml(range)}</div>` : ''}
-        ${c.possibleDuplicate ? `<div class="duplicate-badge">⚠ Possible duplicate</div>` : ''}
+        <div class="comic-badges">
+          ${c.isKeyIssue || c.firstAppearance ? `<span class="cbadge cbadge-key" title="${escapeHtml(c.keyInfo)}">⭐ Key Issue</span>` : ''}
+          ${c.firstAppearance ? `<span class="cbadge cbadge-first" title="${escapeHtml(c.firstAppearance)}">1st ${escapeHtml(c.firstAppearance.replace(/^First (full )?appearance of /i,''))}</span>` : ''}
+          ${c.isSlabbed ? `<span class="cbadge cbadge-slab" title="${escapeHtml(c.slabCompany + ' ' + c.slabGrade)}">${escapeHtml(c.slabCompany || 'Slabbed')}${c.slabGrade ? ' ' + escapeHtml(c.slabGrade) : ''}</span>` : ''}
+          ${c.hasSig ? `<span class="cbadge cbadge-sig" title="${escapeHtml(c.sigDetails)}">✍ Signed</span>` : ''}
+          ${c.edition === 'Newsstand' ? `<span class="cbadge cbadge-news" title="Newsstand edition — lower print run">📰 Newsstand</span>` : ''}
+          ${c.edition === 'Canadian Price Variant' ? `<span class="cbadge cbadge-news" title="Canadian Price Variant">🍁 CPV</span>` : ''}
+          ${c.isVariant ? `<span class="cbadge cbadge-variant" title="${escapeHtml(c.variantDetails)}">✦ Variant</span>` : ''}
+          ${c.lowPrintRun ? `<span class="cbadge cbadge-low" title="${escapeHtml(c.printRunNote)}">🔥 Low Print</span>` : ''}
+          ${c.possibleDuplicate ? `<span class="cbadge cbadge-dup">⚠ Duplicate?</span>` : ''}
+        </div>
         <div class="listing-toggle">
           <button class="${c.listingType === 'Buy it Now' ? 'active' : ''}" onclick="setListingType(${c.id}, 'Buy it Now')">Buy it Now</button>
           <button class="${c.listingType === 'Auction' ? 'active' : ''}" onclick="setListingType(${c.id}, 'Auction')">Auction</button>
