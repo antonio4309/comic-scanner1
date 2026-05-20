@@ -644,11 +644,96 @@
     ::-webkit-scrollbar-thumb { background: #333; border-radius: 5px; }
 
     /* Mobile responsive */
-    @media (max-width: 700px) {
-      .layout, .lookup-layout { grid-template-columns: 1fr; }
-      .sidebar, .lookup-cam-col { border-right: none; border-bottom: 1px solid var(--border); }
-      body { height: auto; overflow: auto; }
-      #pane-export, #pane-lookup { flex: none; }
+    /* ── Mobile bottom nav (hidden on desktop) ── */
+    .mobile-nav { display: none; }
+
+    @media (max-width: 768px) {
+
+      /* Header: shrink logo, hide desktop tab buttons */
+      header { padding: 10px 16px; }
+      header > svg { width: 140px !important; height: 33px !important; }
+      .tab-nav { display: none; }
+
+      /* Root layout */
+      body { overflow: hidden; }
+      #pane-export, #pane-lookup {
+        padding-bottom: 64px;
+        overflow: hidden;
+      }
+
+      /* Export pane: show one column at a time */
+      .layout { display: block; height: 100%; overflow: hidden; }
+      .sidebar { display: none; height: 100%; overflow-y: auto; border-right: none; flex-direction: column; }
+      .main    { display: none; height: 100%; overflow: hidden; flex-direction: column; }
+      .sidebar.mob-active { display: flex; }
+      .main.mob-active    { display: flex; }
+
+      /* Lookup pane: single scrollable column */
+      .lookup-layout { display: flex; flex-direction: column; height: 100%; overflow-y: auto; }
+      .lookup-cam-col  { border-right: none; border-bottom: 1px solid var(--border); flex-shrink: 0; overflow: visible; height: auto; }
+      .lookup-result-col { flex: 1; overflow-y: visible; height: auto; }
+      .lk-grid { grid-template-columns: 1fr; }
+
+      /* Cards: tighter */
+      .comic-thumb { width: 38px; height: 52px; }
+      .comic-title { font-size: 12px; }
+      .pending-grid { grid-template-columns: repeat(3, 1fr); }
+
+      /* Touch targets */
+      button { min-height: 44px; }
+      .del-btn, .pending-remove, .btn-edit-price, .btn-price-save, .btn-price-cancel { min-height: auto; }
+      .listing-toggle button { min-height: auto; }
+
+      /* Stats */
+      .stat-val { font-size: 16px; }
+
+      /* Bottom nav */
+      .mobile-nav {
+        display: flex;
+        position: fixed;
+        bottom: 0; left: 0; right: 0;
+        height: 64px;
+        background: var(--surface);
+        border-top: 1px solid var(--border);
+        z-index: 1000;
+        padding-bottom: env(safe-area-inset-bottom, 0px);
+      }
+
+      .mobile-nav-btn {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 3px;
+        background: none;
+        border: none;
+        color: var(--muted);
+        cursor: pointer;
+        font-size: 11px;
+        font-weight: 600;
+        padding: 6px 4px;
+        transition: color .15s;
+        min-height: auto;
+        position: relative;
+      }
+      .mobile-nav-btn.active { color: var(--green); }
+      .mobile-nav-btn svg { width: 22px; height: 22px; flex-shrink: 0; }
+
+      .mob-count {
+        position: absolute;
+        top: 5px;
+        right: calc(50% - 20px);
+        background: var(--green);
+        color: #000;
+        font-size: 9px;
+        font-weight: 800;
+        padding: 1px 5px;
+        border-radius: 999px;
+        min-width: 16px;
+        text-align: center;
+        display: none;
+      }
     }
   </style>
 </head>
@@ -883,6 +968,30 @@
 
   </div>
 </div><!-- /pane-lookup -->
+
+<!-- Mobile bottom nav -->
+<nav class="mobile-nav" id="mobile-nav">
+  <button class="mobile-nav-btn active" id="mnav-scan" onclick="switchMobileTab('scan')">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+      <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/>
+      <circle cx="12" cy="13" r="4"/>
+    </svg>
+    Scan
+  </button>
+  <button class="mobile-nav-btn" id="mnav-inventory" onclick="switchMobileTab('inventory')" style="position:relative">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+      <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/>
+    </svg>
+    <span class="mob-count" id="mob-count">0</span>
+    Inventory
+  </button>
+  <button class="mobile-nav-btn" id="mnav-lookup" onclick="switchMobileTab('lookup')">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+      <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
+    </svg>
+    Lookup
+  </button>
+</nav>
 
 <canvas id="canvas" style="display:none"></canvas>
 <canvas id="lk-canvas" style="display:none"></canvas>
@@ -1145,6 +1254,7 @@ async function scanAndAdd() {
 
   if (added > 0) {
     showStatus('scan-status', 'success', `✓ Added ${added} comic${added === 1 ? '' : 's'} — fetching eBay UK prices...`);
+    if (isMobile()) setTimeout(() => switchMobileTab('inventory'), 1200);
   } else {
     showStatus('scan-status', 'error', '✗ No comics were added.');
   }
@@ -1367,6 +1477,7 @@ function renderList() {
   }).join('');
 
   updateStats();
+  updateMobBadge();
 }
 
 function escapeHtml(value) {
@@ -1703,6 +1814,50 @@ async function lookupScan() {
   showStatus('lk-status', 'success', '✓ Done');
   document.getElementById('lk-scan-btn').disabled = false;
 }
+
+// ── Mobile navigation ────────────────────────────────────────────────────────
+
+function isMobile() { return window.innerWidth <= 768; }
+
+let activeMobileTab = 'scan';
+
+function switchMobileTab(tab) {
+  if (!isMobile()) return;
+  activeMobileTab = tab;
+
+  ['scan', 'inventory', 'lookup'].forEach(t => {
+    document.getElementById('mnav-' + t)?.classList.toggle('active', t === tab);
+  });
+
+  if (tab === 'lookup') {
+    switchTab('lookup');
+  } else {
+    switchTab('export');
+    document.querySelector('.sidebar')?.classList.toggle('mob-active', tab === 'scan');
+    document.querySelector('.main')?.classList.toggle('mob-active', tab === 'inventory');
+  }
+}
+
+function updateMobBadge() {
+  const badge = document.getElementById('mob-count');
+  if (!badge) return;
+  const n = comics.length;
+  badge.style.display = n > 0 ? 'block' : 'none';
+  badge.textContent = n > 99 ? '99+' : n;
+}
+
+window.addEventListener('DOMContentLoaded', () => {
+  if (isMobile()) switchMobileTab('scan');
+});
+
+window.addEventListener('resize', () => {
+  if (isMobile()) {
+    switchMobileTab(activeMobileTab);
+  } else {
+    document.querySelector('.sidebar')?.classList.remove('mob-active');
+    document.querySelector('.main')?.classList.remove('mob-active');
+  }
+});
 
 function renderLookupResult(c, ebay, thumbSrc) {
   const badges = [
