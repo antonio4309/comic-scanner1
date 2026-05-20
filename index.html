@@ -363,6 +363,20 @@
     .listing-toggle button.active { background: var(--green); color: #000; border-color: var(--green-dark); }
     .listing-toggle button:not(.active):hover { background: #2e2e2e; color: var(--text); }
 
+    .duplicate-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      font-size: 10px;
+      font-weight: 600;
+      color: var(--amber);
+      background: rgba(240,160,48,0.1);
+      border: 1px solid rgba(240,160,48,0.3);
+      border-radius: 4px;
+      padding: 2px 6px;
+      margin-top: 3px;
+    }
+
 
     .pending-grid {
       display: grid;
@@ -847,10 +861,13 @@ async function scanAndAdd() {
         ? (identified.condition || 'Unknown')
         : conditionChoice;
 
+      const newTitle = identified.title || 'Unknown';
+      const newIssue = identified.issue || 'Unknown';
+
       const comic = {
         id: Date.now() + i,
-        title: identified.title || 'Unknown',
-        issue: identified.issue || 'Unknown',
+        title: newTitle,
+        issue: newIssue,
         publisher: identified.publisher || 'Unknown',
         year: identified.year || 'Unknown',
         keyInfo: identified.keyInfo || 'Unknown',
@@ -860,12 +877,13 @@ async function scanAndAdd() {
         confidence: identified.confidence || 'Low',
         qty,
         customPrice,
-        listingType: 'Buy it Now',
+        listingType: document.getElementById('listing-type').value || 'Buy it Now',
         ebayPrice: null,
         ebayStatus: 'loading',
         thumb: photo.thumb,
         imageUrl,
-        searchQuery: identified.searchQuery || `${identified.title || ''} ${identified.issue || ''} ${identified.publisher || ''} ${identified.year || ''}`.trim()
+        searchQuery: identified.searchQuery || `${newTitle} ${newIssue} ${identified.publisher || ''} ${identified.year || ''}`.trim(),
+        possibleDuplicate: checkDuplicate(newTitle, newIssue)
       };
 
       comics.unshift(comic);
@@ -1085,6 +1103,7 @@ function renderList() {
         ${c.keyInfo && c.keyInfo !== 'Unknown' ? `<div class="comic-range">${escapeHtml(c.keyInfo)}</div>` : ''}
         ${c.conditionReason ? `<div class="comic-range">Condition: ${escapeHtml(c.conditionReason)}</div>` : ''}
         ${range ? `<div class="comic-range">${escapeHtml(range)}</div>` : ''}
+        ${c.possibleDuplicate ? `<div class="duplicate-badge">⚠ Possible duplicate</div>` : ''}
         <div class="listing-toggle">
           <button class="${c.listingType === 'Buy it Now' ? 'active' : ''}" onclick="setListingType(${c.id}, 'Buy it Now')">Buy it Now</button>
           <button class="${c.listingType === 'Auction' ? 'active' : ''}" onclick="setListingType(${c.id}, 'Auction')">Auction</button>
@@ -1156,6 +1175,15 @@ function savePrice(id) {
 function cancelEditPrice() {
   editingPriceId = null;
   renderList();
+}
+
+function normKey(title, issue) {
+  return (String(title) + '||' + String(issue).replace(/^#/, '')).toLowerCase().trim();
+}
+
+function checkDuplicate(title, issue, excludeId = null) {
+  const key = normKey(title, issue);
+  return comics.some(c => c.id !== excludeId && normKey(c.title, c.issue) === key);
 }
 
 function setListingType(id, type) {
