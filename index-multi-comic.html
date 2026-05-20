@@ -292,6 +292,54 @@
     .comic-price.notfound { color: var(--amber); font-size: 12px; }
     .comic-price.error { color: var(--red); font-size: 12px; }
 
+
+    .pending-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 8px;
+      margin-top: 12px;
+    }
+
+    .pending-item {
+      position: relative;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      overflow: hidden;
+      background: #111;
+      aspect-ratio: 3 / 4;
+    }
+
+    .pending-item img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+    }
+
+    .pending-remove {
+      position: absolute;
+      top: 4px;
+      right: 4px;
+      width: 22px;
+      height: 22px;
+      padding: 0;
+      border-radius: 999px;
+      background: rgba(0,0,0,0.72);
+      color: white;
+      border: 1px solid rgba(255,255,255,0.25);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 14px;
+      line-height: 1;
+    }
+
+    .pending-caption {
+      font-size: 11px;
+      color: var(--muted);
+      margin-top: 8px;
+    }
+
     .del-btn {
       background: none;
       border: none;
@@ -377,8 +425,8 @@
         <button id="capture-btn" onclick="capturePhoto()" disabled>📷 Capture</button>
         <button id="retake-btn" onclick="retakePhoto()" style="display:none">↺ Retake</button>
         <label style="margin:0;display:inline-flex;align-items:center;gap:6px;font-size:13px;font-weight:600;padding:8px 14px;border-radius:8px;border:1px solid var(--border2);background:var(--surface2);color:var(--text);cursor:pointer">
-          Upload Photo
-          <input type="file" id="file-input" accept="image/*" onchange="handleFileUpload(event)" style="display:none" />
+          Upload Photos
+          <input type="file" id="file-input" accept="image/*" multiple onchange="handleFileUpload(event)" style="display:none" />
         </label>
       </div>
     </div>
@@ -428,10 +476,12 @@
 
       <div class="btn-row" style="margin-top:14px">
         <button class="btn-primary" id="scan-btn" onclick="scanAndAdd()" disabled style="flex:1;justify-content:center">
-          🔍 Identify &amp; Add
+          🔍 Identify &amp; Add All
         </button>
       </div>
       <div id="scan-status" class="status"></div>
+      <div class="pending-caption" id="pending-caption">No photos queued yet.</div>
+      <div class="pending-grid" id="pending-grid"></div>
     </div>
 
   </div>
@@ -492,6 +542,7 @@
 let stream = null;
 let capturedBase64 = null;
 let capturedThumb = null;
+let pendingPhotos = [];
 let comics = [];
 
 const video = document.getElementById('video');
@@ -522,23 +573,27 @@ function capturePhoto() {
   canvas.getContext('2d').drawImage(video, 0, 0);
 
   const compressed = compressCanvasToDataUrl(canvas, 1200, 0.75);
-  capturedBase64 = compressed.split(',')[1];
 
   const thumb = document.createElement('canvas');
   thumb.width = 88;
   thumb.height = 120;
   thumb.getContext('2d').drawImage(canvas, 0, 0, 88, 120);
-  capturedThumb = thumb.toDataURL('image/jpeg', 0.7);
+
+  addPendingPhoto({
+    base64: compressed.split(',')[1],
+    thumb: thumb.toDataURL('image/jpeg', 0.7),
+    preview: compressed,
+    source: 'camera'
+  });
 
   previewImg.src = compressed;
   previewImg.style.display = 'block';
   video.style.display = 'none';
   document.getElementById('capture-btn').style.display = 'none';
   document.getElementById('retake-btn').style.display = 'inline-flex';
-  document.getElementById('scan-btn').disabled = false;
-  showStatus('scan-status', 'info', '📷 Photo captured — click Identify & Add');
+  document.getElementById('scan-btn').disabled = pendingPhotos.length === 0;
+  showStatus('scan-status', 'success', `📷 Photo added to batch (${pendingPhotos.length} queued). Capture another or Identify & Add All.`);
 }
-
 function retakePhoto() {
   capturedBase64 = null;
   capturedThumb = null;
@@ -546,7 +601,7 @@ function retakePhoto() {
   video.style.display = 'block';
   document.getElementById('capture-btn').style.display = 'inline-flex';
   document.getElementById('retake-btn').style.display = 'none';
-  document.getElementById('scan-btn').disabled = true;
+  document.getElementById('scan-btn').disabled = pendingPhotos.length === 0;
   document.getElementById('scan-status').className = 'status';
 }
 
@@ -566,6 +621,48 @@ function dataURLToBlob(dataURL) {
   const array = new Uint8Array(binary.length);
   for (let i = 0; i < binary.length; i++) array[i] = binary.charCodeAt(i);
   return new Blob([array], { type: mime });
+}
+
+
+function addPendingPhoto(photo) {
+  pendingPhotos.push(photo);
+  capturedBase64 = photo.base64;
+  capturedThumb = photo.thumb;
+  renderPendingPhotos();
+}
+
+function removePendingPhoto(index) {
+  pendingPhotos.splice(index, 1);
+  renderPendingPhotos();
+  document.getElementById('scan-btn').disabled = pendingPhotos.length === 0;
+}
+
+function clearPendingPhotos() {
+  pendingPhotos = [];
+  capturedBase64 = null;
+  capturedThumb = null;
+  previewImg.style.display = 'none';
+  renderPendingPhotos();
+  document.getElementById('scan-btn').disabled = true;
+}
+
+function renderPendingPhotos() {
+  const grid = document.getElementById('pending-grid');
+  const caption = document.getElementById('pending-caption');
+
+  if (!pendingPhotos.length) {
+    grid.innerHTML = '';
+    caption.textContent = 'No photos queued yet.';
+    return;
+  }
+
+  caption.textContent = `${pendingPhotos.length} photo${pendingPhotos.length === 1 ? '' : 's'} queued for scanning.`;
+  grid.innerHTML = pendingPhotos.map((photo, index) => `
+    <div class="pending-item">
+      <img src="${photo.preview || photo.thumb}" alt="Queued comic ${index + 1}" />
+      <button class="pending-remove" onclick="removePendingPhoto(${index})" title="Remove">×</button>
+    </div>
+  `).join('');
 }
 
 
@@ -606,8 +703,8 @@ async function uploadImageToBlob(base64) {
 // ── Scan & Add ───────────────────────────────────────────────────────────────
 
 async function scanAndAdd() {
-  if (!capturedBase64) {
-    showStatus('scan-status', 'error', '✗ No photo captured');
+  if (!pendingPhotos.length) {
+    showStatus('scan-status', 'error', '✗ No photos queued. Capture or upload photos first.');
     return;
   }
 
@@ -617,54 +714,64 @@ async function scanAndAdd() {
   const customPrice = parseFloat(document.getElementById('start-price').value) || null;
 
   document.getElementById('scan-btn').disabled = true;
-  showStatus('scan-status', 'info', '<span class="spin">⟳</span> Uploading image...');
 
-  const imageUrl = await uploadImageToBlob(capturedBase64);
+  const batch = [...pendingPhotos];
+  let added = 0;
 
-  showStatus('scan-status', 'info', '<span class="spin">⟳</span> Identifying comic with AI...');
+  for (let i = 0; i < batch.length; i++) {
+    const photo = batch[i];
 
-  let identified;
-  try {
-    identified = await identifyComic(capturedBase64, override);
-  } catch (e) {
-    showStatus('scan-status', 'error', '✗ AI error: ' + e.message);
-    document.getElementById('scan-btn').disabled = false;
-    return;
+    try {
+      showStatus('scan-status', 'info', `<span class="spin">⟳</span> Uploading image ${i + 1} of ${batch.length}...`);
+      const imageUrl = await uploadImageToBlob(photo.base64);
+
+      showStatus('scan-status', 'info', `<span class="spin">⟳</span> Identifying comic ${i + 1} of ${batch.length}...`);
+      const identified = await identifyComic(photo.base64, override);
+
+      const finalCondition = conditionChoice === 'Auto'
+        ? (identified.condition || 'Unknown')
+        : conditionChoice;
+
+      const comic = {
+        id: Date.now() + i,
+        title: identified.title || 'Unknown',
+        issue: identified.issue || 'Unknown',
+        publisher: identified.publisher || 'Unknown',
+        year: identified.year || 'Unknown',
+        keyInfo: identified.keyInfo || 'Unknown',
+        importantCharacters: identified.importantCharacters || 'Unknown',
+        condition: finalCondition,
+        conditionReason: identified.conditionReason || '',
+        confidence: identified.confidence || 'Low',
+        qty,
+        customPrice,
+        listingType: 'Buy it Now',
+        ebayPrice: null,
+        ebayStatus: 'loading',
+        thumb: photo.thumb,
+        imageUrl,
+        searchQuery: identified.searchQuery || `${identified.title || ''} ${identified.issue || ''} ${identified.publisher || ''} ${identified.year || ''}`.trim()
+      };
+
+      comics.unshift(comic);
+      added++;
+      renderList();
+      fetchEbayPrice(comic);
+    } catch (e) {
+      console.error(e);
+      showStatus('scan-status', 'warn', `Comic ${i + 1} failed: ${e.message}`);
+    }
   }
 
-  const finalCondition = conditionChoice === 'Auto'
-    ? (identified.condition || 'Unknown')
-    : conditionChoice;
+  clearPendingPhotos();
+  document.getElementById('scan-btn').disabled = true;
 
-  const comic = {
-    id: Date.now(),
-    title: identified.title || 'Unknown',
-    issue: identified.issue || 'Unknown',
-    publisher: identified.publisher || 'Unknown',
-    year: identified.year || 'Unknown',
-    keyInfo: identified.keyInfo || 'Unknown',
-    importantCharacters: identified.importantCharacters || 'Unknown',
-    condition: finalCondition,
-    conditionReason: identified.conditionReason || '',
-    confidence: identified.confidence || 'Low',
-    qty,
-    customPrice,
-    listingType: 'Buy it Now',
-    ebayPrice: null,
-    ebayStatus: 'loading',
-    thumb: capturedThumb,
-    imageUrl,
-    searchQuery: identified.searchQuery || `${identified.title || ''} ${identified.issue || ''} ${identified.publisher || ''} ${identified.year || ''}`.trim()
-  };
-
-  comics.unshift(comic);
-  renderList();
-  showStatus('scan-status', 'success', '✓ Added: ' + comic.title + (comic.issue !== 'Unknown' ? ' #' + comic.issue : '') + ' — fetching eBay UK price...');
-  document.getElementById('scan-btn').disabled = false;
-
-  fetchEbayPrice(comic);
+  if (added > 0) {
+    showStatus('scan-status', 'success', `✓ Added ${added} comic${added === 1 ? '' : 's'} — fetching eBay UK prices...`);
+  } else {
+    showStatus('scan-status', 'error', '✗ No comics were added.');
+  }
 }
-
 async function identifyComic(base64, override) {
   const res = await fetch('/api/identify.js', {
     method: 'POST',
@@ -675,52 +782,70 @@ async function identifyComic(base64, override) {
   return await readApiJson(res, 'AI identify API');
 }
 
-function handleFileUpload(event) {
-  const file = event.target.files[0];
-  if (!file) return;
+async function handleFileUpload(event) {
+  const files = Array.from(event.target.files || []);
+  if (!files.length) return;
 
-  const reader = new FileReader();
+  showStatus('scan-status', 'info', `<span class="spin">⟳</span> Loading ${files.length} photo${files.length === 1 ? '' : 's'}...`);
 
-  reader.onload = function(e) {
-    const img = new Image();
+  for (const file of files) {
+    try {
+      const dataUrl = await readFileAsDataUrl(file);
+      const img = await loadImage(dataUrl);
 
-    img.onload = function() {
       const temp = document.createElement('canvas');
       temp.width = img.width;
       temp.height = img.height;
       temp.getContext('2d').drawImage(img, 0, 0);
 
-      const dataUrl = compressCanvasToDataUrl(temp, 1200, 0.75);
-      previewImg.src = dataUrl;
-      previewImg.style.display = 'block';
-      document.getElementById('video').style.display = 'none';
-      document.getElementById('cam-placeholder').style.display = 'none';
-      document.getElementById('capture-btn').style.display = 'none';
-      document.getElementById('retake-btn').style.display = 'inline-flex';
-
-      capturedBase64 = dataUrl.split(',')[1];
+      const compressed = compressCanvasToDataUrl(temp, 1200, 0.75);
 
       const thumb = document.createElement('canvas');
       thumb.width = 88;
       thumb.height = 120;
       thumb.getContext('2d').drawImage(img, 0, 0, 88, 120);
-      capturedThumb = thumb.toDataURL('image/jpeg', 0.7);
 
-      document.getElementById('scan-btn').disabled = false;
-      showStatus('scan-status', 'info', 'Photo loaded — click Identify & Add');
-    };
+      addPendingPhoto({
+        base64: compressed.split(',')[1],
+        thumb: thumb.toDataURL('image/jpeg', 0.7),
+        preview: compressed,
+        source: 'upload'
+      });
 
-    img.onerror = function() {
-      showStatus('scan-status', 'error', 'Could not load image');
-    };
+      previewImg.src = compressed;
+      previewImg.style.display = 'block';
+      document.getElementById('video').style.display = 'none';
+      document.getElementById('cam-placeholder').style.display = 'none';
+      document.getElementById('capture-btn').style.display = 'none';
+      document.getElementById('retake-btn').style.display = 'inline-flex';
+    } catch (e) {
+      console.error(e);
+      showStatus('scan-status', 'warn', 'One image could not be loaded: ' + e.message);
+    }
+  }
 
-    img.src = e.target.result;
-  };
-
-  reader.readAsDataURL(file);
+  document.getElementById('scan-btn').disabled = pendingPhotos.length === 0;
+  showStatus('scan-status', 'success', `${pendingPhotos.length} photo${pendingPhotos.length === 1 ? '' : 's'} queued — click Identify & Add All.`);
   event.target.value = '';
 }
 
+function readFileAsDataUrl(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = e => resolve(e.target.result);
+    reader.onerror = () => reject(new Error('Could not read file'));
+    reader.readAsDataURL(file);
+  });
+}
+
+function loadImage(src) {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    img.onload = () => resolve(img);
+    img.onerror = () => reject(new Error('Could not load image'));
+    img.src = src;
+  });
+}
 async function fetchEbayPrice(comic) {
   try {
     const q = encodeURIComponent(comic.searchQuery || `${comic.title} ${comic.issue} comic`);
