@@ -1344,7 +1344,7 @@ function renderList() {
         ${c.keyInfo && c.keyInfo !== 'Unknown' && c.keyInfo ? `<div class="comic-range">${escapeHtml(c.keyInfo)}</div>` : ''}
         ${c.conditionReason ? `<div class="comic-range">Condition${c.conditionGrade ? ' ~' + escapeHtml(c.conditionGrade) : ''}: ${escapeHtml(c.conditionReason)}</div>` : ''}
         ${range ? `<div class="comic-range">${escapeHtml(range)}</div>` : ''}
-        ${c.ebayResults?.[0]?.url ? `<div class="comic-range"><a href="${escapeHtml(c.ebayResults[0].url)}" target="_blank" rel="noopener" class="ebay-link">🔗 View last sold on eBay</a></div>` : ''}
+        ${c.searchQuery ? `<div class="comic-range"><a href="${escapeHtml(buildEbaySoldUrl(c.searchQuery))}" target="_blank" rel="noopener" class="ebay-link">🔗 View sold listings on eBay</a></div>` : ''}
         <div class="comic-badges">
           ${c.isKeyIssue || c.firstAppearance ? `<span class="cbadge cbadge-key" title="${escapeHtml(c.keyInfo)}">⭐ Key Issue</span>` : ''}
           ${c.firstAppearance ? `<span class="cbadge cbadge-first" title="${escapeHtml(c.firstAppearance)}">1st ${escapeHtml(c.firstAppearance.replace(/^First (full )?appearance of /i,''))}</span>` : ''}
@@ -1475,6 +1475,10 @@ function csvCell(value) {
     .replace(/\n/g, ' ')
     .trim();
   return `"${clean}"`;
+}
+
+function buildEbaySoldUrl(query) {
+  return 'https://www.ebay.co.uk/sch/i.html?_nkw=' + encodeURIComponent(query) + '&_sacat=0&LH_Sold=1&LH_Complete=1';
 }
 
 function buildCSV() {
@@ -1715,13 +1719,14 @@ function renderLookupResult(c, ebay, thumbSrc) {
   const condVal  = [c.condition, c.conditionGrade ? '~'+c.conditionGrade : ''].filter(Boolean).join(' · ');
   const editionStr = c.edition && c.edition !== 'Unknown' ? c.edition : '';
 
-  const lastSoldUrl = ebay?.results?.[0]?.url || '';
+  const soldUrl = buildEbaySoldUrl(c.searchQuery || `${c.title} ${c.issue} comic`);
   const ebayHtml = ebay?.found
     ? `<div class="lk-card-val">£${ebay.median}</div>
        <div class="lk-card-sub">£${ebay.min} – £${ebay.max} · ${ebay.count} sold<br>Whatnot est. £${Math.ceil(ebay.median * 1.15)}</div>
-       ${lastSoldUrl ? `<div style="margin-top:8px"><a href="${escapeHtml(lastSoldUrl)}" target="_blank" rel="noopener" class="ebay-link">🔗 View last sold listing</a></div>` : ''}`
+       <div style="margin-top:8px"><a href="${escapeHtml(soldUrl)}" target="_blank" rel="noopener" class="ebay-link">🔗 View sold listings on eBay</a></div>`
     : `<div class="lk-card-val" style="color:var(--muted);font-size:14px">No data</div>
-       <div class="lk-card-sub">No UK sold results found</div>`;
+       <div class="lk-card-sub">No UK sold results found</div>
+       <div style="margin-top:8px"><a href="${escapeHtml(soldUrl)}" target="_blank" rel="noopener" class="ebay-link">🔗 Search sold listings on eBay</a></div>`;
 
   document.getElementById('lk-result').innerHTML = `
     <div class="lk-hero">
