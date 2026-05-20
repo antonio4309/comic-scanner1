@@ -30,18 +30,39 @@
       font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
       background: var(--bg);
       color: var(--text);
-      min-height: 100vh;
+      height: 100vh;
       font-size: 15px;
       line-height: 1.5;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
     }
 
     header {
-      padding: 20px 24px 18px;
+      padding: 14px 24px;
       border-bottom: 1px solid var(--border);
       display: flex;
       align-items: center;
       gap: 12px;
+      flex-shrink: 0;
     }
+
+    /* Tab nav */
+    .tab-nav { margin-left: auto; display: flex; gap: 4px; }
+    .tab-btn {
+      font-size: 12px;
+      font-weight: 600;
+      padding: 7px 16px;
+      border-radius: 8px;
+      border: 1px solid var(--border2);
+      background: transparent;
+      color: var(--muted);
+      cursor: pointer;
+      transition: background .15s, color .15s;
+      white-space: nowrap;
+    }
+    .tab-btn.active { background: var(--green); color: #000; border-color: var(--green-dark); }
+    .tab-btn:not(.active):hover { background: var(--surface2); color: var(--text); }
 
     header h1 {
       font-size: 20px;
@@ -61,12 +82,105 @@
       font-weight: 600;
     }
 
+    /* Panes */
+    #pane-export, #pane-lookup { flex: 1; min-height: 0; display: flex; flex-direction: column; }
+    #pane-lookup { display: none; }
+
     .layout {
       display: grid;
       grid-template-columns: 380px 1fr;
       gap: 0;
-      height: calc(100vh - 61px);
+      flex: 1;
+      min-height: 0;
     }
+
+    /* Lookup layout */
+    .lookup-layout {
+      display: grid;
+      grid-template-columns: 340px 1fr;
+      flex: 1;
+      min-height: 0;
+    }
+    .lookup-cam-col {
+      border-right: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+    .lookup-result-col {
+      display: flex;
+      flex-direction: column;
+      overflow-y: auto;
+    }
+    .lk-empty {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      color: var(--muted);
+      font-size: 14px;
+      gap: 10px;
+      padding: 40px;
+      text-align: center;
+    }
+    .lk-empty svg { opacity: .15; width: 64px; height: 64px; }
+
+    /* Lookup result */
+    .lk-result { padding: 20px; display: flex; flex-direction: column; gap: 16px; }
+    .lk-hero { display: flex; gap: 16px; align-items: flex-start; }
+    .lk-thumb {
+      width: 80px; height: 110px;
+      object-fit: cover;
+      border-radius: 8px;
+      flex-shrink: 0;
+      background: #222;
+      border: 1px solid var(--border);
+    }
+    .lk-identity { flex: 1; }
+    .lk-title { font-size: 22px; font-weight: 800; line-height: 1.2; }
+    .lk-issue { font-size: 16px; font-weight: 700; color: var(--green); margin-top: 2px; }
+    .lk-meta  { font-size: 12px; color: var(--muted); margin-top: 4px; }
+
+    .lk-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+    .lk-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 14px 16px;
+    }
+    .lk-card-label {
+      font-size: 10px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: .08em;
+      color: var(--muted);
+      margin-bottom: 6px;
+    }
+    .lk-card-val { font-size: 20px; font-weight: 800; color: var(--green); }
+    .lk-card-sub { font-size: 11px; color: var(--muted); margin-top: 3px; line-height: 1.4; }
+
+    .lk-section {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 14px 16px;
+    }
+    .lk-section-label {
+      font-size: 10px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: .08em;
+      color: var(--muted);
+      margin-bottom: 8px;
+    }
+    .lk-section-text { font-size: 13px; line-height: 1.55; color: var(--text); }
+
+    .lk-divider { border: none; border-top: 1px solid var(--border); margin: 0; }
 
     .sidebar {
       border-right: 1px solid var(--border);
@@ -518,9 +632,10 @@
 
     /* Mobile responsive */
     @media (max-width: 700px) {
-      .layout { grid-template-columns: 1fr; height: auto; }
-      .sidebar { border-right: none; border-bottom: 1px solid var(--border); }
-      .main { height: 70vh; }
+      .layout, .lookup-layout { grid-template-columns: 1fr; }
+      .sidebar, .lookup-cam-col { border-right: none; border-bottom: 1px solid var(--border); }
+      body { height: auto; overflow: auto; }
+      #pane-export, #pane-lookup { flex: none; }
     }
   </style>
 </head>
@@ -551,8 +666,13 @@
     <text class="wm" x="96" y="52" fill="#ffffff">Longbox<tspan fill="#ffb627">Lens</tspan></text>
   </svg>
   <span class="badge">UK</span>
+  <nav class="tab-nav">
+    <button class="tab-btn active" id="tab-btn-export" onclick="switchTab('export')">📦 Whatnot Export</button>
+    <button class="tab-btn" id="tab-btn-lookup" onclick="switchTab('lookup')">🔍 Comic Lookup</button>
+  </nav>
 </header>
 
+<div id="pane-export">
 <div class="layout">
 
   <!-- LEFT: Camera + Controls -->
@@ -697,8 +817,62 @@
 
   </div>
 </div>
+</div><!-- /pane-export -->
+
+<!-- ── LOOKUP PANE ─────────────────────────────────────────────── -->
+<div id="pane-lookup">
+  <div class="lookup-layout">
+
+    <!-- Left: camera -->
+    <div class="lookup-cam-col">
+      <div class="panel">
+        <div class="panel-title">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+          Camera
+        </div>
+        <div id="lk-video-wrap" style="background:#111;border-radius:var(--radius);overflow:hidden;aspect-ratio:4/3;position:relative;display:flex;align-items:center;justify-content:center;border:1px solid var(--border)">
+          <div class="cam-placeholder" id="lk-cam-placeholder">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+            Tap "Start Camera" to begin
+          </div>
+          <video id="lk-video" autoplay playsinline style="width:100%;height:100%;object-fit:cover;display:none"></video>
+          <img id="lk-preview-img" alt="Comic" style="width:100%;height:100%;object-fit:contain;display:none" />
+        </div>
+        <div class="btn-row">
+          <button id="lk-start-btn" onclick="lkStartCamera()">▶ Start Camera</button>
+          <button id="lk-capture-btn" onclick="lkCapture()" disabled>📷 Capture</button>
+          <button id="lk-retake-btn" onclick="lkRetake()" style="display:none">↺ Retake</button>
+          <label style="margin:0;display:inline-flex;align-items:center;gap:6px;font-size:13px;font-weight:600;padding:8px 14px;border-radius:8px;border:1px solid var(--border2);background:var(--surface2);color:var(--text);cursor:pointer">
+            Upload
+            <input type="file" id="lk-file-input" accept="image/*" onchange="lkHandleUpload(event)" style="display:none" />
+          </label>
+        </div>
+      </div>
+      <div class="panel" style="flex:1;display:flex;flex-direction:column;gap:10px">
+        <button class="btn-primary" id="lk-scan-btn" onclick="lookupScan()" disabled style="width:100%;justify-content:center">
+          🔍 Look Up Comic
+        </button>
+        <div id="lk-status" class="status"></div>
+      </div>
+    </div>
+
+    <!-- Right: results -->
+    <div class="lookup-result-col" id="lk-result-col">
+      <div class="lk-empty" id="lk-empty">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1">
+          <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
+          <path d="M11 8v6M8 11h6"/>
+        </svg>
+        Scan or upload a comic cover to see<br>full details, key issue info, and UK prices
+      </div>
+      <div class="lk-result" id="lk-result" style="display:none"></div>
+    </div>
+
+  </div>
+</div><!-- /pane-lookup -->
 
 <canvas id="canvas" style="display:none"></canvas>
+<canvas id="lk-canvas" style="display:none"></canvas>
 
 <script>
 const MAX_PHOTOS = 150;
@@ -1377,6 +1551,223 @@ function togglePreview() {
   } else {
     pre.style.display = 'none';
   }
+}
+
+// ── Tab switching ────────────────────────────────────────────────────────────
+
+function switchTab(tab) {
+  document.getElementById('pane-export').style.display = tab === 'export' ? 'flex' : 'none';
+  document.getElementById('pane-lookup').style.display = tab === 'lookup'  ? 'flex' : 'none';
+  document.getElementById('tab-btn-export').classList.toggle('active', tab === 'export');
+  document.getElementById('tab-btn-lookup').classList.toggle('active', tab === 'lookup');
+
+  if (tab === 'export' && lkStream) {
+    lkStream.getTracks().forEach(t => t.stop());
+    lkStream = null;
+  }
+  if (tab === 'lookup' && stream) {
+    stream.getTracks().forEach(t => t.stop());
+    stream = null;
+    document.getElementById('video').style.display = 'none';
+    document.getElementById('cam-placeholder').style.display = 'flex';
+    document.getElementById('start-cam-btn').disabled = false;
+    document.getElementById('start-cam-btn').textContent = '▶ Start Camera';
+    document.getElementById('capture-btn').disabled = true;
+  }
+}
+
+// ── Lookup camera ────────────────────────────────────────────────────────────
+
+let lkStream = null;
+let lkBase64 = null;
+
+const lkVideo   = document.getElementById('lk-video');
+const lkCanvas  = document.getElementById('lk-canvas');
+const lkPreview = document.getElementById('lk-preview-img');
+
+async function lkStartCamera() {
+  try {
+    lkStream = await navigator.mediaDevices.getUserMedia({
+      video: { facingMode: { ideal: 'environment' }, width: { ideal: 1280 }, height: { ideal: 960 } }
+    });
+    lkVideo.srcObject = lkStream;
+    lkVideo.style.display = 'block';
+    document.getElementById('lk-cam-placeholder').style.display = 'none';
+    document.getElementById('lk-capture-btn').disabled = false;
+    document.getElementById('lk-start-btn').disabled = true;
+    document.getElementById('lk-start-btn').textContent = '✓ Camera on';
+  } catch (e) {
+    showStatus('lk-status', 'error', '✗ Camera error: ' + e.message);
+  }
+}
+
+function lkCapture() {
+  lkCanvas.width  = lkVideo.videoWidth;
+  lkCanvas.height = lkVideo.videoHeight;
+  lkCanvas.getContext('2d').drawImage(lkVideo, 0, 0);
+  const compressed = compressCanvasToDataUrl(lkCanvas, 1200, 0.75);
+  lkBase64 = compressed.split(',')[1];
+  lkPreview.src = compressed;
+  lkPreview.style.display = 'block';
+  lkVideo.style.display = 'none';
+  document.getElementById('lk-capture-btn').style.display = 'none';
+  document.getElementById('lk-retake-btn').style.display  = 'inline-flex';
+  document.getElementById('lk-scan-btn').disabled = false;
+}
+
+function lkRetake() {
+  lkBase64 = null;
+  lkPreview.style.display = 'none';
+  lkVideo.style.display   = 'block';
+  document.getElementById('lk-capture-btn').style.display = 'inline-flex';
+  document.getElementById('lk-retake-btn').style.display  = 'none';
+  document.getElementById('lk-scan-btn').disabled = true;
+  document.getElementById('lk-status').className = 'status';
+}
+
+async function lkHandleUpload(event) {
+  const file = event.target.files?.[0];
+  if (!file) return;
+  try {
+    const dataUrl = await readFileAsDataUrl(file);
+    const img     = await loadImage(dataUrl);
+    const temp    = document.createElement('canvas');
+    temp.width  = img.width;
+    temp.height = img.height;
+    temp.getContext('2d').drawImage(img, 0, 0);
+    const compressed = compressCanvasToDataUrl(temp, 1200, 0.75);
+    lkBase64 = compressed.split(',')[1];
+    lkPreview.src = compressed;
+    lkPreview.style.display = 'block';
+    lkVideo.style.display   = 'none';
+    document.getElementById('lk-cam-placeholder').style.display = 'none';
+    document.getElementById('lk-capture-btn').style.display = 'none';
+    document.getElementById('lk-retake-btn').style.display  = 'inline-flex';
+    document.getElementById('lk-scan-btn').disabled = false;
+  } catch (e) {
+    showStatus('lk-status', 'error', 'Could not load image: ' + e.message);
+  }
+  event.target.value = '';
+}
+
+// ── Lookup scan ──────────────────────────────────────────────────────────────
+
+async function lookupScan() {
+  if (!lkBase64) return;
+  document.getElementById('lk-scan-btn').disabled = true;
+  document.getElementById('lk-empty').style.display  = 'none';
+  document.getElementById('lk-result').style.display = 'none';
+
+  showStatus('lk-status', 'info', '<span class="spin">⟳</span> Identifying comic...');
+
+  let identified;
+  try {
+    identified = await identifyComic(lkBase64, '');
+  } catch (e) {
+    showStatus('lk-status', 'error', '✗ ' + e.message);
+    document.getElementById('lk-scan-btn').disabled = false;
+    return;
+  }
+
+  showStatus('lk-status', 'info', '<span class="spin">⟳</span> Fetching UK sold prices...');
+
+  let ebayData = null;
+  try {
+    const q = encodeURIComponent(identified.searchQuery || `${identified.title} ${identified.issue} comic`);
+    const c = encodeURIComponent(identified.condition || '');
+    const res = await fetch(`/api/ebay-search.js?q=${q}&condition=${c}`);
+    ebayData = await readApiJson(res, 'eBay pricing');
+  } catch (e) {
+    ebayData = { found: false };
+  }
+
+  renderLookupResult(identified, ebayData, lkPreview.src);
+  showStatus('lk-status', 'success', '✓ Done');
+  document.getElementById('lk-scan-btn').disabled = false;
+}
+
+function renderLookupResult(c, ebay, thumbSrc) {
+  const badges = [
+    c.isKeyIssue || c.firstAppearance ? `<span class="cbadge cbadge-key">⭐ Key Issue</span>` : '',
+    c.firstAppearance ? `<span class="cbadge cbadge-first" title="${escapeHtml(c.firstAppearance)}">1st ${escapeHtml(c.firstAppearance.replace(/^First (full )?appearance of /i,''))}</span>` : '',
+    c.isSlabbed       ? `<span class="cbadge cbadge-slab">${escapeHtml(c.slabCompany||'Slabbed')}${c.slabGrade?' '+c.slabGrade:''}</span>` : '',
+    c.hasSig          ? `<span class="cbadge cbadge-sig" title="${escapeHtml(c.sigDetails)}">✍ Signed</span>` : '',
+    c.edition === 'Newsstand' ? `<span class="cbadge cbadge-news">📰 Newsstand</span>` : '',
+    c.edition === 'Canadian Price Variant' ? `<span class="cbadge cbadge-news">🍁 CPV</span>` : '',
+    c.isVariant       ? `<span class="cbadge cbadge-variant" title="${escapeHtml(c.variantDetails)}">✦ Variant</span>` : '',
+    c.lowPrintRun     ? `<span class="cbadge cbadge-low">🔥 Low Print</span>` : ''
+  ].filter(Boolean).join('');
+
+  const condVal  = [c.condition, c.conditionGrade ? '~'+c.conditionGrade : ''].filter(Boolean).join(' · ');
+  const editionStr = c.edition && c.edition !== 'Unknown' ? c.edition : '';
+
+  const ebayHtml = ebay?.found
+    ? `<div class="lk-card-val">£${ebay.median}</div>
+       <div class="lk-card-sub">£${ebay.min} – £${ebay.max} · ${ebay.count} sold<br>Whatnot est. £${Math.ceil(ebay.median * 1.15)}</div>`
+    : `<div class="lk-card-val" style="color:var(--muted);font-size:14px">No data</div>
+       <div class="lk-card-sub">No UK sold results found</div>`;
+
+  document.getElementById('lk-result').innerHTML = `
+    <div class="lk-hero">
+      <img class="lk-thumb" src="${escapeHtml(thumbSrc)}" alt="" />
+      <div class="lk-identity">
+        <div class="lk-title">${escapeHtml(c.title)}</div>
+        <div class="lk-issue">${c.issue && c.issue !== 'Unknown' ? '#' + escapeHtml(c.issue) : ''}</div>
+        <div class="lk-meta">${[c.publisher, c.year, editionStr].filter(x=>x&&x!=='Unknown').join(' · ')}</div>
+        ${badges ? `<div class="comic-badges" style="margin-top:8px">${badges}</div>` : ''}
+      </div>
+    </div>
+
+    <div class="lk-grid">
+      <div class="lk-card">
+        <div class="lk-card-label">Condition</div>
+        <div class="lk-card-val" style="font-size:16px">${escapeHtml(condVal || 'Unknown')}</div>
+        <div class="lk-card-sub">${escapeHtml(c.conditionReason || '')}</div>
+      </div>
+      <div class="lk-card">
+        <div class="lk-card-label">eBay UK · Last 90 days</div>
+        ${ebayHtml}
+      </div>
+    </div>
+
+    ${c.keyInfo ? `
+    <div class="lk-section">
+      <div class="lk-section-label">⭐ Key Issue Info</div>
+      <div class="lk-section-text">${escapeHtml(c.keyInfo)}</div>
+    </div>` : ''}
+
+    ${c.firstAppearance ? `
+    <div class="lk-section">
+      <div class="lk-section-label">First Appearance</div>
+      <div class="lk-section-text">${escapeHtml(c.firstAppearance)}</div>
+    </div>` : ''}
+
+    ${c.importantCharacters && c.importantCharacters !== 'Unknown' ? `
+    <div class="lk-section">
+      <div class="lk-section-label">Characters</div>
+      <div class="lk-section-text">${escapeHtml(c.importantCharacters)}</div>
+    </div>` : ''}
+
+    ${c.printRunNote ? `
+    <div class="lk-section">
+      <div class="lk-section-label">🔥 Print Run Note</div>
+      <div class="lk-section-text">${escapeHtml(c.printRunNote)}</div>
+    </div>` : ''}
+
+    ${c.variantDetails ? `
+    <div class="lk-section">
+      <div class="lk-section-label">✦ Variant Details</div>
+      <div class="lk-section-text">${escapeHtml(c.variantDetails)}</div>
+    </div>` : ''}
+
+    ${c.sigDetails ? `
+    <div class="lk-section">
+      <div class="lk-section-label">✍ Signature</div>
+      <div class="lk-section-text">${escapeHtml(c.sigDetails)}</div>
+    </div>` : ''}
+  `;
+
+  document.getElementById('lk-result').style.display = 'flex';
 }
 </script>
 </body>
