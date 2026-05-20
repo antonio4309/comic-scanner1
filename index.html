@@ -287,10 +287,63 @@
     .comic-sub { font-size: 11px; color: var(--muted); margin-top: 2px; }
     .comic-range { font-size: 10px; color: #666; margin-top: 2px; }
 
-    .comic-price { font-size: 14px; font-weight: 700; color: var(--green); white-space: nowrap; flex-shrink: 0; }
+    .comic-price { font-size: 14px; font-weight: 700; color: var(--green); white-space: nowrap; }
     .comic-price.loading { color: var(--muted); font-size: 12px; }
     .comic-price.notfound { color: var(--amber); font-size: 12px; }
     .comic-price.error { color: var(--red); font-size: 12px; }
+    .comic-price.overridden { color: var(--amber); }
+
+    .price-col { display: flex; flex-direction: column; align-items: flex-end; gap: 3px; flex-shrink: 0; }
+
+    .btn-edit-price {
+      background: none;
+      border: none;
+      padding: 2px 5px;
+      font-size: 11px;
+      color: var(--muted);
+      cursor: pointer;
+      border-radius: 4px;
+      opacity: 0;
+      transition: opacity .15s, background .15s;
+      line-height: 1;
+    }
+    .comic-card:hover .btn-edit-price { opacity: 1; }
+    .btn-edit-price:hover { background: var(--surface2); color: var(--text); }
+
+    .price-edit-wrap { display: flex; align-items: center; gap: 4px; }
+    .price-edit-input {
+      width: 68px;
+      font-size: 13px;
+      font-weight: 700;
+      padding: 4px 6px;
+      border: 1px solid var(--green);
+      border-radius: 6px;
+      background: var(--surface);
+      color: var(--text);
+      text-align: right;
+      box-shadow: 0 0 0 3px rgba(34,201,132,0.12);
+    }
+    .btn-price-save {
+      padding: 4px 8px;
+      font-size: 13px;
+      background: var(--green);
+      color: #000;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      font-weight: 700;
+      line-height: 1;
+    }
+    .btn-price-cancel {
+      padding: 4px 7px;
+      font-size: 13px;
+      background: var(--surface2);
+      color: var(--muted);
+      border: 1px solid var(--border);
+      border-radius: 5px;
+      cursor: pointer;
+      line-height: 1;
+    }
 
 
     .pending-grid {
@@ -581,6 +634,7 @@ let capturedBase64 = null;
 let capturedThumb = null;
 let pendingPhotos = [];
 let comics = [];
+let editingPriceId = null;
 
 const video = document.getElementById('video');
 const canvas = document.getElementById('canvas');
@@ -934,6 +988,7 @@ async function fetchEbayPrice(comic) {
 // ── Pricing ─────────────────────────────────────────────────────────────────
 
 function getWhatnotPrice(c) {
+  if (c.priceOverride != null) return c.priceOverride;
   const base = c.customPrice != null ? c.customPrice : c.ebayPrice;
   if (!base || base <= 0) return null;
   return Math.ceil(base * 1.15);
@@ -960,17 +1015,41 @@ function renderList() {
   }
 
   list.innerHTML = comics.map(c => {
-    let priceHtml;
     const whatnot = getWhatnotPrice(c);
+    let priceHtml;
 
-    if (c.ebayStatus === 'loading') {
-      priceHtml = `<span class="comic-price loading"><span class="spin">⟳</span></span>`;
-    } else if (c.ebayStatus === 'ok') {
-      priceHtml = `<span class="comic-price" title="Whatnot price after fees. eBay base £${c.ebayPrice.toFixed(2)}">£${whatnot}</span>`;
-    } else if (c.ebayStatus === 'notfound') {
-      priceHtml = `<span class="comic-price notfound" title="No UK eBay results">N/A</span>`;
+    if (editingPriceId === c.id) {
+      priceHtml = `<div class="price-col">
+        <div class="price-edit-wrap">
+          <span style="font-size:12px;color:var(--muted)">£</span>
+          <input class="price-edit-input" id="price-input-${c.id}" type="number" value="${whatnot || ''}" min="0" step="1"
+            onkeydown="if(event.key==='Enter')savePrice(${c.id});if(event.key==='Escape')cancelEditPrice()" />
+          <button class="btn-price-save" onclick="savePrice(${c.id})">✓</button>
+          <button class="btn-price-cancel" onclick="cancelEditPrice()">✕</button>
+        </div>
+      </div>`;
+    } else if (c.ebayStatus === 'loading') {
+      priceHtml = `<div class="price-col"><span class="comic-price loading"><span class="spin">⟳</span></span></div>`;
     } else {
-      priceHtml = `<span class="comic-price error" title="${c.ebayError || 'eBay error'}">Err</span>`;
+      const isOverridden = c.priceOverride != null;
+      let display, cls, titleText;
+
+      if (whatnot) {
+        cls = isOverridden ? 'comic-price overridden' : 'comic-price';
+        titleText = isOverridden
+          ? 'Custom price (manually set)'
+          : `Whatnot price after fees · eBay base £${c.ebayPrice ? c.ebayPrice.toFixed(2) : '?'}`;
+        display = `£${whatnot}`;
+      } else if (c.ebayStatus === 'notfound') {
+        cls = 'comic-price notfound'; titleText = 'No UK eBay results — click ✏ to set manually'; display = 'N/A';
+      } else {
+        cls = 'comic-price error'; titleText = c.ebayError || 'eBay error'; display = 'Err';
+      }
+
+      priceHtml = `<div class="price-col">
+        <span class="${cls}" title="${escapeHtml(titleText)}">${display}</span>
+        <button class="btn-edit-price" onclick="startEditPrice(${c.id})" title="Edit price">✏ edit</button>
+      </div>`;
     }
 
     const sub = [c.publisher, c.year, c.condition, c.qty > 1 ? 'Qty: ' + c.qty : '']
@@ -1028,6 +1107,32 @@ function updateStats() {
   document.getElementById('stat-count').textContent = totalItems;
   document.getElementById('stat-total').textContent = '£' + totalVal.toFixed(0);
   document.getElementById('stat-avg').textContent = '£' + avg.toFixed(0);
+}
+
+function startEditPrice(id) {
+  editingPriceId = id;
+  renderList();
+  setTimeout(() => {
+    const input = document.getElementById(`price-input-${id}`);
+    if (input) { input.focus(); input.select(); }
+  }, 0);
+}
+
+function savePrice(id) {
+  const input = document.getElementById(`price-input-${id}`);
+  const val = input ? parseFloat(input.value) : NaN;
+  const comic = comics.find(c => c.id === id);
+  if (comic) {
+    comic.priceOverride = (!isNaN(val) && val >= 0) ? Math.round(val) : null;
+  }
+  editingPriceId = null;
+  renderList();
+  updateStats();
+}
+
+function cancelEditPrice() {
+  editingPriceId = null;
+  renderList();
 }
 
 function showStatus(id, type, html) {
