@@ -1,0 +1,959 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ComicScan — Whatnot Price Tool</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #0f0f0f;
+      --surface: #1a1a1a;
+      --surface2: #242424;
+      --border: rgba(255,255,255,0.1);
+      --border2: rgba(255,255,255,0.18);
+      --text: #f0f0f0;
+      --muted: #888;
+      --green: #22c984;
+      --green-dark: #17a068;
+      --red: #e05252;
+      --amber: #f0a030;
+      --radius: 10px;
+      --radius-lg: 14px;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      font-size: 15px;
+      line-height: 1.5;
+    }
+
+    header {
+      padding: 20px 24px 18px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    header h1 {
+      font-size: 20px;
+      font-weight: 700;
+      letter-spacing: -0.3px;
+    }
+
+    header h1 span { color: var(--green); }
+
+    .badge {
+      font-size: 11px;
+      padding: 3px 8px;
+      background: rgba(34,201,132,0.15);
+      color: var(--green);
+      border: 1px solid rgba(34,201,132,0.3);
+      border-radius: 20px;
+      font-weight: 600;
+    }
+
+    .layout {
+      display: grid;
+      grid-template-columns: 380px 1fr;
+      gap: 0;
+      height: calc(100vh - 61px);
+    }
+
+    .sidebar {
+      border-right: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    .main {
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    /* Panels */
+    .panel {
+      padding: 18px 20px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .panel-title {
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: .08em;
+      margin-bottom: 12px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    /* Camera */
+    #video-wrap {
+      background: #111;
+      border-radius: var(--radius);
+      overflow: hidden;
+      aspect-ratio: 4/3;
+      position: relative;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border: 1px solid var(--border);
+    }
+
+    #video { width: 100%; height: 100%; object-fit: cover; display: none; }
+    #preview-img { width: 100%; height: 100%; object-fit: contain; display: none; }
+
+    .cam-placeholder {
+      text-align: center;
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .cam-placeholder svg {
+      width: 48px; height: 48px;
+      margin: 0 auto 10px;
+      display: block;
+      opacity: .35;
+    }
+
+    /* Buttons */
+    .btn-row { display: flex; gap: 8px; margin-top: 10px; flex-wrap: wrap; }
+
+    button {
+      font-family: inherit;
+      font-size: 13px;
+      font-weight: 600;
+      padding: 8px 14px;
+      border-radius: 8px;
+      border: 1px solid var(--border2);
+      background: var(--surface2);
+      color: var(--text);
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      transition: background .15s, transform .1s;
+      white-space: nowrap;
+    }
+
+    button:hover { background: #2e2e2e; }
+    button:active { transform: scale(0.97); }
+    button:disabled { opacity: .4; cursor: not-allowed; transform: none; }
+
+    .btn-primary {
+      background: var(--green);
+      color: #000;
+      border-color: var(--green-dark);
+      font-weight: 700;
+    }
+    .btn-primary:hover { background: #1db872; }
+
+    .btn-danger {
+      background: rgba(224,82,82,0.12);
+      color: var(--red);
+      border-color: rgba(224,82,82,0.3);
+    }
+    .btn-danger:hover { background: rgba(224,82,82,0.22); }
+
+    /* Status messages */
+    .status {
+      font-size: 12px;
+      padding: 7px 10px;
+      border-radius: 7px;
+      margin-top: 8px;
+      display: none;
+      align-items: center;
+      gap: 6px;
+    }
+    .status.show { display: flex; }
+    .status.info { background: rgba(59,130,246,0.15); color: #7ab4f7; }
+    .status.success { background: rgba(34,201,132,0.12); color: var(--green); }
+    .status.error { background: rgba(224,82,82,0.12); color: var(--red); }
+    .status.warn { background: rgba(240,160,48,0.15); color: var(--amber); }
+
+    /* Form elements */
+    label {
+      font-size: 12px;
+      color: var(--muted);
+      display: block;
+      margin-bottom: 4px;
+      margin-top: 10px;
+    }
+    label:first-child { margin-top: 0; }
+
+    input, select, textarea {
+      width: 100%;
+      font-family: inherit;
+      font-size: 13px;
+      padding: 8px 10px;
+      border: 1px solid var(--border2);
+      border-radius: 8px;
+      background: var(--surface);
+      color: var(--text);
+      outline: none;
+    }
+    input:focus, select:focus, textarea:focus {
+      border-color: var(--green);
+      box-shadow: 0 0 0 3px rgba(34,201,132,0.12);
+    }
+    select option { background: #222; }
+
+    .field-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+
+    /* Comic list */
+    .list-header {
+      padding: 14px 20px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-bottom: 1px solid var(--border);
+      flex-shrink: 0;
+    }
+
+    .list-header h2 { font-size: 14px; font-weight: 600; }
+
+    .stats-row {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      border-bottom: 1px solid var(--border);
+      flex-shrink: 0;
+    }
+
+    .stat {
+      padding: 12px 16px;
+      border-right: 1px solid var(--border);
+      text-align: center;
+    }
+    .stat:last-child { border-right: none; }
+    .stat-val { font-size: 20px; font-weight: 700; color: var(--green); }
+    .stat-label { font-size: 11px; color: var(--muted); margin-top: 2px; }
+
+    .comic-list {
+      flex: 1;
+      overflow-y: auto;
+      padding: 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .empty-state {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      color: var(--muted);
+      font-size: 13px;
+      gap: 8px;
+      padding: 40px;
+      text-align: center;
+    }
+
+    .empty-state svg { opacity: .2; width: 56px; height: 56px; }
+
+    .comic-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 10px 12px;
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      transition: border-color .15s;
+    }
+    .comic-card:hover { border-color: var(--border2); }
+
+    .comic-thumb {
+      width: 44px;
+      height: 60px;
+      object-fit: cover;
+      border-radius: 5px;
+      flex-shrink: 0;
+      background: #333;
+    }
+
+    .comic-info { flex: 1; min-width: 0; }
+    .comic-title { font-size: 13px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .comic-sub { font-size: 11px; color: var(--muted); margin-top: 2px; }
+    .comic-range { font-size: 10px; color: #666; margin-top: 2px; }
+
+    .comic-price { font-size: 14px; font-weight: 700; color: var(--green); white-space: nowrap; flex-shrink: 0; }
+    .comic-price.loading { color: var(--muted); font-size: 12px; }
+    .comic-price.notfound { color: var(--amber); font-size: 12px; }
+    .comic-price.error { color: var(--red); font-size: 12px; }
+
+    .del-btn {
+      background: none;
+      border: none;
+      padding: 4px;
+      color: var(--muted);
+      cursor: pointer;
+      font-size: 18px;
+      flex-shrink: 0;
+      border-radius: 5px;
+      line-height: 1;
+    }
+    .del-btn:hover { color: var(--red); background: rgba(224,82,82,0.1); }
+
+    /* Spin */
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .spin { display: inline-block; animation: spin .7s linear infinite; }
+
+    /* Export section */
+    .export-panel {
+      padding: 16px 20px;
+      border-top: 1px solid var(--border);
+      flex-shrink: 0;
+    }
+
+    .export-title {
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: .08em;
+      margin-bottom: 12px;
+    }
+
+    .export-options { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 12px; }
+
+    .export-btns { display: flex; gap: 8px; }
+
+    /* Scrollbar */
+    ::-webkit-scrollbar { width: 5px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: #333; border-radius: 5px; }
+
+    /* Mobile responsive */
+    @media (max-width: 700px) {
+      .layout { grid-template-columns: 1fr; height: auto; }
+      .sidebar { border-right: none; border-bottom: 1px solid var(--border); }
+      .main { height: 70vh; }
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <svg width="26" height="26" viewBox="0 0 26 26" fill="none">
+    <rect width="26" height="26" rx="6" fill="#22c984"/>
+    <path d="M5 8h16M5 13h10M5 18h12" stroke="#000" stroke-width="2.2" stroke-linecap="round"/>
+  </svg>
+  <h1>Comic<span>Scan</span></h1>
+  <span class="badge">UK · eBay</span>
+</header>
+
+<div class="layout">
+
+  <!-- LEFT: Camera + Controls -->
+  <div class="sidebar">
+
+    <!-- Camera -->
+    <div class="panel">
+      <div class="panel-title">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+        Camera
+      </div>
+      <div id="video-wrap">
+        <div class="cam-placeholder" id="cam-placeholder">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+          Tap "Start Camera" to begin
+        </div>
+        <video id="video" autoplay playsinline></video>
+        <img id="preview-img" alt="Captured comic" />
+      </div>
+      <div class="btn-row">
+        <button id="start-cam-btn" onclick="startCamera()">▶ Start Camera</button>
+        <button id="capture-btn" onclick="capturePhoto()" disabled>📷 Capture</button>
+        <button id="retake-btn" onclick="retakePhoto()" style="display:none">↺ Retake</button>
+        <label style="margin:0;display:inline-flex;align-items:center;gap:6px;font-size:13px;font-weight:600;padding:8px 14px;border-radius:8px;border:1px solid var(--border2);background:var(--surface2);color:var(--text);cursor:pointer">
+          Upload Photo
+          <input type="file" id="file-input" accept="image/*" onchange="handleFileUpload(event)" style="display:none" />
+        </label>
+      </div>
+    </div>
+
+    <!-- Details -->
+    <div class="panel" style="flex:1;overflow-y:auto">
+      <div class="panel-title">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="m18.5 2.5 2 2L11 14H9v-2z"/></svg>
+        Comic Details
+      </div>
+
+      <label>Override title (optional)</label>
+      <input type="text" id="override-title" placeholder="e.g. Amazing Spider-Man #300 VF" />
+
+      <div class="field-row" style="margin-top:10px">
+        <div>
+          <label>Condition</label>
+          <select id="condition">
+            <option value="Auto">Auto AI Grade</option>
+            <option value="Near Mint">Near Mint (NM)</option>
+            <option value="Very Fine">Very Fine (VF)</option>
+            <option value="Fine">Fine (F)</option>
+            <option value="Very Good">Very Good (VG)</option>
+            <option value="Good">Good (G)</option>
+            <option value="Fair">Fair</option>
+            <option value="Poor">Poor</option>
+          </select>
+        </div>
+        <div>
+          <label>Qty</label>
+          <input type="number" id="qty" value="1" min="1" />
+        </div>
+      </div>
+
+      <div class="field-row" style="margin-top:0">
+        <div>
+          <label>Custom price (£)</label>
+          <input type="number" id="start-price" placeholder="Auto from eBay" min="0" step="0.01" />
+        </div>
+        <div>
+          <label>Listing type</label>
+          <select id="listing-type">
+            <option value="Buy it Now">Buy it Now</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="btn-row" style="margin-top:14px">
+        <button class="btn-primary" id="scan-btn" onclick="scanAndAdd()" disabled style="flex:1;justify-content:center">
+          🔍 Identify &amp; Add
+        </button>
+      </div>
+      <div id="scan-status" class="status"></div>
+    </div>
+
+  </div>
+
+  <!-- RIGHT: Inventory + Export -->
+  <div class="main">
+
+    <div class="list-header">
+      <h2>📦 Inventory</h2>
+      <button class="btn-danger" onclick="clearAll()" style="font-size:12px;padding:5px 10px">🗑 Clear all</button>
+    </div>
+
+    <div class="stats-row">
+      <div class="stat"><div class="stat-val" id="stat-count">0</div><div class="stat-label">Comics</div></div>
+      <div class="stat"><div class="stat-val" id="stat-total">£0.00</div><div class="stat-label">eBay value</div></div>
+      <div class="stat"><div class="stat-val" id="stat-avg">£0.00</div><div class="stat-label">Avg price</div></div>
+    </div>
+
+    <div class="comic-list" id="comic-list">
+      <div class="empty-state">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>
+        No comics yet<br>Scan your first comic →
+      </div>
+    </div>
+
+    <!-- Export -->
+    <div class="export-panel">
+      <div class="export-title">⬇ Export for Whatnot</div>
+      <div class="export-options">
+        <div>
+          <label style="margin-top:0">Category</label>
+          <select id="wn-category">
+            <option value="Comics & Manga">Comics & Manga</option>
+          </select>
+        </div>
+        <div>
+          <label style="margin-top:0">Price to export</label>
+          <select id="price-type">
+            <option value="whatnot">Whatnot price (fees added)</option>
+            <option value="ebay">eBay UK price</option>
+            <option value="custom">Custom price only</option>
+          </select>
+        </div>
+      </div>
+      <div class="export-btns">
+        <button class="btn-primary" onclick="exportCSV()">⬇ Download Whatnot CSV</button>
+        <button onclick="togglePreview()">👁 Preview</button>
+      </div>
+      <pre id="csv-preview" style="display:none;margin-top:12px;font-size:10px;font-family:monospace;background:#111;padding:12px;border-radius:8px;overflow-x:auto;white-space:pre;border:1px solid var(--border);max-height:140px;overflow-y:auto"></pre>
+    </div>
+
+  </div>
+</div>
+
+<canvas id="canvas" style="display:none"></canvas>
+
+<script>
+let stream = null;
+let capturedBase64 = null;
+let capturedThumb = null;
+let comics = [];
+
+const video = document.getElementById('video');
+const canvas = document.getElementById('canvas');
+const previewImg = document.getElementById('preview-img');
+
+// ── Camera ──────────────────────────────────────────────────────────────────
+
+async function startCamera() {
+  try {
+    stream = await navigator.mediaDevices.getUserMedia({
+      video: { facingMode: { ideal: 'environment' }, width: { ideal: 1280 }, height: { ideal: 960 } }
+    });
+    video.srcObject = stream;
+    video.style.display = 'block';
+    document.getElementById('cam-placeholder').style.display = 'none';
+    document.getElementById('capture-btn').disabled = false;
+    document.getElementById('start-cam-btn').disabled = true;
+    document.getElementById('start-cam-btn').textContent = '✓ Camera on';
+  } catch (e) {
+    showStatus('scan-status', 'error', '✗ Camera error: ' + e.message);
+  }
+}
+
+function capturePhoto() {
+  canvas.width = video.videoWidth;
+  canvas.height = video.videoHeight;
+  canvas.getContext('2d').drawImage(video, 0, 0);
+
+  const compressed = compressCanvasToDataUrl(canvas, 1200, 0.75);
+  capturedBase64 = compressed.split(',')[1];
+
+  const thumb = document.createElement('canvas');
+  thumb.width = 88;
+  thumb.height = 120;
+  thumb.getContext('2d').drawImage(canvas, 0, 0, 88, 120);
+  capturedThumb = thumb.toDataURL('image/jpeg', 0.7);
+
+  previewImg.src = compressed;
+  previewImg.style.display = 'block';
+  video.style.display = 'none';
+  document.getElementById('capture-btn').style.display = 'none';
+  document.getElementById('retake-btn').style.display = 'inline-flex';
+  document.getElementById('scan-btn').disabled = false;
+  showStatus('scan-status', 'info', '📷 Photo captured — click Identify & Add');
+}
+
+function retakePhoto() {
+  capturedBase64 = null;
+  capturedThumb = null;
+  previewImg.style.display = 'none';
+  video.style.display = 'block';
+  document.getElementById('capture-btn').style.display = 'inline-flex';
+  document.getElementById('retake-btn').style.display = 'none';
+  document.getElementById('scan-btn').disabled = true;
+  document.getElementById('scan-status').className = 'status';
+}
+
+function compressCanvasToDataUrl(sourceCanvas, maxWidth = 1200, quality = 0.75) {
+  const scale = sourceCanvas.width > maxWidth ? maxWidth / sourceCanvas.width : 1;
+  const out = document.createElement('canvas');
+  out.width = Math.round(sourceCanvas.width * scale);
+  out.height = Math.round(sourceCanvas.height * scale);
+  out.getContext('2d').drawImage(sourceCanvas, 0, 0, out.width, out.height);
+  return out.toDataURL('image/jpeg', quality);
+}
+
+function dataURLToBlob(dataURL) {
+  const [meta, base64] = dataURL.split(',');
+  const mime = meta.match(/:(.*?);/)?.[1] || 'image/jpeg';
+  const binary = atob(base64);
+  const array = new Uint8Array(binary.length);
+  for (let i = 0; i < binary.length; i++) array[i] = binary.charCodeAt(i);
+  return new Blob([array], { type: mime });
+}
+
+
+async function readApiJson(response, label) {
+  const text = await response.text();
+
+  let data;
+  try {
+    data = JSON.parse(text);
+  } catch (error) {
+    throw new Error(`${label} did not return JSON. Status ${response.status}. Response: ${text.slice(0, 180)}`);
+  }
+
+  if (!response.ok) {
+    throw new Error(data.error || `${label} failed with status ${response.status}`);
+  }
+
+  return data;
+}
+
+async function uploadImageToBlob(base64) {
+  try {
+    const blob = dataURLToBlob('data:image/jpeg;base64,' + base64);
+    const res = await fetch('/api/upload-image.js', {
+      method: 'POST',
+      headers: { 'x-filename': `comic-${Date.now()}.jpg` },
+      body: blob
+    });
+    const data = await readApiJson(res, 'Image upload');
+    if (data.error) throw new Error(data.error || 'Image upload failed');
+    return data.url || '';
+  } catch (e) {
+    console.warn('Image hosting failed, continuing without URL:', e);
+    return '';
+  }
+}
+
+// ── Scan & Add ───────────────────────────────────────────────────────────────
+
+async function scanAndAdd() {
+  if (!capturedBase64) {
+    showStatus('scan-status', 'error', '✗ No photo captured');
+    return;
+  }
+
+  const override = document.getElementById('override-title').value.trim();
+  const conditionChoice = document.getElementById('condition').value;
+  const qty = parseInt(document.getElementById('qty').value) || 1;
+  const customPrice = parseFloat(document.getElementById('start-price').value) || null;
+
+  document.getElementById('scan-btn').disabled = true;
+  showStatus('scan-status', 'info', '<span class="spin">⟳</span> Uploading image...');
+
+  const imageUrl = await uploadImageToBlob(capturedBase64);
+
+  showStatus('scan-status', 'info', '<span class="spin">⟳</span> Identifying comic with AI...');
+
+  let identified;
+  try {
+    identified = await identifyComic(capturedBase64, override);
+  } catch (e) {
+    showStatus('scan-status', 'error', '✗ AI error: ' + e.message);
+    document.getElementById('scan-btn').disabled = false;
+    return;
+  }
+
+  const finalCondition = conditionChoice === 'Auto'
+    ? (identified.condition || 'Unknown')
+    : conditionChoice;
+
+  const comic = {
+    id: Date.now(),
+    title: identified.title || 'Unknown',
+    issue: identified.issue || 'Unknown',
+    publisher: identified.publisher || 'Unknown',
+    year: identified.year || 'Unknown',
+    keyInfo: identified.keyInfo || 'Unknown',
+    importantCharacters: identified.importantCharacters || 'Unknown',
+    condition: finalCondition,
+    conditionReason: identified.conditionReason || '',
+    confidence: identified.confidence || 'Low',
+    qty,
+    customPrice,
+    listingType: 'Buy it Now',
+    ebayPrice: null,
+    ebayStatus: 'loading',
+    thumb: capturedThumb,
+    imageUrl,
+    searchQuery: identified.searchQuery || `${identified.title || ''} ${identified.issue || ''} ${identified.publisher || ''} ${identified.year || ''}`.trim()
+  };
+
+  comics.unshift(comic);
+  renderList();
+  showStatus('scan-status', 'success', '✓ Added: ' + comic.title + (comic.issue !== 'Unknown' ? ' #' + comic.issue : '') + ' — fetching eBay UK price...');
+  document.getElementById('scan-btn').disabled = false;
+
+  fetchEbayPrice(comic);
+}
+
+async function identifyComic(base64, override) {
+  const res = await fetch('/api/identify.js', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ base64, override: override || '' })
+  });
+
+  return await readApiJson(res, 'AI identify API');
+}
+
+function handleFileUpload(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+
+  const reader = new FileReader();
+
+  reader.onload = function(e) {
+    const img = new Image();
+
+    img.onload = function() {
+      const temp = document.createElement('canvas');
+      temp.width = img.width;
+      temp.height = img.height;
+      temp.getContext('2d').drawImage(img, 0, 0);
+
+      const dataUrl = compressCanvasToDataUrl(temp, 1200, 0.75);
+      previewImg.src = dataUrl;
+      previewImg.style.display = 'block';
+      document.getElementById('video').style.display = 'none';
+      document.getElementById('cam-placeholder').style.display = 'none';
+      document.getElementById('capture-btn').style.display = 'none';
+      document.getElementById('retake-btn').style.display = 'inline-flex';
+
+      capturedBase64 = dataUrl.split(',')[1];
+
+      const thumb = document.createElement('canvas');
+      thumb.width = 88;
+      thumb.height = 120;
+      thumb.getContext('2d').drawImage(img, 0, 0, 88, 120);
+      capturedThumb = thumb.toDataURL('image/jpeg', 0.7);
+
+      document.getElementById('scan-btn').disabled = false;
+      showStatus('scan-status', 'info', 'Photo loaded — click Identify & Add');
+    };
+
+    img.onerror = function() {
+      showStatus('scan-status', 'error', 'Could not load image');
+    };
+
+    img.src = e.target.result;
+  };
+
+  reader.readAsDataURL(file);
+  event.target.value = '';
+}
+
+async function fetchEbayPrice(comic) {
+  try {
+    const q = encodeURIComponent(comic.searchQuery || `${comic.title} ${comic.issue} comic`);
+    const c = encodeURIComponent(comic.condition);
+    const res = await fetch(`/api/ebay-search.js?q=${q}&condition=${c}`);
+
+    const data = await readApiJson(res, 'eBay pricing API');
+
+    if (!data.found) {
+      comic.ebayStatus = 'notfound';
+      comic.ebayPrice = null;
+    } else {
+      comic.ebayStatus = 'ok';
+      comic.ebayPrice = data.median;
+      comic.ebayMin = data.min;
+      comic.ebayMax = data.max;
+      comic.ebayCount = data.count;
+      comic.ebayResults = data.results || [];
+    }
+  } catch (e) {
+    comic.ebayStatus = 'error';
+    comic.ebayError = e.message;
+    showStatus('scan-status', 'warn', 'Comic added, but pricing failed: ' + e.message);
+  }
+  renderList();
+  updateStats();
+}
+
+// ── Pricing ─────────────────────────────────────────────────────────────────
+
+function getWhatnotPrice(c) {
+  const base = c.customPrice != null ? c.customPrice : c.ebayPrice;
+  if (!base || base <= 0) return null;
+  return Math.ceil(base * 1.15);
+}
+
+function getSubcategory(year) {
+  const y = Number(year);
+  if (!y || Number.isNaN(y)) return 'Modern Comics';
+  return y < 1985 ? 'Vintage Comics' : 'Modern Comics';
+}
+
+// ── Render ───────────────────────────────────────────────────────────────────
+
+function renderList() {
+  const list = document.getElementById('comic-list');
+
+  if (!comics.length) {
+    list.innerHTML = `<div class="empty-state">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>
+      No comics yet<br>Scan your first comic →
+    </div>`;
+    updateStats();
+    return;
+  }
+
+  list.innerHTML = comics.map(c => {
+    let priceHtml;
+    const whatnot = getWhatnotPrice(c);
+
+    if (c.ebayStatus === 'loading') {
+      priceHtml = `<span class="comic-price loading"><span class="spin">⟳</span></span>`;
+    } else if (c.ebayStatus === 'ok') {
+      priceHtml = `<span class="comic-price" title="Whatnot price after fees. eBay base £${c.ebayPrice.toFixed(2)}">£${whatnot}</span>`;
+    } else if (c.ebayStatus === 'notfound') {
+      priceHtml = `<span class="comic-price notfound" title="No UK eBay results">N/A</span>`;
+    } else {
+      priceHtml = `<span class="comic-price error" title="${c.ebayError || 'eBay error'}">Err</span>`;
+    }
+
+    const sub = [c.publisher, c.year, c.condition, c.qty > 1 ? 'Qty: ' + c.qty : '']
+      .filter(x => x && x !== 'Unknown').join(' · ');
+    const range = c.ebayStatus === 'ok'
+      ? `eBay UK: £${c.ebayMin.toFixed(2)} – £${c.ebayMax.toFixed(2)} (${c.ebayCount} results) · Whatnot: £${whatnot}`
+      : '';
+
+    return `<div class="comic-card">
+      <img class="comic-thumb" src="${c.thumb}" alt="" />
+      <div class="comic-info">
+        <div class="comic-title">${escapeHtml(c.title)}${c.issue && c.issue !== 'Unknown' ? ' #' + escapeHtml(c.issue) : ''}</div>
+        <div class="comic-sub">${escapeHtml(sub)}</div>
+        ${c.keyInfo && c.keyInfo !== 'Unknown' ? `<div class="comic-range">${escapeHtml(c.keyInfo)}</div>` : ''}
+        ${c.conditionReason ? `<div class="comic-range">Condition: ${escapeHtml(c.conditionReason)}</div>` : ''}
+        ${range ? `<div class="comic-range">${escapeHtml(range)}</div>` : ''}
+      </div>
+      ${priceHtml}
+      <button class="del-btn" onclick="deleteComic(${c.id})" title="Remove">×</button>
+    </div>`;
+  }).join('');
+
+  updateStats();
+}
+
+function escapeHtml(value) {
+  return String(value || '')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#039;');
+}
+
+function deleteComic(id) {
+  comics = comics.filter(c => c.id !== id);
+  renderList();
+}
+
+function clearAll() {
+  if (!comics.length) return;
+  if (confirm(`Remove all ${comics.length} comics from inventory?`)) {
+    comics = [];
+    renderList();
+  }
+}
+
+function updateStats() {
+  const ready = comics.filter(c => c.ebayStatus === 'ok' && getWhatnotPrice(c));
+  const totalItems = comics.reduce((s, c) => s + (c.qty || 1), 0);
+  const totalVal = ready.reduce((s, c) => s + getWhatnotPrice(c) * (c.qty || 1), 0);
+  const totalQty = ready.reduce((s, c) => s + (c.qty || 1), 0);
+  const avg = totalQty ? totalVal / totalQty : 0;
+
+  document.getElementById('stat-count').textContent = totalItems;
+  document.getElementById('stat-total').textContent = '£' + totalVal.toFixed(0);
+  document.getElementById('stat-avg').textContent = '£' + avg.toFixed(0);
+}
+
+function showStatus(id, type, html) {
+  const el = document.getElementById(id);
+  el.className = 'status show ' + type;
+  el.innerHTML = html;
+}
+
+// ── Whatnot CSV Export ───────────────────────────────────────────────────────
+
+function csvCell(value) {
+  const clean = String(value == null ? '' : value)
+    .replace(/"/g, '""')
+    .replace(/\r/g, ' ')
+    .replace(/\n/g, ' ')
+    .trim();
+  return `"${clean}"`;
+}
+
+function buildCSV() {
+  const headers = [
+    'Category',
+    'Subcategory',
+    'Title',
+    'Description',
+    'Quantity',
+    'Type',
+    'Price',
+    'Shipping Profile',
+    'Offerable',
+    'Hazmat',
+    'Condition',
+    'Cost Per Item',
+    'Sku',
+    'Image URL 1',
+    'Image URL 2',
+    'Image URL 3',
+    'Image URL 4',
+    'Image URL 5',
+    'Image URL 6',
+    'Image URL 7',
+    'Image URL 8'
+  ];
+
+  const rows = [headers];
+
+  for (const c of comics) {
+    const title = `${c.title || 'Unknown'}${c.issue && c.issue !== 'Unknown' ? ' #' + c.issue : ''}`.trim();
+    const desc = [
+      c.keyInfo && c.keyInfo !== 'Unknown' ? c.keyInfo : '',
+      c.publisher && c.publisher !== 'Unknown' ? c.publisher : '',
+      c.year && c.year !== 'Unknown' ? c.year : '',
+      c.conditionReason ? `Condition note: ${c.conditionReason}` : '',
+      c.ebayPrice ? `eBay UK market reference: £${c.ebayPrice.toFixed(2)}` : ''
+    ].filter(Boolean).join(' · ') || 'Comic book listing';
+
+    rows.push([
+      'Comics & Manga',
+      getSubcategory(c.year),
+      title,
+      desc,
+      c.qty || 1,
+      'Buy it Now',
+      getWhatnotPrice(c) || '',
+      'Bagged and boarded raw comic',
+      'Yes',
+      'Not Hazmat',
+      c.condition || 'Very Fine',
+      '',
+      '',
+      c.imageUrl || '',
+      '', '', '', '', '', '', ''
+    ]);
+  }
+
+  return rows.map(row => row.map(csvCell).join(',')).join('\r\n');
+}
+
+function exportCSV() {
+  if (!comics.length) {
+    alert('No comics to export');
+    return;
+  }
+  const csv = buildCSV();
+  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `whatnot_comics_${new Date().toISOString().slice(0,10)}.csv`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+
+function togglePreview() {
+  const pre = document.getElementById('csv-preview');
+  if (pre.style.display === 'none') {
+    if (!comics.length) {
+      alert('No comics to preview');
+      return;
+    }
+    pre.textContent = buildCSV();
+    pre.style.display = 'block';
+  } else {
+    pre.style.display = 'none';
+  }
+}
+</script>
+</body>
+</html>

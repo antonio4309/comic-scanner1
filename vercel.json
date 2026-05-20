@@ -1,0 +1,9 @@
+{
+  "version": 2,
+  "rewrites": [
+    { "source": "/api/identify", "destination": "/api/identify.js" },
+    { "source": "/api/ebay-search", "destination": "/api/ebay-search.js" },
+    { "source": "/api/upload-image", "destination": "/api/upload-image.js" },
+    { "source": "/((?!api/).*)", "destination": "/index.html" }
+  ]
+}
