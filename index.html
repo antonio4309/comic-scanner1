@@ -4,6 +4,9 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>LongboxLens — Whatnot Price Tool</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,800&family=Archivo+Black&display=swap" rel="stylesheet" />
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -15,8 +18,8 @@
       --border2: rgba(255,255,255,0.18);
       --text: #f0f0f0;
       --muted: #888;
-      --green: #22c984;
-      --green-dark: #17a068;
+      --green: #ffb627;
+      --green-dark: #d4901f;
       --red: #e05252;
       --amber: #f0a030;
       --radius: 10px;
@@ -51,9 +54,9 @@
     .badge {
       font-size: 11px;
       padding: 3px 8px;
-      background: rgba(34,201,132,0.15);
+      background: rgba(255,182,39,0.15);
       color: var(--green);
-      border: 1px solid rgba(34,201,132,0.3);
+      border: 1px solid rgba(255,182,39,0.3);
       border-radius: 20px;
       font-weight: 600;
     }
@@ -155,7 +158,7 @@
       border-color: var(--green-dark);
       font-weight: 700;
     }
-    .btn-primary:hover { background: #1db872; }
+    .btn-primary:hover { background: #e6a420; }
 
     .btn-danger {
       background: rgba(224,82,82,0.12);
@@ -176,7 +179,7 @@
     }
     .status.show { display: flex; }
     .status.info { background: rgba(59,130,246,0.15); color: #7ab4f7; }
-    .status.success { background: rgba(34,201,132,0.12); color: var(--green); }
+    .status.success { background: rgba(255,182,39,0.12); color: var(--green); }
     .status.error { background: rgba(224,82,82,0.12); color: var(--red); }
     .status.warn { background: rgba(240,160,48,0.15); color: var(--amber); }
 
@@ -203,7 +206,7 @@
     }
     input:focus, select:focus, textarea:focus {
       border-color: var(--green);
-      box-shadow: 0 0 0 3px rgba(34,201,132,0.12);
+      box-shadow: 0 0 0 3px rgba(255,182,39,0.12);
     }
     select option { background: #222; }
 
@@ -321,7 +324,7 @@
       background: var(--surface);
       color: var(--text);
       text-align: right;
-      box-shadow: 0 0 0 3px rgba(34,201,132,0.12);
+      box-shadow: 0 0 0 3px rgba(255,182,39,0.12);
     }
     .btn-price-save {
       padding: 4px 8px;
@@ -504,11 +507,29 @@
 <body>
 
 <header>
-  <svg width="26" height="26" viewBox="0 0 26 26" fill="none">
-    <rect width="26" height="26" rx="6" fill="#22c984"/>
-    <path d="M5 8h16M5 13h10M5 18h12" stroke="#000" stroke-width="2.2" stroke-linecap="round"/>
+  <svg xmlns="http://www.w3.org/2000/svg" width="204" height="48" viewBox="0 0 340 80" fill="none" style="flex-shrink:0">
+    <defs>
+      <style>
+        @import url('https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,800&amp;family=Archivo+Black&amp;display=swap');
+        .wm { font-family:'Bricolage Grotesque','Arial Black',sans-serif; font-weight:800; font-size:38px; letter-spacing:-1.5px; }
+        .cm { font-family:'Archivo Black',sans-serif; }
+      </style>
+    </defs>
+    <g transform="translate(6,7) scale(1.05)">
+      <path d="M8 24 L54 18 L70 25 L24 31 Z" fill="#c8853f"/>
+      <path d="M8 24 L24 31 L24 54 L8 47 Z" fill="#9c6228"/>
+      <path d="M24 31 L70 25 L70 48 L24 54 Z" fill="#a8702f"/>
+      <path d="M28 24.5 L33 23.9 L33 30 L28 30.6 Z" fill="#e23b3b"/>
+      <path d="M34 23.8 L39 23.2 L39 29.3 L34 29.9 Z" fill="#ffb627"/>
+      <path d="M40 23.1 L45 22.5 L45 28.6 L40 29.2 Z" fill="#3b7de2"/>
+      <path d="M46 22.4 L51 21.8 L51 27.9 L46 28.5 Z" fill="#3bbf6a"/>
+      <text class="cm" x="47" y="42" font-size="7" fill="#fdf6e3" text-anchor="middle" transform="rotate(-7 47 42)" letter-spacing="0.5">COMICS</text>
+      <circle cx="60" cy="40" r="12" fill="none" stroke="#ffffff" stroke-width="3"/>
+      <circle cx="60" cy="40" r="4" fill="#ffb627"/>
+      <line x1="68" y1="48" x2="74" y2="54" stroke="#ffffff" stroke-width="3.5" stroke-linecap="round"/>
+    </g>
+    <text class="wm" x="96" y="52" fill="#ffffff">Longbox<tspan fill="#ffb627">Lens</tspan></text>
   </svg>
-  <h1>Longbox<span>Lens</span></h1>
   <span class="badge">UK</span>
 </header>
 
