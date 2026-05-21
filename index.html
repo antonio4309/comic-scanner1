@@ -836,9 +836,214 @@
         text-align: center; display: none;
       }
     }
+
+    /* ── AUTH SCREEN ──────────────────────────────────────────── */
+    #auth-screen {
+      position: fixed; inset: 0; background: var(--ink);
+      z-index: 20000; display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      padding: 24px; overflow-y: auto;
+    }
+    .auth-box {
+      width: 100%; max-width: 440px; position: relative; z-index: 2;
+    }
+    .auth-logo {
+      text-align: center; margin-bottom: 36px;
+    }
+    .auth-wordmark {
+      font-family: 'Bebas Neue', Impact, sans-serif;
+      font-size: 52px; letter-spacing: 0.05em; line-height: 1; color: var(--cream);
+    }
+    .auth-wordmark span { color: var(--amber); }
+    .auth-tagline {
+      font-family: 'Space Mono', monospace; font-size: 9px;
+      letter-spacing: 0.28em; text-transform: uppercase; color: var(--muted); margin-top: 5px;
+    }
+    .auth-rule {
+      height: 1px; margin: 0 auto 28px;
+      background: linear-gradient(90deg, transparent, var(--amber), transparent);
+      opacity: 0.4; width: 60%;
+    }
+    .auth-tabs {
+      display: flex; border: 1px solid var(--border2); margin-bottom: 22px;
+    }
+    .auth-tab {
+      flex: 1; padding: 10px; font-family: 'Space Mono', monospace;
+      font-size: 9px; font-weight: 700; letter-spacing: 0.15em; text-transform: uppercase;
+      background: transparent; border: none; color: var(--muted); cursor: pointer;
+      transition: background .15s, color .15s; border-radius: 0; position: relative;
+    }
+    .auth-tab.active { background: rgba(245,163,24,0.08); color: var(--amber); }
+    .auth-tab.active::after {
+      content: ''; position: absolute; bottom: 0; left: 0; right: 0;
+      height: 2px; background: var(--amber);
+    }
+    .auth-form {
+      display: flex; flex-direction: column; gap: 0;
+    }
+    .auth-form label { margin-top: 14px; }
+    .auth-form label:first-child { margin-top: 0; }
+    .auth-submit {
+      margin-top: 20px; width: 100%; justify-content: center; padding: 12px; font-size: 11px;
+    }
+    .auth-error {
+      font-family: 'Space Mono', monospace; font-size: 9px; letter-spacing: 0.05em;
+      color: var(--red); border-left: 2px solid var(--red); padding: 6px 8px;
+      margin-top: 12px; display: none;
+    }
+    .auth-error.show { display: block; }
+    .auth-link {
+      font-family: 'Space Mono', monospace; font-size: 9px; letter-spacing: 0.05em;
+      color: var(--muted); margin-top: 14px; text-align: center;
+    }
+    .auth-link button {
+      background: none; border: none; color: var(--amber); cursor: pointer;
+      font-family: inherit; font-size: inherit; letter-spacing: inherit;
+      padding: 0; display: inline; text-transform: none;
+    }
+    .auth-link button:hover { text-decoration: underline; }
+
+    /* Feature selection */
+    .feat-heading {
+      font-family: 'Bebas Neue', Impact, sans-serif;
+      font-size: 22px; letter-spacing: 0.1em; color: var(--cream); margin-bottom: 4px;
+    }
+    .feat-sub {
+      font-family: 'Space Mono', monospace; font-size: 9px; letter-spacing: 0.12em;
+      text-transform: uppercase; color: var(--muted); margin-bottom: 20px;
+    }
+    .feature-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 20px; }
+    .feature-card {
+      border: 1px solid var(--border2); border-left: 2px solid var(--border3);
+      padding: 16px 14px; cursor: pointer;
+      transition: border-color .15s, background .15s; position: relative;
+      user-select: none;
+    }
+    .feature-card:hover { border-color: var(--border3); background: var(--sfc2); }
+    .feature-card.selected {
+      border-color: rgba(245,163,24,0.4) !important;
+      border-left-color: var(--amber) !important;
+      background: rgba(245,163,24,0.06);
+    }
+    .feature-check {
+      position: absolute; top: 8px; right: 10px;
+      font-family: 'Space Mono', monospace; font-size: 10px;
+      color: var(--amber); opacity: 0; transition: opacity .15s;
+    }
+    .feature-card.selected .feature-check { opacity: 1; }
+    .feature-name {
+      font-family: 'Bebas Neue', Impact, sans-serif;
+      font-size: 17px; letter-spacing: 0.08em; color: var(--cream); margin-bottom: 6px; line-height: 1.1;
+    }
+    .feature-desc {
+      font-family: 'Barlow Condensed', sans-serif;
+      font-size: 13px; color: var(--muted); line-height: 1.4;
+    }
+    .feature-tags { margin-top: 10px; display: flex; flex-wrap: wrap; gap: 3px; }
+    .feature-tag {
+      font-family: 'Space Mono', monospace; font-size: 7px;
+      letter-spacing: 0.08em; text-transform: uppercase;
+      padding: 2px 5px; border: 1px solid var(--border2); color: var(--muted);
+    }
+    .feature-card.selected .feature-tag { border-color: rgba(245,163,24,0.2); color: rgba(245,163,24,0.6); }
+
+    /* Header user area */
+    .header-user {
+      margin-left: auto; display: flex; align-items: center; gap: 10px;
+    }
+    .user-chip {
+      font-family: 'Space Mono', monospace; font-size: 9px; letter-spacing: 0.08em;
+      color: var(--muted); display: flex; align-items: center; gap: 6px;
+    }
+    .btn-logout {
+      font-family: 'Space Mono', monospace; font-size: 8px; font-weight: 700;
+      letter-spacing: 0.1em; text-transform: uppercase;
+      padding: 4px 8px; border: 1px solid var(--border2); background: transparent;
+      color: var(--muted); cursor: pointer; min-height: auto;
+      transition: color .15s, border-color .15s;
+    }
+    .btn-logout:hover { color: var(--red); border-color: rgba(232,22,42,0.3); }
   </style>
 </head>
 <body>
+
+<!-- ── AUTH SCREEN ─────────────────────────────────────────────── -->
+<div id="auth-screen">
+  <div class="auth-box">
+    <div class="auth-logo">
+      <div class="auth-wordmark">Longbox<span>Lens</span></div>
+      <div class="auth-tagline">Comic Archive &amp; Pricing System</div>
+    </div>
+    <div class="auth-rule"></div>
+
+    <!-- Login / Register tabs -->
+    <div class="auth-tabs" id="auth-tabs">
+      <button class="auth-tab active" id="auth-tab-login" onclick="switchAuthMode('login')">Login</button>
+      <button class="auth-tab" id="auth-tab-register" onclick="switchAuthMode('register')">Register</button>
+    </div>
+
+    <!-- Login form -->
+    <div class="auth-form" id="auth-form-login">
+      <label>Email</label>
+      <input type="email" id="login-email" placeholder="your@email.com" autocomplete="email" onkeydown="if(event.key==='Enter')doLogin()" />
+      <label>Password</label>
+      <input type="password" id="login-password" placeholder="••••••••" autocomplete="current-password" onkeydown="if(event.key==='Enter')doLogin()" />
+      <div class="auth-error" id="login-error"></div>
+      <button class="btn-primary auth-submit" onclick="doLogin()">→ Authenticate</button>
+      <div class="auth-link">No account? <button onclick="switchAuthMode('register')">Create one</button></div>
+    </div>
+
+    <!-- Register form -->
+    <div class="auth-form" id="auth-form-register" style="display:none">
+      <label>Name</label>
+      <input type="text" id="reg-name" placeholder="Your name" autocomplete="name" />
+      <label>Email</label>
+      <input type="email" id="reg-email" placeholder="your@email.com" autocomplete="email" />
+      <label>Password</label>
+      <input type="password" id="reg-password" placeholder="Min 6 characters" autocomplete="new-password" />
+      <label>Confirm password</label>
+      <input type="password" id="reg-confirm" placeholder="Repeat password" autocomplete="new-password" onkeydown="if(event.key==='Enter')doRegister()" />
+      <div class="auth-error" id="reg-error"></div>
+      <button class="btn-primary auth-submit" onclick="doRegister()">→ Continue</button>
+      <div class="auth-link">Already have an account? <button onclick="switchAuthMode('login')">Log in</button></div>
+    </div>
+
+    <!-- Feature selection (step 2 of register) -->
+    <div class="auth-form" id="auth-form-features" style="display:none">
+      <div class="feat-heading">Choose Your Tools</div>
+      <div class="feat-sub">Select what you need — you can use one or both</div>
+      <div class="feature-grid">
+        <div class="feature-card selected" id="feat-export" onclick="toggleFeature('export')">
+          <span class="feature-check">✓</span>
+          <div class="feature-name">Whatnot Export</div>
+          <div class="feature-desc">Scan comics, fetch live UK eBay prices, and export a Whatnot-ready CSV.</div>
+          <div class="feature-tags">
+            <span class="feature-tag">Scan</span>
+            <span class="feature-tag">Price</span>
+            <span class="feature-tag">CSV</span>
+            <span class="feature-tag">Sellers</span>
+          </div>
+        </div>
+        <div class="feature-card selected" id="feat-lookup" onclick="toggleFeature('lookup')">
+          <span class="feature-check">✓</span>
+          <div class="feature-name">Comic Lookup</div>
+          <div class="feature-desc">Identify any comic, get condition assessment, key issue info and market data.</div>
+          <div class="feature-tags">
+            <span class="feature-tag">Identify</span>
+            <span class="feature-tag">Condition</span>
+            <span class="feature-tag">Key Issues</span>
+            <span class="feature-tag">Collectors</span>
+          </div>
+        </div>
+      </div>
+      <div class="auth-error" id="feat-error"></div>
+      <button class="btn-primary auth-submit" onclick="doSelectFeatures()">→ Enter Archive</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── MAIN APP ─────────────────────────────────────────────────── -->
+<div id="main-app" style="display:none;flex:1;flex-direction:column;min-height:0">
 
 <header>
   <div class="header-top">
@@ -866,6 +1071,7 @@
       <button class="tab-btn active" id="tab-btn-export" onclick="switchTab('export')">Whatnot Export</button>
       <button class="tab-btn" id="tab-btn-lookup" onclick="switchTab('lookup')">Comic Lookup</button>
     </nav>
+    <div class="header-user" id="header-user-area"></div>
   </div>
   <div class="header-rule"></div>
 </header>
@@ -1128,6 +1334,8 @@
   </button>
 </nav>
 
+</div><!-- /main-app -->
+
 <!-- CGC Grade Guide Modal -->
 <div id="grade-modal" class="modal-overlay" onclick="hideGradeModal()" style="display:none">
   <div class="modal-box" onclick="event.stopPropagation()">
@@ -1163,6 +1371,173 @@
 <input type="file" id="rescan-input" accept="image/*" style="display:none" onchange="handleRescan(event)" />
 
 <script>
+// ── Auth System ────────────────────────────────────────────────────────────────
+
+function getUsers() {
+  try { return JSON.parse(localStorage.getItem('lbl_users') || '[]'); } catch { return []; }
+}
+function saveUsers(u) { localStorage.setItem('lbl_users', JSON.stringify(u)); }
+function getSession() {
+  try { return JSON.parse(localStorage.getItem('lbl_session') || 'null'); } catch { return null; }
+}
+function saveSession(s) { localStorage.setItem('lbl_session', JSON.stringify(s)); }
+
+function hashPw(pw) {
+  return btoa(unescape(encodeURIComponent(pw + '_lbl_2026')));
+}
+
+function authLogin(email, password) {
+  const user = getUsers().find(u => u.email.toLowerCase() === email.toLowerCase());
+  if (!user) return { ok: false, error: 'No account found with that email.' };
+  if (user.passwordHash !== hashPw(password)) return { ok: false, error: 'Incorrect password.' };
+  const session = { userId: user.id, email: user.email, name: user.name, features: user.features };
+  saveSession(session);
+  return { ok: true, session };
+}
+
+function authRegister(name, email, password) {
+  const users = getUsers();
+  if (users.find(u => u.email.toLowerCase() === email.toLowerCase()))
+    return { ok: false, error: 'An account with that email already exists.' };
+  const user = {
+    id: Date.now().toString(), name: name.trim(),
+    email: email.toLowerCase().trim(), passwordHash: hashPw(password),
+    features: [], createdAt: new Date().toISOString()
+  };
+  users.push(user); saveUsers(users);
+  return { ok: true, user };
+}
+
+function updateUserFeatures(userId, features) {
+  const users = getUsers();
+  const u = users.find(u => u.id === userId);
+  if (u) { u.features = features; saveUsers(users); }
+}
+
+function logout() { localStorage.removeItem('lbl_session'); location.reload(); }
+
+// ── Auth UI state ──────────────────────────────────────────────────────────────
+
+let authMode = 'login';
+let pendingUser = null;
+let selectedFeatures = new Set(['export', 'lookup']);
+
+function switchAuthMode(mode) {
+  authMode = mode;
+  document.getElementById('auth-tab-login').classList.toggle('active', mode === 'login');
+  document.getElementById('auth-tab-register').classList.toggle('active', mode === 'register');
+  document.getElementById('auth-form-login').style.display = mode === 'login' ? 'flex' : 'none';
+  document.getElementById('auth-form-register').style.display = mode === 'register' ? 'flex' : 'none';
+  document.getElementById('auth-form-features').style.display = mode === 'features' ? 'flex' : 'none';
+  document.getElementById('auth-tabs').style.display = mode === 'features' ? 'none' : 'flex';
+  document.querySelectorAll('.auth-error').forEach(el => el.classList.remove('show'));
+}
+
+function showAuthErr(id, msg) {
+  const el = document.getElementById(id);
+  if (el) { el.textContent = msg; el.classList.add('show'); }
+}
+
+function doLogin() {
+  const email = document.getElementById('login-email').value.trim();
+  const pw    = document.getElementById('login-password').value;
+  if (!email || !pw) { showAuthErr('login-error', 'Please fill in all fields.'); return; }
+  const r = authLogin(email, pw);
+  if (!r.ok) { showAuthErr('login-error', r.error); return; }
+  activateApp(r.session);
+}
+
+function doRegister() {
+  const name    = document.getElementById('reg-name').value.trim();
+  const email   = document.getElementById('reg-email').value.trim();
+  const pw      = document.getElementById('reg-password').value;
+  const confirm = document.getElementById('reg-confirm').value;
+  if (!name || !email || !pw) { showAuthErr('reg-error', 'Please fill in all fields.'); return; }
+  if (pw !== confirm) { showAuthErr('reg-error', 'Passwords do not match.'); return; }
+  if (pw.length < 6) { showAuthErr('reg-error', 'Password must be at least 6 characters.'); return; }
+  const r = authRegister(name, email, pw);
+  if (!r.ok) { showAuthErr('reg-error', r.error); return; }
+  pendingUser = r.user;
+  selectedFeatures = new Set(['export', 'lookup']);
+  renderFeatureCards();
+  switchAuthMode('features');
+}
+
+function toggleFeature(f) {
+  if (selectedFeatures.has(f)) selectedFeatures.delete(f);
+  else selectedFeatures.add(f);
+  renderFeatureCards();
+}
+
+function renderFeatureCards() {
+  document.getElementById('feat-export').classList.toggle('selected', selectedFeatures.has('export'));
+  document.getElementById('feat-lookup').classList.toggle('selected', selectedFeatures.has('lookup'));
+}
+
+function doSelectFeatures() {
+  if (!selectedFeatures.size) { showAuthErr('feat-error', 'Please select at least one option.'); return; }
+  const features = Array.from(selectedFeatures);
+  updateUserFeatures(pendingUser.id, features);
+  const session = { userId: pendingUser.id, email: pendingUser.email, name: pendingUser.name, features };
+  saveSession(session);
+  activateApp(session);
+}
+
+function activateApp(session) {
+  document.getElementById('auth-screen').style.display = 'none';
+  const app = document.getElementById('main-app');
+  app.style.display = 'flex';
+  app.style.flexDirection = 'column';
+  app.style.flex = '1';
+  app.style.minHeight = '0';
+  applyFeatureRestrictions(session.features);
+  renderHeaderUser(session);
+  if (isMobile()) switchMobileTab('scan');
+}
+
+function applyFeatureRestrictions(features) {
+  const hasExport = features.includes('export');
+  const hasLookup = features.includes('lookup');
+  if (hasExport && hasLookup) return;
+
+  if (hasExport && !hasLookup) {
+    const lb = document.getElementById('tab-btn-lookup');
+    if (lb) lb.style.display = 'none';
+    const ml = document.getElementById('mnav-lookup');
+    if (ml) ml.style.display = 'none';
+    switchTab('export');
+  }
+
+  if (hasLookup && !hasExport) {
+    const eb = document.getElementById('tab-btn-export');
+    if (eb) eb.style.display = 'none';
+    const ms = document.getElementById('mnav-scan');
+    const mi = document.getElementById('mnav-inventory');
+    if (ms) ms.style.display = 'none';
+    if (mi) mi.style.display = 'none';
+    switchTab('lookup');
+  }
+}
+
+function renderHeaderUser(session) {
+  const el = document.getElementById('header-user-area');
+  if (!el) return;
+  const labels = session.features.map(f => f === 'export' ? 'Export' : 'Lookup').join(' + ');
+  el.innerHTML = `
+    <span class="user-chip">
+      <span style="color:var(--amber)">◆</span>
+      ${escapeHtml(session.name)}
+      <span style="color:var(--dim)">·</span>
+      <span style="color:var(--dim)">${escapeHtml(labels)}</span>
+    </span>
+    <button class="btn-logout" onclick="logout()">Logout</button>
+  `;
+}
+
+// ── Main App Init ─────────────────────────────────────────────────────────────
+// (DOMContentLoaded is at the bottom of this script; auth check runs there)
+
+// ─────────────────────────────────────────────────────────────────────────────
 const MAX_PHOTOS = 150;
 
 let stream = null;
@@ -2312,7 +2687,12 @@ function updateMobBadge() {
 }
 
 window.addEventListener('DOMContentLoaded', () => {
-  if (isMobile()) switchMobileTab('scan');
+  const session = getSession();
+  if (session) {
+    activateApp(session);
+  } else {
+    document.getElementById('auth-screen').style.display = 'flex';
+  }
 });
 
 window.addEventListener('resize', () => {
