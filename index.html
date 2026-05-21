@@ -1097,6 +1097,101 @@
       border-radius: 0; text-transform: none; font-weight: 400;
     }
     .user-chip-btn:hover { border-color: var(--border2); color: var(--cream2); background: var(--sfc2); }
+
+    /* ── Fee Calculator ─────────────────────────────────────── */
+    #pane-fees { flex: 1; min-height: 0; display: flex; flex-direction: column; }
+    .fees-layout {
+      display: grid; grid-template-columns: 360px 1fr;
+      flex: 1; min-height: 0; overflow: hidden;
+    }
+    .fees-input-col {
+      border-right: 1px solid var(--border2);
+      display: flex; flex-direction: column; overflow-y: auto;
+      background: var(--ink); min-height: 0;
+    }
+    .fees-result-col {
+      display: flex; flex-direction: column; overflow-y: auto;
+      background: var(--coal); min-height: 0;
+    }
+    .fees-panel { padding: 20px; border-bottom: 1px solid var(--border); }
+    .fees-title {
+      font-family: 'Space Mono', monospace; font-size: 8px; font-weight: 700;
+      letter-spacing: .2em; text-transform: uppercase; color: var(--muted);
+      display: flex; align-items: center; gap: 6px; margin-bottom: 16px;
+    }
+    .fees-title::before { content: '//'; color: var(--amber); }
+    .fees-label {
+      font-family: 'Space Mono', monospace; font-size: 9px; font-weight: 700;
+      letter-spacing: .1em; text-transform: uppercase; color: var(--muted);
+      margin-bottom: 4px; margin-top: 14px; display: block;
+    }
+    .fees-label:first-of-type { margin-top: 0; }
+    .fees-input { width: 100%; padding: 10px 12px; font-size: 16px; font-family: 'Space Mono', monospace; }
+    .fees-select { width: 100%; padding: 10px 12px; font-size: 11px; font-family: 'Space Mono', monospace; }
+    .fees-hint {
+      font-family: 'Barlow Condensed', sans-serif; font-size: 11px;
+      color: var(--dim); margin-top: 4px;
+    }
+    .fees-result-panel {
+      padding: 24px 28px; flex: 1;
+    }
+    .fees-breakdown-title {
+      font-family: 'Space Mono', monospace; font-size: 8px; font-weight: 700;
+      letter-spacing: .2em; text-transform: uppercase; color: var(--muted);
+      display: flex; align-items: center; gap: 6px; margin-bottom: 20px;
+    }
+    .fees-breakdown-title::before { content: '//'; color: var(--amber); }
+    .fees-row {
+      display: flex; justify-content: space-between; align-items: baseline;
+      padding: 9px 0; border-bottom: 1px solid var(--border);
+      font-family: 'Barlow Condensed', sans-serif;
+    }
+    .fees-row-label { font-size: 14px; color: var(--cream2); }
+    .fees-row-label small {
+      font-family: 'Space Mono', monospace; font-size: 8px; color: var(--dim); margin-left: 6px;
+    }
+    .fees-row-value { font-family: 'Space Mono', monospace; font-size: 13px; color: var(--muted); }
+    .fees-row-value.deduct { color: var(--red); }
+    .fees-divider { height: 1px; background: var(--border2); margin: 4px 0; }
+    .fees-total-row {
+      display: flex; justify-content: space-between; align-items: baseline;
+      padding: 10px 0; border-bottom: 1px solid var(--border2);
+    }
+    .fees-total-label {
+      font-family: 'Space Mono', monospace; font-size: 10px; font-weight: 700;
+      letter-spacing: .1em; text-transform: uppercase; color: var(--cream);
+    }
+    .fees-total-value {
+      font-family: 'Space Mono', monospace; font-size: 14px; font-weight: 700; color: var(--red);
+    }
+    .fees-receive-block {
+      margin-top: 20px; padding: 16px 18px;
+      border: 1px solid rgba(245,163,24,0.3); border-left: 3px solid var(--amber);
+      background: rgba(245,163,24,0.04);
+    }
+    .fees-receive-label {
+      font-family: 'Space Mono', monospace; font-size: 9px; font-weight: 700;
+      letter-spacing: .15em; text-transform: uppercase; color: var(--amber); margin-bottom: 6px;
+    }
+    .fees-receive-value {
+      font-family: 'Bebas Neue', Impact, sans-serif; font-size: 48px;
+      letter-spacing: .04em; line-height: 1; color: var(--amber);
+    }
+    .fees-receive-pct {
+      font-family: 'Space Mono', monospace; font-size: 9px; color: var(--muted); margin-top: 4px;
+    }
+    .fees-info-box {
+      margin: 0 20px 20px; padding: 10px 12px;
+      border: 1px solid var(--border2); border-left: 2px solid rgba(245,163,24,0.35);
+      background: rgba(245,163,24,0.03);
+      font-family: 'Barlow Condensed', sans-serif; font-size: 12px; color: var(--muted);
+      line-height: 1.5;
+    }
+    @media (max-width: 768px) {
+      .fees-layout { display: flex; flex-direction: column; }
+      .fees-input-col { flex: 0 0 auto; }
+      .fees-result-col { flex: 1; }
+    }
   </style>
 </head>
 <body>
@@ -1204,6 +1299,7 @@
     <nav class="tab-nav">
       <button class="tab-btn active" id="tab-btn-export" onclick="switchTab('export')">Whatnot Export</button>
       <button class="tab-btn" id="tab-btn-lookup" onclick="switchTab('lookup')">Comic Lookup</button>
+      <button class="tab-btn" id="tab-btn-fees" onclick="switchTab('fees')">Fee Calculator</button>
     </nav>
     <div class="header-user" id="header-user-area"></div>
   </div>
@@ -1443,6 +1539,92 @@
 
   </div>
 </div><!-- /pane-lookup -->
+
+<!-- ── FEE CALCULATOR ──────────────────────────────────────── -->
+<div id="pane-fees" style="display:none">
+<div class="fees-layout">
+
+  <!-- LEFT: Inputs -->
+  <div class="fees-input-col">
+    <div class="fees-panel">
+      <div class="fees-title">Whatnot Fee Calculator</div>
+
+      <label class="fees-label">Sale Price (£)</label>
+      <input class="fees-input" type="number" id="fc-price" value="20" min="0" step="1" oninput="calcFees()" />
+      <div class="fees-hint">The price you're selling the item for on Whatnot</div>
+
+      <label class="fees-label">Category</label>
+      <select class="fees-select" id="fc-category" onchange="calcFees()">
+        <option value="0">Comics, TCG, Sports Singles, Toys &amp; Hobbies — 6.67%</option>
+        <option value="1">Coins &amp; Money — 4%</option>
+        <option value="2">All other categories — 6.67%</option>
+      </select>
+      <div class="fees-hint">Different categories have different commission rates</div>
+
+      <label class="fees-label">Shipping Cost (£)</label>
+      <input class="fees-input" type="number" id="fc-shipping" value="0" min="0" step="0.50" oninput="calcFees()" />
+      <div class="fees-hint">Shipping charged to buyer — affects the processing fee base</div>
+
+      <label class="fees-label">VAT Rate (%)</label>
+      <input class="fees-input" type="number" id="fc-vat" value="20" min="0" max="30" step="1" oninput="calcFees()" />
+      <div class="fees-hint">Typically 20% in the UK</div>
+    </div>
+
+    <div class="fees-info-box" style="margin:12px 20px;">
+      Comics, TCG &amp; Sports Singles currently enjoy a limited-time 6.67% commission (0% on any portion above £1,500). Processing fee is 2.42% of total order + £0.25 transaction fee, both subject to VAT.
+    </div>
+  </div>
+
+  <!-- RIGHT: Results -->
+  <div class="fees-result-col">
+    <div class="fees-result-panel">
+      <div class="fees-breakdown-title">Fee Breakdown</div>
+
+      <div class="fees-row">
+        <span class="fees-row-label">Sale Price</span>
+        <span class="fees-row-value" id="fc-r-sale">£0.00</span>
+      </div>
+      <div class="fees-row">
+        <span class="fees-row-label">Shipping Cost</span>
+        <span class="fees-row-value" id="fc-r-shipping">£0.00</span>
+      </div>
+
+      <div class="fees-divider" style="margin:8px 0"></div>
+
+      <div class="fees-row">
+        <span class="fees-row-label">Commission Fee <small id="fc-r-rate">6.67%</small></span>
+        <span class="fees-row-value deduct" id="fc-r-commission">−£0.00</span>
+      </div>
+      <div class="fees-row">
+        <span class="fees-row-label">VAT on Commission <small id="fc-r-vat-pct">20%</small></span>
+        <span class="fees-row-value deduct" id="fc-r-vat-commission">−£0.00</span>
+      </div>
+      <div class="fees-row">
+        <span class="fees-row-label">Payment Processing Fee <small>2.42% + £0.25</small></span>
+        <span class="fees-row-value deduct" id="fc-r-processing">−£0.00</span>
+      </div>
+      <div class="fees-row">
+        <span class="fees-row-label">VAT on Processing Fee <small id="fc-r-vat-pct2">20%</small></span>
+        <span class="fees-row-value deduct" id="fc-r-vat-processing">−£0.00</span>
+      </div>
+
+      <div class="fees-divider" style="margin:8px 0"></div>
+
+      <div class="fees-total-row">
+        <span class="fees-total-label">Total Fees</span>
+        <span class="fees-total-value" id="fc-r-total-fees">−£0.00</span>
+      </div>
+
+      <div class="fees-receive-block">
+        <div class="fees-receive-label">You Receive</div>
+        <div class="fees-receive-value" id="fc-r-receive">£0.00</div>
+        <div class="fees-receive-pct" id="fc-r-pct"></div>
+      </div>
+    </div>
+  </div>
+
+</div>
+</div><!-- /pane-fees -->
 
 <!-- Mobile bottom nav -->
 <nav class="mobile-nav" id="mobile-nav">
@@ -2755,8 +2937,11 @@ function togglePreview() {
 function switchTab(tab) {
   document.getElementById('pane-export').style.display = tab === 'export' ? 'flex' : 'none';
   document.getElementById('pane-lookup').style.display = tab === 'lookup'  ? 'flex' : 'none';
+  document.getElementById('pane-fees').style.display   = tab === 'fees'    ? 'flex' : 'none';
   document.getElementById('tab-btn-export').classList.toggle('active', tab === 'export');
   document.getElementById('tab-btn-lookup').classList.toggle('active', tab === 'lookup');
+  document.getElementById('tab-btn-fees').classList.toggle('active', tab === 'fees');
+  if (tab === 'fees') calcFees();
 
   if (tab === 'export' && lkStream) {
     lkStream.getTracks().forEach(t => t.stop()); lkStream = null;
@@ -3216,6 +3401,52 @@ function showUpgradePrompt() {
   setTimeout(() => {
     document.getElementById('st-plan-section')?.scrollIntoView({ behavior: 'smooth' });
   }, 150);
+}
+
+// ── Whatnot Fee Calculator ────────────────────────────────────────────────────
+
+const FC_CATEGORIES = [
+  { label: '6.67%', rate: 0.0667 },
+  { label: '4%',    rate: 0.04   },
+  { label: '6.67%', rate: 0.0667 },
+];
+
+function calcFees() {
+  const salePrice  = parseFloat(document.getElementById('fc-price')?.value)    || 0;
+  const shipping   = parseFloat(document.getElementById('fc-shipping')?.value) || 0;
+  const vatRate    = (parseFloat(document.getElementById('fc-vat')?.value)      || 20) / 100;
+  const catIndex   = parseInt(document.getElementById('fc-category')?.value)   || 0;
+  const { rate, label } = FC_CATEGORIES[catIndex] || FC_CATEGORIES[0];
+
+  // Commission applies only up to £1,500 (0% on portion above)
+  const commissionableAmount = Math.min(salePrice, 1500);
+  const commission    = commissionableAmount * rate;
+  const vatOnComm     = commission * vatRate;
+
+  // Processing: 2.42% of total order value (sale + shipping) + £0.25 transaction fee
+  const totalOrderValue = salePrice + shipping;
+  const processingFee   = 0.0242 * totalOrderValue + 0.25;
+  const vatOnProc       = processingFee * vatRate;
+
+  const totalFees = commission + vatOnComm + processingFee + vatOnProc;
+  const youReceive = Math.max(0, salePrice - totalFees);
+  const feePct = salePrice > 0 ? (totalFees / salePrice * 100).toFixed(1) : '0.0';
+
+  const f = n => '£' + n.toFixed(2);
+  const d = n => '−£' + n.toFixed(2);
+
+  document.getElementById('fc-r-sale').textContent          = f(salePrice);
+  document.getElementById('fc-r-shipping').textContent      = f(shipping);
+  document.getElementById('fc-r-rate').textContent          = label;
+  document.getElementById('fc-r-commission').textContent    = d(commission);
+  document.getElementById('fc-r-vat-pct').textContent       = Math.round(vatRate * 100) + '%';
+  document.getElementById('fc-r-vat-pct2').textContent      = Math.round(vatRate * 100) + '%';
+  document.getElementById('fc-r-vat-commission').textContent = d(vatOnComm);
+  document.getElementById('fc-r-processing').textContent    = d(processingFee);
+  document.getElementById('fc-r-vat-processing').textContent = d(vatOnProc);
+  document.getElementById('fc-r-total-fees').textContent    = d(totalFees);
+  document.getElementById('fc-r-receive').textContent       = f(youReceive);
+  document.getElementById('fc-r-pct').textContent           = feePct + '% of sale price taken in fees';
 }
 </script>
 </body>
