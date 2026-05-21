@@ -2039,6 +2039,7 @@ async function scanAndAdd() {
         condition:       finalCondition,
         conditionGrade:  identified.conditionGrade  || '',
         conditionReason: identified.conditionReason || '',
+        photoAdvice:     identified.photoAdvice     || '',
         confidence:      identified.confidence      || 'Low',
         qty,
         customPrice,
@@ -2070,7 +2071,13 @@ async function scanAndAdd() {
 
   if (added > 0) {
     saveInventory();
-    showStatus('scan-status', 'success', `✓ Added ${added} comic${added === 1 ? '' : 's'} — fetching eBay UK prices...`);
+    // Collect any photo advice from the batch
+    const adviceSet = [...new Set(comics.slice(0, added).map(c => c.photoAdvice).filter(Boolean))];
+    if (adviceSet.length) {
+      showStatus('scan-status', 'warn', `⚠ ${adviceSet[0]}${adviceSet.length > 1 ? ` (+${adviceSet.length - 1} more tips)` : ''}`);
+    } else {
+      showStatus('scan-status', 'success', `✓ Added ${added} comic${added === 1 ? '' : 's'} — fetching eBay UK prices...`);
+    }
     if (isMobile()) setTimeout(() => switchMobileTab('inventory'), 1200);
   } else {
     showStatus('scan-status', 'error', '✗ No comics were added.');
@@ -2384,6 +2391,7 @@ async function handleRescan(event) {
     comic.condition = identified.condition || comic.condition;
     comic.conditionGrade = identified.conditionGrade || '';
     comic.conditionReason = identified.conditionReason || '';
+    comic.photoAdvice     = identified.photoAdvice     || '';
     comic.confidence = identified.confidence || 'Low';
     comic.searchQuery = identified.searchQuery || comic.searchQuery;
 
@@ -2865,7 +2873,11 @@ async function lookupScan() {
   }
 
   renderLookupResult(identified, ebayData, lkPreview.src);
-  showStatus('lk-status', 'success', '✓ Done');
+  if (identified.photoAdvice) {
+    showStatus('lk-status', 'warn', `⚠ ${identified.photoAdvice}`);
+  } else {
+    showStatus('lk-status', 'success', '✓ Done');
+  }
   document.getElementById('lk-scan-btn').disabled = false;
 }
 
@@ -2912,6 +2924,11 @@ function renderLookupResult(c, ebay, thumbSrc) {
   const cgcInfo = c.conditionGrade ? cgcGradeNote(c.conditionGrade) : null;
 
   document.getElementById('lk-result').innerHTML = `
+    ${c.photoAdvice ? `
+    <div style="padding:10px 14px;background:rgba(229,130,26,0.07);border-left:2px solid #e5821a;margin-bottom:2px">
+      <div style="font-family:'Space Mono',monospace;font-size:8px;font-weight:700;letter-spacing:.15em;text-transform:uppercase;color:#e5821a;margin-bottom:4px">// Photo Tip</div>
+      <div style="font-family:'Barlow Condensed',sans-serif;font-size:13px;color:var(--cream2);line-height:1.4">${escapeHtml(c.photoAdvice)}</div>
+    </div>` : ''}
     <div class="lk-hero">
       <img class="lk-thumb" src="${escapeHtml(thumbSrc)}" alt="" />
       <div class="lk-identity">

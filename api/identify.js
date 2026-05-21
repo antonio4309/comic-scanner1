@@ -21,7 +21,8 @@ const SCHEMA = `{
   "confidence": "Low",
   "condition": "Unknown",
   "conditionGrade": "",
-  "conditionReason": "Unknown",
+  "conditionReason": "",
+  "photoAdvice": "",
   "searchQuery": "Unknown"
 }`;
 
@@ -77,10 +78,33 @@ ${SCHEMA}
 - printRunNote: explain why — e.g. "Newsstand edition — typically 10-15% of print run", "Canadian price variant — very low distribution", "Late-period newsstand (post-1990) — extremely scarce", "Independent publisher with estimated <10k print run", "Convention exclusive variant".
 
 === GRADING ===
-- condition: one of: Near Mint, Very Fine, Fine, Very Good, Good, Fair, Poor, Unknown.
+CRITICAL: NEVER output condition "Unknown" unless the comic cover is completely black, entirely blank, or totally unrecognisable — it should almost never be Unknown.
+Always make a best-effort estimate even in imperfect conditions. A rough estimate is always better than Unknown.
+
+- condition: one of: Near Mint, Very Fine, Fine, Very Good, Good, Fair, Poor.
+  Only use "Unknown" if cover is literally invisible (rare edge case).
 - conditionGrade: numeric CGC-equivalent estimate e.g. "9.4", "8.5", "7.0" — omit if slabbed (use slabGrade instead).
-- conditionReason: describe specific visible defects — spine stress, colour fading, corner blunting, creases, staple rust, soiling, spine splits, tape, writing. Be brief and specific.
-- If the comic is slabbed, set condition and conditionGrade based on the label grade.
+- conditionReason: 1–2 sentences. Describe specific visible defects — spine stress, colour fading, corner blunting, creases, staple rust, soiling, spine splits, tape, writing.
+  If the comic is in a bag/sleeve/mylar: state "Graded through bag/sleeve — " then describe what is visible. Give a real estimate anyway.
+  If the photo is blurry or dark: state "Photo quality limits assessment — estimated from visible areas." Then give best estimate.
+  If the comic is slabbed: set condition and conditionGrade based on the label grade.
+
+Grading through a bag: Look at corners, spine, and cover colour visible through the plastic.
+  Flat corners + bright colours visible → assume Very Fine or better (8.0+).
+  Some corner blunting visible → Very Good to Fine (6.0–7.0).
+  Heavy creasing visible even through bag → Fair to Good (2.0–4.0).
+
+=== PHOTO QUALITY ===
+photoAdvice: Check the image for quality issues. Output a single short, helpful sentence if ANY of the following apply. Output "" if the photo is clear and the comic well-presented.
+  - Comic in bag, sleeve, or mylar: "Remove the comic from its bag or sleeve for an accurate condition grade."
+  - Blurry or out-of-focus cover: "Hold the camera steady and move closer — the cover text is blurry."
+  - Poor or dim lighting, cover dark or underexposed: "Improve the lighting — use natural light or a bright lamp aimed at the cover."
+  - Comic tilted at an angle or photographed from the side: "Lay the comic flat and shoot straight down from above."
+  - Cover partially cut off or cropped: "Step back or zoom out — part of the cover is cut off."
+  - Cluttered, patterned, or busy background: "Place the comic on a plain flat surface (dark table or white paper) for cleaner results."
+  - Multiple comics stacked or overlapping: "Scan one comic at a time for accurate identification."
+  - Heavy glare or reflections on the cover: "Move the light source to the side to reduce glare on the cover."
+  - Only if truly clear with no issues: photoAdvice = ""
 
 === SEARCH QUERY ===
 - searchQuery: optimised for eBay UK sold listings — "Title #Issue Publisher Year" e.g. "Amazing Spider-Man 300 Marvel 1988 comic"
@@ -184,6 +208,7 @@ export default async function handler(req, res) {
       condition:       parsed.condition       || 'Unknown',
       conditionGrade:  parsed.conditionGrade  || '',
       conditionReason: parsed.conditionReason || '',
+      photoAdvice:     parsed.photoAdvice     || '',
       searchQuery:     parsed.searchQuery     || `${title} ${issue} comic`.trim()
     });
 
