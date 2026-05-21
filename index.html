@@ -963,6 +963,137 @@
       transition: color .15s, border-color .15s;
     }
     .btn-logout:hover { color: var(--red); border-color: rgba(232,22,42,0.3); }
+
+    /* ── SETTINGS MODAL ─────────────────────────────────────────────── */
+    #settings-modal {
+      position: fixed; inset: 0; background: rgba(4,3,2,0.92);
+      z-index: 25000; display: flex; align-items: center;
+      justify-content: center; padding: 20px;
+      backdrop-filter: blur(3px);
+    }
+    .settings-box {
+      background: var(--surface); border: 1px solid var(--border3);
+      border-left: 2px solid var(--amber);
+      width: 100%; max-width: 480px;
+      max-height: 88vh; overflow-y: auto;
+      box-shadow: 0 32px 80px rgba(0,0,0,0.9);
+      position: relative;
+    }
+    .settings-box::before {
+      content: ''; position: absolute; top: 0; left: 0; right: 0; height: 1px;
+      background: linear-gradient(90deg, var(--amber), transparent);
+    }
+    .settings-header {
+      padding: 14px 18px; border-bottom: 1px solid var(--border2);
+      display: flex; align-items: center; justify-content: space-between;
+      position: sticky; top: 0; background: var(--surface); z-index: 1;
+    }
+    .settings-header h3 {
+      font-family: 'Bebas Neue', Impact, sans-serif;
+      font-size: 20px; letter-spacing: 0.1em; font-weight: 400;
+    }
+    .settings-section {
+      padding: 16px 18px; border-bottom: 1px solid var(--border);
+    }
+    .settings-section-title {
+      font-family: 'Space Mono', monospace; font-size: 8px; font-weight: 700;
+      letter-spacing: 0.2em; text-transform: uppercase; color: var(--muted);
+      margin-bottom: 14px; display: flex; align-items: center; gap: 6px;
+    }
+    .settings-section-title::before { content: '//'; color: var(--amber); }
+    .settings-error {
+      font-family: 'Space Mono', monospace; font-size: 9px; letter-spacing: 0.05em;
+      color: var(--red); border-left: 2px solid var(--red); padding: 6px 8px;
+      margin-top: 10px; display: none;
+    }
+    .settings-error.show { display: block; }
+    .settings-success {
+      font-family: 'Space Mono', monospace; font-size: 9px; letter-spacing: 0.05em;
+      color: var(--cyan); border-left: 2px solid var(--cyan); padding: 6px 8px;
+      margin-top: 10px; display: none;
+    }
+    .settings-success.show { display: block; }
+    .plan-row {
+      display: flex; align-items: center; justify-content: space-between;
+      gap: 12px; margin-bottom: 10px;
+    }
+    .plan-badge-free {
+      font-family: 'Space Mono', monospace; font-size: 9px; font-weight: 700;
+      letter-spacing: 0.1em; text-transform: uppercase;
+      padding: 4px 10px; border: 1px solid var(--border2);
+      background: var(--sfc2); color: var(--muted);
+    }
+    .plan-badge-pro {
+      font-family: 'Space Mono', monospace; font-size: 9px; font-weight: 700;
+      letter-spacing: 0.1em; text-transform: uppercase;
+      padding: 4px 10px; border: 1px solid rgba(245,163,24,0.4);
+      background: rgba(245,163,24,0.08); color: var(--amber);
+      box-shadow: 0 0 12px var(--amber-glow);
+    }
+    .plan-limit-bar {
+      height: 3px; background: var(--sfc3); margin-bottom: 6px; overflow: hidden;
+    }
+    .plan-limit-fill { height: 100%; background: var(--amber); transition: width 0.3s; }
+    .plan-limit-fill.danger { background: var(--red); }
+    .plan-limit-label {
+      font-family: 'Space Mono', monospace; font-size: 8px; letter-spacing: 0.1em;
+      color: var(--muted); text-transform: uppercase;
+    }
+    .btn-upgrade {
+      background: var(--amber); color: var(--ink); border-color: var(--amber-d);
+      font-weight: 700; box-shadow: 0 0 16px var(--amber-glow);
+      width: 100%; justify-content: center; margin-top: 10px; padding: 10px;
+    }
+    .btn-upgrade:hover { background: #f7b030; box-shadow: 0 0 24px rgba(245,163,24,0.35); color: var(--ink); }
+    .pro-chip {
+      font-family: 'Space Mono', monospace; font-size: 7px; font-weight: 700;
+      letter-spacing: 0.08em; text-transform: uppercase;
+      padding: 2px 6px; border: 1px solid rgba(245,163,24,0.35);
+      background: rgba(245,163,24,0.08); color: var(--amber);
+    }
+    .price-thin {
+      font-family: 'Space Mono', monospace; font-size: 8px; letter-spacing: 0.04em;
+      color: #e5821a; display: inline-flex; align-items: center; gap: 2px; cursor: default;
+    }
+    .btn-danger-full {
+      background: rgba(232,22,42,0.06); color: var(--red);
+      border-color: rgba(232,22,42,0.18); width: 100%;
+      justify-content: center; margin-top: 4px; padding: 10px;
+    }
+    .btn-danger-full:hover { background: rgba(232,22,42,0.12); box-shadow: 0 0 12px var(--red-glow); }
+    .settings-feat-grid {
+      display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 12px;
+    }
+    .settings-feat-card {
+      border: 1px solid var(--border2); border-left: 2px solid var(--border3);
+      padding: 12px 12px; cursor: pointer;
+      transition: border-color .15s, background .15s; position: relative;
+      user-select: none;
+    }
+    .settings-feat-card:hover { background: var(--sfc2); }
+    .settings-feat-card.selected {
+      border-color: rgba(245,163,24,0.4) !important;
+      border-left-color: var(--amber) !important;
+      background: rgba(245,163,24,0.05);
+    }
+    .settings-feat-card .feature-check { position: absolute; top: 6px; right: 8px; opacity: 0; }
+    .settings-feat-card.selected .feature-check { opacity: 1; }
+    .settings-feat-name {
+      font-family: 'Bebas Neue', Impact, sans-serif;
+      font-size: 14px; letter-spacing: 0.08em; line-height: 1.1;
+    }
+    .settings-feat-desc {
+      font-family: 'Barlow Condensed', sans-serif;
+      font-size: 11px; color: var(--muted); line-height: 1.3; margin-top: 3px;
+    }
+    .user-chip-btn {
+      font-family: 'Space Mono', monospace; font-size: 9px; letter-spacing: 0.08em;
+      color: var(--muted); display: inline-flex; align-items: center; gap: 6px;
+      background: none; border: 1px solid transparent; padding: 3px 6px;
+      cursor: pointer; transition: border-color .15s, color .15s; min-height: auto;
+      border-radius: 0; text-transform: none; font-weight: 400;
+    }
+    .user-chip-btn:hover { border-color: var(--border2); color: var(--cream2); background: var(--sfc2); }
   </style>
 </head>
 <body>
@@ -1366,6 +1497,75 @@
   </div>
 </div>
 
+<!-- ── SETTINGS MODAL ─────────────────────────────────────────────── -->
+<div id="settings-modal" style="display:none" onclick="if(event.target===this)hideSettings()">
+  <div class="settings-box">
+    <div class="settings-header">
+      <h3>Account Settings</h3>
+      <button class="modal-close" onclick="hideSettings()">×</button>
+    </div>
+
+    <!-- Profile -->
+    <div class="settings-section">
+      <div class="settings-section-title">Profile</div>
+      <label>Display name</label>
+      <input type="text" id="st-name" placeholder="Your name" />
+      <label>Email</label>
+      <input type="email" id="st-email" disabled style="opacity:0.45" />
+      <div class="settings-error" id="st-name-error"></div>
+      <div class="settings-success" id="st-name-ok"></div>
+      <div class="btn-row" style="margin-top:12px">
+        <button class="btn-primary" onclick="doSaveName()">✓ Save name</button>
+      </div>
+      <hr class="lk-divider" style="margin:16px 0" />
+      <div class="settings-section-title" style="margin-bottom:10px">Change password</div>
+      <label>Current password</label>
+      <input type="password" id="st-pw-old" placeholder="••••••••" autocomplete="current-password" />
+      <label>New password</label>
+      <input type="password" id="st-pw-new" placeholder="Min 6 characters" autocomplete="new-password" />
+      <label>Confirm new</label>
+      <input type="password" id="st-pw-confirm" placeholder="Repeat" autocomplete="new-password" />
+      <div class="settings-error" id="st-pw-error"></div>
+      <div class="settings-success" id="st-pw-ok"></div>
+      <div class="btn-row" style="margin-top:12px">
+        <button onclick="doChangePassword()">✓ Change password</button>
+      </div>
+    </div>
+
+    <!-- Tools -->
+    <div class="settings-section">
+      <div class="settings-section-title">Tools</div>
+      <div class="settings-feat-grid">
+        <div class="settings-feat-card selected" id="st-feat-export" onclick="stToggleFeat('export')">
+          <span class="feature-check" style="color:var(--amber)">✓</span>
+          <div class="settings-feat-name">Whatnot Export</div>
+          <div class="settings-feat-desc">Scan, price &amp; export CSV</div>
+        </div>
+        <div class="settings-feat-card selected" id="st-feat-lookup" onclick="stToggleFeat('lookup')">
+          <span class="feature-check" style="color:var(--amber)">✓</span>
+          <div class="settings-feat-name">Comic Lookup</div>
+          <div class="settings-feat-desc">Identify &amp; condition check</div>
+        </div>
+      </div>
+      <div class="settings-error" id="st-feat-error"></div>
+      <div class="settings-success" id="st-feat-ok"></div>
+      <button class="btn-primary" onclick="doSaveFeatures()" style="width:100%;justify-content:center">✓ Update tools — requires reload</button>
+    </div>
+
+    <!-- Plan -->
+    <div class="settings-section" id="st-plan-section">
+      <div class="settings-section-title">Plan</div>
+      <div id="st-plan-content"></div>
+    </div>
+
+    <!-- Danger zone -->
+    <div class="settings-section">
+      <div class="settings-section-title">Danger Zone</div>
+      <button class="btn-danger-full" onclick="doDeleteAccount()">✕ Delete account &amp; all data</button>
+    </div>
+  </div>
+</div>
+
 <canvas id="canvas" style="display:none"></canvas>
 <canvas id="lk-canvas" style="display:none"></canvas>
 <input type="file" id="rescan-input" accept="image/*" style="display:none" onchange="handleRescan(event)" />
@@ -1402,7 +1602,7 @@ function authRegister(name, email, password) {
   const user = {
     id: Date.now().toString(), name: name.trim(),
     email: email.toLowerCase().trim(), passwordHash: hashPw(password),
-    features: [], createdAt: new Date().toISOString()
+    features: [], plan: 'free', createdAt: new Date().toISOString()
   };
   users.push(user); saveUsers(users);
   return { ok: true, user };
@@ -1415,6 +1615,66 @@ function updateUserFeatures(userId, features) {
 }
 
 function logout() { localStorage.removeItem('lbl_session'); location.reload(); }
+
+// ── Inventory Persistence ──────────────────────────────────────────────────────
+
+const FREE_COMIC_LIMIT = 10;
+let currentUserId = null;
+
+function getInventoryKey(uid) { return 'lbl_inv_' + uid; }
+
+function saveInventory() {
+  if (!currentUserId) return;
+  try { localStorage.setItem(getInventoryKey(currentUserId), JSON.stringify(comics)); } catch(e) {}
+}
+
+function loadInventory() {
+  if (!currentUserId) return;
+  try {
+    const raw = localStorage.getItem(getInventoryKey(currentUserId));
+    if (raw) comics = JSON.parse(raw);
+  } catch(e) { comics = []; }
+}
+
+// ── Price Cache ────────────────────────────────────────────────────────────────
+
+const PRICE_CACHE_TTL = 24 * 60 * 60 * 1000;
+
+function getPriceCacheKey(uid) { return 'lbl_pcache_' + uid; }
+
+function getPriceCache() {
+  if (!currentUserId) return {};
+  try { return JSON.parse(localStorage.getItem(getPriceCacheKey(currentUserId)) || '{}'); } catch { return {}; }
+}
+
+function savePriceCache(cache) {
+  if (!currentUserId) return;
+  try { localStorage.setItem(getPriceCacheKey(currentUserId), JSON.stringify(cache)); } catch {}
+}
+
+function getCachedPrice(query) {
+  const cache = getPriceCache();
+  const entry = cache[query];
+  if (!entry) return null;
+  if (Date.now() - entry.ts > PRICE_CACHE_TTL) return null;
+  return entry.data;
+}
+
+function setCachedPrice(query, data) {
+  const cache = getPriceCache();
+  cache[query] = { ts: Date.now(), data };
+  const keys = Object.keys(cache);
+  if (keys.length > 500) {
+    keys.sort((a, b) => cache[a].ts - cache[b].ts).slice(0, 100).forEach(k => delete cache[k]);
+  }
+  savePriceCache(cache);
+}
+
+function clearPriceCacheForComics(comicList) {
+  const cache = getPriceCache();
+  comicList.forEach(c => { if (c.searchQuery) delete cache[c.searchQuery]; });
+  savePriceCache(cache);
+}
 
 // ── Auth UI state ──────────────────────────────────────────────────────────────
 
@@ -1484,14 +1744,18 @@ function doSelectFeatures() {
 }
 
 function activateApp(session) {
+  currentUserId = session.userId;
   document.getElementById('auth-screen').style.display = 'none';
   const app = document.getElementById('main-app');
   app.style.display = 'flex';
   app.style.flexDirection = 'column';
   app.style.flex = '1';
   app.style.minHeight = '0';
+  loadInventory();
   applyFeatureRestrictions(session.features);
   renderHeaderUser(session);
+  renderList();
+  updateStats();
   if (isMobile()) switchMobileTab('scan');
 }
 
@@ -1523,13 +1787,17 @@ function renderHeaderUser(session) {
   const el = document.getElementById('header-user-area');
   if (!el) return;
   const labels = session.features.map(f => f === 'export' ? 'Export' : 'Lookup').join(' + ');
+  const users = getUsers();
+  const user = users.find(u => u.id === session.userId);
+  const userIsPro = user?.plan === 'pro';
   el.innerHTML = `
-    <span class="user-chip">
+    <button class="user-chip-btn" onclick="showSettings()">
       <span style="color:var(--amber)">◆</span>
       ${escapeHtml(session.name)}
+      ${userIsPro ? '<span class="pro-chip">Pro</span>' : ''}
       <span style="color:var(--dim)">·</span>
       <span style="color:var(--dim)">${escapeHtml(labels)}</span>
-    </span>
+    </button>
     <button class="btn-logout" onclick="logout()">Logout</button>
   `;
 }
@@ -1724,6 +1992,16 @@ async function scanAndAdd() {
 
   for (let i = 0; i < batch.length; i++) {
     const photo = batch[i];
+
+    // Free tier limit check
+    const users = getUsers();
+    const activeUser = users.find(u => u.id === currentUserId);
+    if (activeUser?.plan !== 'pro' && comics.length >= FREE_COMIC_LIMIT) {
+      showStatus('scan-status', 'warn', `⚠ Free plan limit (${FREE_COMIC_LIMIT} comics). Upgrade to Pro for unlimited archive.`);
+      showUpgradePrompt();
+      break;
+    }
+
     try {
       showStatus('scan-status', 'info', `<span class="spin">⟳</span> Uploading image ${i + 1} of ${batch.length}...`);
       const imageUrl = await uploadImageToBlob(photo.base64);
@@ -1791,6 +2069,7 @@ async function scanAndAdd() {
   document.getElementById('scan-btn').disabled = true;
 
   if (added > 0) {
+    saveInventory();
     showStatus('scan-status', 'success', `✓ Added ${added} comic${added === 1 ? '' : 's'} — fetching eBay UK prices...`);
     if (isMobile()) setTimeout(() => switchMobileTab('inventory'), 1200);
   } else {
@@ -1877,14 +2156,35 @@ function loadImage(src) {
   });
 }
 
-async function fetchEbayPrice(comic) {
+async function fetchEbayPrice(comic, forceRefresh = false) {
+  const cacheKey = comic.searchQuery || `${comic.title} ${comic.issue} comic`;
+
+  if (!forceRefresh) {
+    const cached = getCachedPrice(cacheKey);
+    if (cached) {
+      if (!cached.found) {
+        comic.ebayStatus = 'notfound'; comic.ebayPrice = null;
+      } else {
+        comic.ebayStatus = 'ok';
+        comic.ebayPrice = cached.median;
+        comic.ebayMin = cached.min;
+        comic.ebayMax = cached.max;
+        comic.ebayCount = cached.count;
+        comic.ebayResults = cached.results || [];
+      }
+      renderList(); updateStats();
+      return;
+    }
+  }
+
   try {
-    const q = encodeURIComponent(comic.searchQuery || `${comic.title} ${comic.issue} comic`);
+    const q = encodeURIComponent(cacheKey);
     const c = encodeURIComponent(comic.condition);
     const res = await fetch(`/api/ebay-search.js?q=${q}&condition=${c}`);
     const data = await readApiJson(res, 'eBay pricing API');
     if (!data.found) {
       comic.ebayStatus = 'notfound'; comic.ebayPrice = null;
+      setCachedPrice(cacheKey, { found: false });
     } else {
       comic.ebayStatus = 'ok';
       comic.ebayPrice = data.median;
@@ -1892,6 +2192,7 @@ async function fetchEbayPrice(comic) {
       comic.ebayMax = data.max;
       comic.ebayCount = data.count;
       comic.ebayResults = data.results || [];
+      setCachedPrice(cacheKey, data);
     }
   } catch (e) {
     comic.ebayStatus = 'error';
@@ -1909,14 +2210,13 @@ async function refetchAllPrices() {
   const btn = document.getElementById('btn-refetch');
   if (btn) { btn.disabled = true; btn.innerHTML = '<span class="spin">⟳</span> Refreshing'; }
 
-  comics.forEach(c => {
-    if (!c.isBundle) { c.ebayStatus = 'loading'; c.ebayPrice = null; }
-  });
+  const toRefetch = comics.filter(c => !c.isBundle);
+  clearPriceCacheForComics(toRefetch);
+  toRefetch.forEach(c => { c.ebayStatus = 'loading'; c.ebayPrice = null; });
   renderList();
 
-  for (const comic of comics) {
-    if (comic.isBundle) continue;
-    await fetchEbayPrice(comic);
+  for (const comic of toRefetch) {
+    await fetchEbayPrice(comic, true);
     await new Promise(r => setTimeout(r, 120));
   }
 
@@ -2024,6 +2324,7 @@ function bundleSelected() {
   const btn = document.getElementById('btn-select');
   if (btn) btn.textContent = '☐ Select';
   document.getElementById('bundle-bar').classList.remove('show');
+  saveInventory();
   renderList();
   updateStats();
 }
@@ -2091,6 +2392,7 @@ async function handleRescan(event) {
 
     renderList();
     await fetchEbayPrice(comic);
+    saveInventory();
   } catch (e) {
     console.error(e);
     showStatus('scan-status', 'warn', 'Re-scan failed: ' + e.message);
@@ -2111,6 +2413,7 @@ function setStartingBid(id, val) {
   if (!comic) return;
   const n = parseFloat(val);
   comic.startingBid = !isNaN(n) && n >= 0 ? Math.round(n) : null;
+  saveInventory();
 }
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
@@ -2198,8 +2501,10 @@ function renderList() {
       } else {
         cls = 'comic-price error'; titleText = c.ebayError || 'eBay error'; display = 'Err';
       }
+      const thinData = c.ebayStatus === 'ok' && c.ebayCount < 3;
       priceHtml = `<div class="price-col">
         <span class="${cls}" title="${escapeHtml(titleText)}">${display}</span>
+        ${thinData ? `<span class="price-thin" title="${c.ebayCount} sold result${c.ebayCount === 1 ? '' : 's'} — limited data">⚠ ${c.ebayCount}</span>` : ''}
         <button class="btn-edit-price" onclick="startEditPrice(${c.id})" title="Edit price">✏ edit</button>
       </div>`;
     }
@@ -2268,6 +2573,7 @@ function renderList() {
 function deleteComic(id) {
   comics = comics.filter(c => c.id !== id);
   if (selectedIds.has(id)) { selectedIds.delete(id); updateBundleBar(); }
+  saveInventory();
   renderList();
 }
 
@@ -2277,6 +2583,7 @@ function clearAll() {
     comics = []; selectedIds.clear(); selectMode = false;
     document.getElementById('btn-select').textContent = '☐ Select';
     document.getElementById('bundle-bar').classList.remove('show');
+    saveInventory();
     renderList();
   }
 }
@@ -2325,6 +2632,7 @@ function savePrice(id) {
   const comic = comics.find(c => c.id === id);
   if (comic) comic.priceOverride = (!isNaN(val) && val >= 0) ? Math.round(val) : null;
   editingPriceId = null;
+  saveInventory();
   renderList(); updateStats();
 }
 
@@ -2342,6 +2650,7 @@ function checkDuplicate(title, issue, excludeId = null) {
 function setListingType(id, type) {
   const comic = comics.find(c => c.id === id);
   if (comic) comic.listingType = type;
+  saveInventory();
   renderList();
 }
 
@@ -2560,6 +2869,19 @@ async function lookupScan() {
   document.getElementById('lk-scan-btn').disabled = false;
 }
 
+// ── CGC grade estimate ─────────────────────────────────────────────────────────
+
+function cgcGradeNote(grade) {
+  const g = parseFloat(grade);
+  if (isNaN(g)) return null;
+  if (g >= 9.8) return { label: 'NM/M', note: 'Near-perfect copy. Slabbed premium 3–8× raw for key issues.', color: 'var(--cyan)' };
+  if (g >= 9.4) return { label: 'NM', note: 'Strong slab candidate. CGC 9.6+ often 2–4× raw on keys.', color: 'var(--cyan)' };
+  if (g >= 9.0) return { label: 'VF/NM', note: 'Moderate slab interest. Worth grading high-demand issues.', color: 'var(--amber)' };
+  if (g >= 8.0) return { label: 'VF', note: 'Lower slab premium. Grade only very high-demand keys.', color: 'var(--amber)' };
+  if (g >= 6.0) return { label: 'FN', note: 'Raw sale typically beats grading cost at this grade.', color: 'var(--muted)' };
+  return { label: 'Poor/Fair', note: 'Sell as reader copy — grading not recommended.', color: 'var(--red)' };
+}
+
 // ── Lookup result render ──────────────────────────────────────────────────────
 
 function renderLookupResult(c, ebay, thumbSrc) {
@@ -2587,6 +2909,8 @@ function renderLookupResult(c, ebay, thumbSrc) {
        <div class="lk-card-sub">No UK sold results found</div>
        <div style="margin-top:8px"><a href="${escapeHtml(soldUrl)}" target="_blank" rel="noopener" class="ebay-link">🔗 Search eBay</a></div>`;
 
+  const cgcInfo = c.conditionGrade ? cgcGradeNote(c.conditionGrade) : null;
+
   document.getElementById('lk-result').innerHTML = `
     <div class="lk-hero">
       <img class="lk-thumb" src="${escapeHtml(thumbSrc)}" alt="" />
@@ -2609,6 +2933,16 @@ function renderLookupResult(c, ebay, thumbSrc) {
         ${ebayHtml}
       </div>
     </div>
+
+    ${cgcInfo ? `
+    <div class="lk-section" style="border-left: 2px solid ${cgcInfo.color}">
+      <div class="lk-section-label">CGC Grade Estimate</div>
+      <div style="display:flex;align-items:baseline;gap:12px;margin-bottom:6px">
+        <span style="font-family:'Bebas Neue',Impact,sans-serif;font-size:36px;letter-spacing:0.05em;color:${cgcInfo.color};line-height:1">${escapeHtml(c.conditionGrade)}</span>
+        <span style="font-family:'Space Mono',monospace;font-size:10px;font-weight:700;color:${cgcInfo.color}">${escapeHtml(cgcInfo.label)}</span>
+      </div>
+      <div class="lk-section-text">${escapeHtml(cgcInfo.note)}</div>
+    </div>` : ''}
 
     ${c.isSlabbed ? `
     <div class="lk-section">
@@ -2702,6 +3036,167 @@ window.addEventListener('resize', () => {
     document.querySelector('.main')?.classList.remove('mob-active');
   }
 });
+
+// ── Settings ──────────────────────────────────────────────────────────────────
+
+let stSelectedFeatures = new Set();
+
+function showSettings() {
+  const session = getSession();
+  if (!session) return;
+  const users = getUsers();
+  const user = users.find(u => u.id === session.userId);
+  if (!user) return;
+
+  document.getElementById('st-name').value = session.name;
+  document.getElementById('st-email').value = session.email;
+  document.getElementById('st-pw-old').value = '';
+  document.getElementById('st-pw-new').value = '';
+  document.getElementById('st-pw-confirm').value = '';
+
+  ['st-name-error','st-name-ok','st-pw-error','st-pw-ok','st-feat-error','st-feat-ok'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) { el.classList.remove('show'); el.textContent = ''; }
+  });
+
+  stSelectedFeatures = new Set(session.features);
+  renderStFeatureCards();
+  renderStPlan(user, session);
+  document.getElementById('settings-modal').style.display = 'flex';
+}
+
+function hideSettings() {
+  document.getElementById('settings-modal').style.display = 'none';
+}
+
+function renderStFeatureCards() {
+  document.getElementById('st-feat-export')?.classList.toggle('selected', stSelectedFeatures.has('export'));
+  document.getElementById('st-feat-lookup')?.classList.toggle('selected', stSelectedFeatures.has('lookup'));
+}
+
+function stToggleFeat(f) {
+  if (stSelectedFeatures.has(f)) stSelectedFeatures.delete(f);
+  else stSelectedFeatures.add(f);
+  renderStFeatureCards();
+}
+
+function renderStPlan(user, session) {
+  const userIsPro = user?.plan === 'pro';
+  const count = comics.length;
+  const limit = FREE_COMIC_LIMIT;
+  const pct = Math.min(100, Math.round((count / limit) * 100));
+  const el = document.getElementById('st-plan-content');
+  if (!el) return;
+
+  if (userIsPro) {
+    el.innerHTML = `
+      <div class="plan-row">
+        <span class="plan-badge-pro">◆ Pro</span>
+        <span style="font-family:'Space Mono',monospace;font-size:9px;color:var(--muted)">${count} comics · Unlimited</span>
+      </div>
+      <div style="font-family:'Barlow Condensed',sans-serif;font-size:13px;color:var(--muted);line-height:1.5">
+        Full access enabled. Subscription billing activates when payments launch.
+      </div>`;
+  } else {
+    el.innerHTML = `
+      <div class="plan-row">
+        <span class="plan-badge-free">Free</span>
+        <span style="font-family:'Space Mono',monospace;font-size:9px;color:var(--muted)">${count} / ${limit} comics used</span>
+      </div>
+      <div class="plan-limit-bar">
+        <div class="plan-limit-fill${pct >= 80 ? ' danger' : ''}" style="width:${pct}%"></div>
+      </div>
+      <div class="plan-limit-label">${limit - count > 0 ? (limit - count) + ' slots remaining' : 'Archive full — upgrade to continue'}</div>
+      <button class="btn-primary btn-upgrade" onclick="doUpgrade()">↑ Upgrade to Pro — Unlimited Archive</button>`;
+  }
+}
+
+function showStMsg(id, msg) {
+  ['st-name-error','st-name-ok','st-pw-error','st-pw-ok','st-feat-error','st-feat-ok'].forEach(i => {
+    const el = document.getElementById(i);
+    if (el && i !== id) el.classList.remove('show');
+  });
+  const el = document.getElementById(id);
+  if (el) { el.textContent = msg; el.classList.add('show'); }
+}
+
+function doSaveName() {
+  const name = document.getElementById('st-name').value.trim();
+  if (!name) { showStMsg('st-name-error', 'Name cannot be empty.'); return; }
+  const session = getSession();
+  const users = getUsers();
+  const user = users.find(u => u.id === session.userId);
+  if (!user) return;
+  user.name = name;
+  saveUsers(users);
+  const newSession = { ...session, name };
+  saveSession(newSession);
+  renderHeaderUser(newSession);
+  showStMsg('st-name-ok', '✓ Name updated.');
+}
+
+function doChangePassword() {
+  const oldPw    = document.getElementById('st-pw-old').value;
+  const newPw    = document.getElementById('st-pw-new').value;
+  const confirm  = document.getElementById('st-pw-confirm').value;
+  const session  = getSession();
+  const users    = getUsers();
+  const user     = users.find(u => u.id === session.userId);
+  if (!user) return;
+  if (!oldPw || !newPw) { showStMsg('st-pw-error', 'Fill in all password fields.'); return; }
+  if (user.passwordHash !== hashPw(oldPw)) { showStMsg('st-pw-error', 'Current password is incorrect.'); return; }
+  if (newPw.length < 6) { showStMsg('st-pw-error', 'New password must be at least 6 characters.'); return; }
+  if (newPw !== confirm) { showStMsg('st-pw-error', 'New passwords do not match.'); return; }
+  user.passwordHash = hashPw(newPw);
+  saveUsers(users);
+  document.getElementById('st-pw-old').value = '';
+  document.getElementById('st-pw-new').value = '';
+  document.getElementById('st-pw-confirm').value = '';
+  showStMsg('st-pw-ok', '✓ Password changed successfully.');
+}
+
+function doSaveFeatures() {
+  if (!stSelectedFeatures.size) { showStMsg('st-feat-error', 'Select at least one tool.'); return; }
+  const session  = getSession();
+  const features = Array.from(stSelectedFeatures);
+  updateUserFeatures(session.userId, features);
+  const newSession = { ...session, features };
+  saveSession(newSession);
+  showStMsg('st-feat-ok', '✓ Tools updated. Reloading in 1 second...');
+  setTimeout(() => location.reload(), 1200);
+}
+
+function doUpgrade() {
+  const session = getSession();
+  const users   = getUsers();
+  const user    = users.find(u => u.id === session.userId);
+  if (!user) return;
+  user.plan = 'pro';
+  saveUsers(users);
+  saveSession({ ...session });
+  renderHeaderUser(session);
+  renderStPlan(user, session);
+  showStMsg('st-name-ok', '✓ Upgraded to Pro! Billing activates when subscriptions launch.');
+}
+
+function doDeleteAccount() {
+  if (!confirm('Permanently delete your account and all data? This cannot be undone.')) return;
+  const session = getSession();
+  let users = getUsers();
+  users = users.filter(u => u.id !== session.userId);
+  saveUsers(users);
+  localStorage.removeItem(getInventoryKey(session.userId));
+  localStorage.removeItem(getPriceCacheKey(session.userId));
+  localStorage.removeItem('lbl_session');
+  location.reload();
+}
+
+function showUpgradePrompt() {
+  showSettings();
+  setTimeout(() => {
+    document.getElementById('st-plan-section')?.scrollIntoView({ behavior: 'smooth' });
+  }, 150);
+}
 </script>
 </body>
 </html>
