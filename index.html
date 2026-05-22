@@ -861,6 +861,47 @@
 
       /* Tighter card padding on small screens */
       .comic-card { padding: 7px 8px; gap: 6px; }
+
+      /* iOS zoom prevention — inputs must be 16px+ or Safari auto-zooms on focus */
+      input, select, textarea { font-size: 16px; }
+
+      /* Smooth scrolling for in-pane navigation */
+      html { scroll-behavior: smooth; }
+
+      /* Touch feedback */
+      button:active { opacity: 0.82; }
+
+      /* Ensure last comic card scrolls clear of the fixed 64px nav */
+      .comic-list { padding-bottom: 80px; }
+
+      /* Scan sidebar — last panel clears the nav on small phones */
+      .sidebar { padding-bottom: 80px; }
+
+      /* Lookup result — last section clears the nav */
+      .lk-result { padding-bottom: 80px; }
+    }
+
+    /* Landscape phones — reduce camera and fixed-height elements */
+    @media (max-width: 768px) and (orientation: landscape) {
+      #video-wrap { max-height: 220px; }
+      .mobile-nav { height: 52px; }
+      .mobile-nav-btn { font-size: 7px; }
+      .mobile-nav-btn svg { width: 18px; height: 18px; }
+      #pane-export, #pane-lookup { padding-bottom: 52px; }
+      .export-panel { padding-bottom: 64px; }
+      .comic-list { padding-bottom: 64px; }
+      .sidebar { padding-bottom: 64px; }
+      .lk-result { padding-bottom: 64px; }
+    }
+
+    /* Honour reduced-motion preference */
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+        scroll-behavior: auto !important;
+      }
     }
 
     /* ── AUTH SCREEN ──────────────────────────────────────────── */
