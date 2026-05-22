@@ -879,6 +879,29 @@
 
       /* Lookup result — last section clears the nav */
       .lk-result { padding-bottom: 80px; }
+
+      /* Remove iOS gray tap flash and prevent double-tap zoom on all buttons/links */
+      button, a { -webkit-tap-highlight-color: transparent; }
+      button { touch-action: manipulation; }
+
+      /* Stats bar — horizontal scroll so values (e.g. "£1,234") never get squeezed */
+      .stats-row {
+        display: flex;
+        overflow-x: auto;
+        scroll-snap-type: x mandatory;
+        -webkit-overflow-scrolling: touch;
+        -ms-overflow-style: none;
+        scrollbar-width: none;
+      }
+      .stats-row::-webkit-scrollbar { display: none; }
+      .stat { flex-shrink: 0; min-width: 115px; scroll-snap-align: start; }
+
+      /* Filter chips — bigger touch target on mobile */
+      .chip { padding: 6px 10px; }
+      .chip-row { gap: 5px; }
+
+      /* Upload <label> in btn-row isn't a button so it needs explicit min-height */
+      .btn-row label { min-height: 44px; }
     }
 
     /* Landscape phones — reduce camera and fixed-height elements */
