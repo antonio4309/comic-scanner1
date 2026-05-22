@@ -2775,14 +2775,19 @@ function renderList() {
     let priceHtml;
 
     if (editingPriceId === c.id) {
+      const netDefault = whatnot ? Math.round(whatnot / 1.15) : (c.ebayPrice || '');
+      const listPreview = whatnot ? `→ list at £${whatnot}` : '';
       priceHtml = `<div class="price-col">
+        <div style="font-family:'Space Mono',monospace;font-size:7px;color:var(--muted);text-align:right;letter-spacing:0.08em;text-transform:uppercase;margin-bottom:2px">want to net</div>
         <div class="price-edit-wrap">
           <span style="font-size:12px;color:var(--muted)">£</span>
-          <input class="price-edit-input" id="price-input-${c.id}" type="number" value="${whatnot || ''}" min="0" step="1"
+          <input class="price-edit-input" id="price-input-${c.id}" type="number" value="${netDefault}" min="0" step="0.5"
+            oninput="updatePricePreview(${c.id})"
             onkeydown="if(event.key==='Enter')savePrice(${c.id});if(event.key==='Escape')cancelEditPrice()" />
           <button class="btn-price-save" onclick="savePrice(${c.id})">✓</button>
           <button class="btn-price-cancel" onclick="cancelEditPrice()">✕</button>
         </div>
+        <div id="price-preview-${c.id}" style="font-family:'Space Mono',monospace;font-size:8px;color:var(--amber);text-align:right;margin-top:3px;letter-spacing:0.05em">${listPreview}</div>
       </div>`;
     } else if (c.ebayStatus === 'loading') {
       priceHtml = `<div class="price-col"><span class="comic-price loading"><span class="spin">⟳</span></span></div>`;
@@ -2916,20 +2921,31 @@ function updateStats() {
   }
 }
 
+function updatePricePreview(id) {
+  const input   = document.getElementById(`price-input-${id}`);
+  const preview = document.getElementById(`price-preview-${id}`);
+  if (!input || !preview) return;
+  const net = parseFloat(input.value);
+  preview.textContent = (!isNaN(net) && net > 0) ? `→ list at £${Math.ceil(net * 1.15)}` : '';
+}
+
 function startEditPrice(id) {
   editingPriceId = id;
   renderList();
   setTimeout(() => {
     const input = document.getElementById(`price-input-${id}`);
-    if (input) { input.focus(); input.select(); }
+    if (input) { input.focus(); input.select(); updatePricePreview(id); }
   }, 0);
 }
 
 function savePrice(id) {
   const input = document.getElementById(`price-input-${id}`);
-  const val = input ? parseFloat(input.value) : NaN;
+  const net = input ? parseFloat(input.value) : NaN;
   const comic = comics.find(c => c.id === id);
-  if (comic) comic.priceOverride = (!isNaN(val) && val >= 0) ? Math.round(val) : null;
+  if (comic) {
+    // User typed the net they want to receive; back-calculate the Whatnot listing price
+    comic.priceOverride = (!isNaN(net) && net > 0) ? Math.ceil(net * 1.15) : null;
+  }
   editingPriceId = null;
   saveInventory();
   renderList(); updateStats();
