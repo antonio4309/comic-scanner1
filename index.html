@@ -844,6 +844,10 @@
       .field-row { grid-template-columns: 1fr; }
       .export-options { grid-template-columns: 1fr; }
 
+      /* Push export buttons above the fixed 64px mobile nav.
+         flex-shrink:0 means this padding comes out of the comic-list, not the buttons. */
+      .export-panel { padding-bottom: 80px; }
+
       /* Tighten filter bar */
       .filter-bar { padding: 5px 10px; gap: 6px; }
 
