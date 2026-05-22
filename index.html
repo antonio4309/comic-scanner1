@@ -868,8 +868,8 @@
       /* Smooth scrolling for in-pane navigation */
       html { scroll-behavior: smooth; }
 
-      /* Touch feedback */
-      button:active { opacity: 0.82; }
+      /* Touch feedback — opacity + subtle scale for tactile press feel */
+      button:active { opacity: 0.82; transform: scale(0.98); transition: none; }
 
       /* Ensure last comic card scrolls clear of the fixed 64px nav */
       .comic-list { padding-bottom: 80px; }
@@ -880,9 +880,16 @@
       /* Lookup result — last section clears the nav */
       .lk-result { padding-bottom: 80px; }
 
-      /* Remove iOS gray tap flash and prevent double-tap zoom on all buttons/links */
-      button, a { -webkit-tap-highlight-color: transparent; }
+      /* Remove iOS gray tap flash, prevent double-tap zoom, block long-press text selection */
+      button, a {
+        -webkit-tap-highlight-color: transparent;
+        -webkit-user-select: none;
+        user-select: none;
+      }
       button { touch-action: manipulation; }
+
+      /* Selects are interactive touch targets too */
+      select { min-height: 44px; }
 
       /* Stats bar — horizontal scroll so values (e.g. "£1,234") never get squeezed */
       .stats-row {
@@ -925,6 +932,11 @@
         transition-duration: 0.01ms !important;
         scroll-behavior: auto !important;
       }
+    }
+
+    /* OLED efficiency — pure black body background when user prefers dark */
+    @media (max-width: 768px) and (prefers-color-scheme: dark) {
+      body { background: #000; }
     }
 
     /* ── AUTH SCREEN ──────────────────────────────────────────── */
