@@ -41,6 +41,9 @@
       --shadow-sm:  0 2px 8px rgba(0,0,0,0.7);
       --shadow-md:  0 8px 28px rgba(0,0,0,0.65);
       --shadow-lg:  0 20px 60px rgba(0,0,0,0.75);
+      --muted2:   #b0b4ba;
+      --dim2:     #a3a8b0;
+      --amber-dim:#e5821a;
       /* kept for JS compat */
       --green: #f5a623;
       --green-dark: #d4860d;
@@ -244,7 +247,7 @@
     .lk-card:hover { border-left-color: var(--amber); }
     .lk-card-label {
       font-family: 'Space Mono', monospace; font-size: 8px; font-weight: 700;
-      text-transform: uppercase; letter-spacing: .15em; color: #b0b4ba; margin-bottom: 6px;
+      text-transform: uppercase; letter-spacing: .15em; color: var(--muted2); margin-bottom: 6px;
     }
     .lk-card-val {
       font-family: 'Bebas Neue', Impact, sans-serif;
@@ -261,7 +264,7 @@
     }
     .lk-section-label {
       font-family: 'Space Mono', monospace; font-size: 8px; font-weight: 700;
-      text-transform: uppercase; letter-spacing: .15em; color: #b0b4ba; margin-bottom: 6px;
+      text-transform: uppercase; letter-spacing: .15em; color: var(--muted2); margin-bottom: 6px;
     }
     .lk-section-text {
       font-family: 'Barlow Condensed', sans-serif;
@@ -353,7 +356,7 @@
     .status.info    { border-color: var(--cyan);  color: var(--cyan); }
     .status.success { border-color: var(--amber); color: var(--amber); }
     .status.error   { border-color: var(--red);   color: var(--red); }
-    .status.warn    { border-color: #e5821a;       color: #e5821a; }
+    .status.warn    { border-color: var(--amber-dim); color: var(--amber-dim); }
 
     label {
       font-family: 'Space Mono', monospace; font-size: 10px; letter-spacing: 0.12em;
@@ -556,7 +559,7 @@
     .comic-price.loading { color: var(--muted); font-family: 'Space Mono', monospace; font-size: 10px; letter-spacing: 0; }
     .comic-price.notfound { color: var(--muted); font-family: 'Space Mono', monospace; font-size: 10px; letter-spacing: 0; }
     .comic-price.error { color: var(--red); font-family: 'Space Mono', monospace; font-size: 10px; letter-spacing: 0; }
-    .comic-price.overridden { color: #e5821a; }
+    .comic-price.overridden { color: var(--amber-dim); }
 
     .price-col { display: flex; flex-direction: column; align-items: flex-end; gap: 2px; flex-shrink: 0; }
 
@@ -635,7 +638,7 @@
     .cbadge-sig    { background: rgba(168,85,247,0.1);   color: #c084fc;      border: 1px solid rgba(168,85,247,0.22); }
     .cbadge-news   { background: rgba(0,207,190,0.07);   color: #5de8df;      border: 1px solid rgba(0,207,190,0.18); }
     .cbadge-variant{ background: rgba(236,72,153,0.1);   color: #f472b6;      border: 1px solid rgba(236,72,153,0.22); }
-    .cbadge-low    { background: rgba(229,130,26,0.1);   color: #e5821a;      border: 1px solid rgba(229,130,26,0.22); }
+    .cbadge-low    { background: rgba(229,130,26,0.1);   color: var(--amber-dim); border: 1px solid rgba(229,130,26,0.22); }
     .cbadge-dup    { background: rgba(232,22,42,0.06);   color: #e87880;      border: 1px solid rgba(232,22,42,0.18); }
     .cbadge-bundle { background: rgba(168,85,247,0.1);   color: #c084fc;      border: 1px solid rgba(168,85,247,0.22); }
 
@@ -680,7 +683,7 @@
     }
     .pending-caption {
       font-family: 'Space Mono', monospace; font-size: 9px;
-      letter-spacing: 0.1em; text-transform: uppercase; color: #b0b4ba; margin-top: 8px;
+      letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted2); margin-top: 8px;
     }
 
     @keyframes spin { to { transform: rotate(360deg); } }
@@ -1043,7 +1046,7 @@
     }
     .feature-tags { margin-top: 10px; display: flex; flex-wrap: wrap; gap: 3px; }
     .feature-tag {
-      font-family: 'Space Mono', monospace; font-size: 7px;
+      font-family: 'Space Mono', monospace; font-size: 9px;
       letter-spacing: 0.08em; text-transform: uppercase;
       padding: 2px 5px; border: 1px solid var(--border2); color: var(--muted);
     }
@@ -1148,14 +1151,14 @@
     }
     .btn-upgrade:hover { background: #f0a820; box-shadow: 0 0 24px rgba(245,166,35,0.35); color: var(--ink); }
     .pro-chip {
-      font-family: 'Space Mono', monospace; font-size: 7px; font-weight: 700;
+      font-family: 'Space Mono', monospace; font-size: 9px; font-weight: 700;
       letter-spacing: 0.08em; text-transform: uppercase;
       padding: 2px 6px; border: 1px solid rgba(245,163,24,0.35);
       background: rgba(245,163,24,0.08); color: var(--amber);
     }
     .price-thin {
       font-family: 'Space Mono', monospace; font-size: 8px; letter-spacing: 0.04em;
-      color: #e5821a; display: inline-flex; align-items: center; gap: 2px; cursor: default;
+      color: var(--amber-dim); display: inline-flex; align-items: center; gap: 2px; cursor: default;
     }
     .btn-danger-full {
       background: rgba(232,22,42,0.06); color: var(--red);
@@ -1229,7 +1232,7 @@
     .fees-select { width: 100%; padding: 10px 12px; font-size: 11px; font-family: 'Space Mono', monospace; }
     .fees-hint {
       font-family: 'Barlow Condensed', sans-serif; font-size: 11px;
-      color: #b0b4ba; margin-top: 4px;
+      color: var(--muted2); margin-top: 4px;
     }
     .fees-result-panel {
       padding: 16px; flex: 1; display: flex; flex-direction: column; gap: 16px;
@@ -1251,7 +1254,7 @@
     }
     .fees-row-label { font-size: 14px; color: var(--cream2); }
     .fees-row-label small {
-      font-family: 'Space Mono', monospace; font-size: 8px; color: #a3a8b0; margin-left: 6px;
+      font-family: 'Space Mono', monospace; font-size: 8px; color: var(--dim2); margin-left: 6px;
     }
     .fees-row-value { font-family: 'Space Mono', monospace; font-size: 13px; color: var(--cream2); }
     .fees-row-value.deduct { color: var(--red); }
@@ -2778,7 +2781,7 @@ function renderList() {
       const netDefault = whatnot ? Math.round(whatnot / 1.15) : (c.ebayPrice || '');
       const listPreview = whatnot ? `→ list at £${whatnot}` : '';
       priceHtml = `<div class="price-col">
-        <div style="font-family:'Space Mono',monospace;font-size:7px;color:var(--muted);text-align:right;letter-spacing:0.08em;text-transform:uppercase;margin-bottom:2px">want to net</div>
+        <div style="font-family:'Space Mono',monospace;font-size:9px;color:var(--muted);text-align:right;letter-spacing:0.08em;text-transform:uppercase;margin-bottom:2px">want to net</div>
         <div class="price-edit-wrap">
           <span style="font-size:12px;color:var(--muted)">£</span>
           <input class="price-edit-input" id="price-input-${c.id}" type="number" value="${netDefault}" min="0" step="0.5"
@@ -2829,6 +2832,7 @@ function renderList() {
     const startBidVal = c.startingBid != null ? c.startingBid : (whatnot || '');
     const startingBidHtml = c.listingType === 'Auction'
       ? `<div class="starting-bid-wrap">Starting bid: £<input type="number" class="starting-bid-input"
+          id="bid-input-${c.id}" aria-label="Starting auction bid"
           value="${startBidVal}" onchange="setStartingBid(${c.id}, this.value)"
           min="0" step="1" title="Starting auction bid" /></div>`
       : '';
@@ -3235,8 +3239,8 @@ function renderLookupResult(c, ebay, thumbSrc) {
 
   document.getElementById('lk-result').innerHTML = `
     ${c.photoAdvice ? `
-    <div style="padding:10px 14px;background:rgba(229,130,26,0.07);border-left:2px solid #e5821a;margin-bottom:2px">
-      <div style="font-family:'Space Mono',monospace;font-size:8px;font-weight:700;letter-spacing:.15em;text-transform:uppercase;color:#e5821a;margin-bottom:4px">// Photo Tip</div>
+    <div style="padding:10px 14px;background:rgba(229,130,26,0.07);border-left:2px solid var(--amber-dim);margin-bottom:2px">
+      <div style="font-family:'Space Mono',monospace;font-size:8px;font-weight:700;letter-spacing:.15em;text-transform:uppercase;color:var(--amber-dim);margin-bottom:4px">// Photo Tip</div>
       <div style="font-family:'Barlow Condensed',sans-serif;font-size:13px;color:var(--cream2);line-height:1.4">${escapeHtml(c.photoAdvice)}</div>
     </div>` : ''}
     <div class="lk-hero">
