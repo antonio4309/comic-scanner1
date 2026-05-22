@@ -25,12 +25,12 @@
       --sfc3:       #211e15;
       --sfc4:       #28241a;
       --cream:      #ede7da;
-      --cream2:     #b4aca0;
-      --muted:      #68625a;
-      --dim:        #3a3530;
-      --amber:      #f5a318;
-      --amber-d:    #c4801a;
-      --amber-glow: rgba(245,163,24,0.2);
+      --cream2:     #cec7bb;
+      --muted:      #8a8278;
+      --dim:        #524d47;
+      --amber:      #ffb627;
+      --amber-d:    #d98c10;
+      --amber-glow: rgba(255,182,39,0.3);
       --red:        #e8162a;
       --red-glow:   rgba(232,22,42,0.18);
       --cyan:       #00cfbe;
@@ -42,9 +42,9 @@
       --shadow-md:  0 8px 28px rgba(0,0,0,0.65);
       --shadow-lg:  0 20px 60px rgba(0,0,0,0.75);
       /* kept for JS compat */
-      --green: #f5a318;
-      --green-dark: #c4801a;
-      --green-glow: rgba(245,163,24,0.2);
+      --green: #ffb627;
+      --green-dark: #d98c10;
+      --green-glow: rgba(255,182,39,0.3);
       --text: #ede7da;
     }
 
@@ -380,7 +380,7 @@
     .list-header {
       padding: 10px 16px; display: flex; align-items: center;
       justify-content: space-between; border-bottom: 1px solid var(--border2);
-      flex-shrink: 0; background: var(--ink);
+      flex-shrink: 0; background: var(--sfc2);
     }
     .list-header h2 {
       font-family: 'Bebas Neue', Impact, sans-serif;
@@ -432,11 +432,12 @@
     .stats-row {
       display: grid; grid-template-columns: repeat(3, 1fr);
       border-bottom: 1px solid var(--border2); flex-shrink: 0;
-      background: var(--ink);
+      background: var(--coal); gap: 1px;
     }
     .stat {
-      padding: 10px 16px; border-right: 1px solid var(--border);
+      padding: 10px 16px; border-right: none;
       position: relative; overflow: hidden;
+      background: var(--sfc2);
     }
     .stat:last-child { border-right: none; }
     .stat::before {
@@ -489,7 +490,7 @@
 
     /* Comic card */
     .comic-card {
-      background: var(--surface);
+      background: var(--sfc2);
       border: 1px solid var(--border2);
       border-left: 2px solid var(--border3);
       padding: 8px 10px;
@@ -516,7 +517,7 @@
     .comic-card:hover {
       border-color: var(--border3);
       border-left-color: var(--amber);
-      background: var(--sfc2);
+      background: var(--sfc3);
     }
     .card-selected { border-left-color: var(--amber) !important; border-color: rgba(245,163,24,0.3) !important; background: rgba(245,163,24,0.04) !important; }
 
@@ -709,7 +710,7 @@
 
     .export-panel {
       padding: 12px 16px; border-top: 1px solid var(--border2);
-      flex-shrink: 0; background: var(--ink);
+      flex-shrink: 0; background: var(--sfc2);
     }
     .export-title {
       font-family: 'Space Mono', monospace; font-size: 9px; font-weight: 700;
@@ -1133,7 +1134,11 @@
       color: var(--dim); margin-top: 4px;
     }
     .fees-result-panel {
-      padding: 24px 28px; flex: 1;
+      padding: 16px; flex: 1; display: flex; flex-direction: column; gap: 16px;
+    }
+    .fees-breakdown-card {
+      background: var(--sfc2); border: 1px solid var(--border2);
+      border-left: 2px solid var(--border3); padding: 16px 20px;
     }
     .fees-breakdown-title {
       font-family: 'Space Mono', monospace; font-size: 8px; font-weight: 700;
@@ -1150,7 +1155,7 @@
     .fees-row-label small {
       font-family: 'Space Mono', monospace; font-size: 8px; color: var(--dim); margin-left: 6px;
     }
-    .fees-row-value { font-family: 'Space Mono', monospace; font-size: 13px; color: var(--muted); }
+    .fees-row-value { font-family: 'Space Mono', monospace; font-size: 13px; color: var(--cream2); }
     .fees-row-value.deduct { color: var(--red); }
     .fees-divider { height: 1px; background: var(--border2); margin: 4px 0; }
     .fees-total-row {
@@ -1165,9 +1170,10 @@
       font-family: 'Space Mono', monospace; font-size: 14px; font-weight: 700; color: var(--red);
     }
     .fees-receive-block {
-      margin-top: 20px; padding: 16px 18px;
-      border: 1px solid rgba(245,163,24,0.3); border-left: 3px solid var(--amber);
-      background: rgba(245,163,24,0.04);
+      padding: 20px 22px;
+      border: 1px solid rgba(255,182,39,0.4); border-left: 3px solid var(--amber);
+      background: rgba(255,182,39,0.07);
+      box-shadow: 0 0 20px rgba(255,182,39,0.08);
     }
     .fees-receive-label {
       font-family: 'Space Mono', monospace; font-size: 9px; font-weight: 700;
@@ -1578,41 +1584,43 @@
   <!-- RIGHT: Results -->
   <div class="fees-result-col">
     <div class="fees-result-panel">
-      <div class="fees-breakdown-title">Fee Breakdown</div>
+      <div class="fees-breakdown-card">
+        <div class="fees-breakdown-title">Fee Breakdown</div>
 
-      <div class="fees-row">
-        <span class="fees-row-label">Sale Price</span>
-        <span class="fees-row-value" id="fc-r-sale">£0.00</span>
-      </div>
-      <div class="fees-row">
-        <span class="fees-row-label">Shipping Cost</span>
-        <span class="fees-row-value" id="fc-r-shipping">£0.00</span>
-      </div>
+        <div class="fees-row">
+          <span class="fees-row-label">Sale Price</span>
+          <span class="fees-row-value" id="fc-r-sale">£0.00</span>
+        </div>
+        <div class="fees-row">
+          <span class="fees-row-label">Shipping Cost</span>
+          <span class="fees-row-value" id="fc-r-shipping">£0.00</span>
+        </div>
 
-      <div class="fees-divider" style="margin:8px 0"></div>
+        <div class="fees-divider" style="margin:8px 0"></div>
 
-      <div class="fees-row">
-        <span class="fees-row-label">Commission Fee <small id="fc-r-rate">6.67%</small></span>
-        <span class="fees-row-value deduct" id="fc-r-commission">−£0.00</span>
-      </div>
-      <div class="fees-row">
-        <span class="fees-row-label">VAT on Commission <small id="fc-r-vat-pct">20%</small></span>
-        <span class="fees-row-value deduct" id="fc-r-vat-commission">−£0.00</span>
-      </div>
-      <div class="fees-row">
-        <span class="fees-row-label">Payment Processing Fee <small>2.42% + £0.25</small></span>
-        <span class="fees-row-value deduct" id="fc-r-processing">−£0.00</span>
-      </div>
-      <div class="fees-row">
-        <span class="fees-row-label">VAT on Processing Fee <small id="fc-r-vat-pct2">20%</small></span>
-        <span class="fees-row-value deduct" id="fc-r-vat-processing">−£0.00</span>
-      </div>
+        <div class="fees-row">
+          <span class="fees-row-label">Commission Fee <small id="fc-r-rate">6.67%</small></span>
+          <span class="fees-row-value deduct" id="fc-r-commission">−£0.00</span>
+        </div>
+        <div class="fees-row">
+          <span class="fees-row-label">VAT on Commission <small id="fc-r-vat-pct">20%</small></span>
+          <span class="fees-row-value deduct" id="fc-r-vat-commission">−£0.00</span>
+        </div>
+        <div class="fees-row">
+          <span class="fees-row-label">Payment Processing Fee <small>2.42% + £0.25</small></span>
+          <span class="fees-row-value deduct" id="fc-r-processing">−£0.00</span>
+        </div>
+        <div class="fees-row">
+          <span class="fees-row-label">VAT on Processing Fee <small id="fc-r-vat-pct2">20%</small></span>
+          <span class="fees-row-value deduct" id="fc-r-vat-processing">−£0.00</span>
+        </div>
 
-      <div class="fees-divider" style="margin:8px 0"></div>
+        <div class="fees-divider" style="margin:8px 0"></div>
 
-      <div class="fees-total-row">
-        <span class="fees-total-label">Total Fees</span>
-        <span class="fees-total-value" id="fc-r-total-fees">−£0.00</span>
+        <div class="fees-total-row">
+          <span class="fees-total-label">Total Fees</span>
+          <span class="fees-total-value" id="fc-r-total-fees">−£0.00</span>
+        </div>
       </div>
 
       <div class="fees-receive-block">
