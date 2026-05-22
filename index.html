@@ -18,16 +18,16 @@
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
     :root {
-      --ink:        #070604;
-      --coal:       #0d0b09;
-      --surface:    #131109;
-      --sfc2:       #1a170f;
-      --sfc3:       #211e15;
-      --sfc4:       #28241a;
+      --ink:        #0f0d0a;
+      --coal:       #171410;
+      --surface:    #1c1a13;
+      --sfc2:       #23201a;
+      --sfc3:       #2c2920;
+      --sfc4:       #363027;
       --cream:      #ede7da;
       --cream2:     #cec7bb;
       --muted:      #8a8278;
-      --dim:        #524d47;
+      --dim:        #6e6860;
       --amber:      #ffb627;
       --amber-d:    #d98c10;
       --amber-glow: rgba(255,182,39,0.3);
@@ -35,9 +35,9 @@
       --red-glow:   rgba(232,22,42,0.18);
       --cyan:       #00cfbe;
       --cyan-glow:  rgba(0,207,190,0.15);
-      --border:     rgba(237,231,218,0.06);
-      --border2:    rgba(237,231,218,0.11);
-      --border3:    rgba(237,231,218,0.2);
+      --border:     rgba(237,231,218,0.09);
+      --border2:    rgba(237,231,218,0.16);
+      --border3:    rgba(237,231,218,0.28);
       --shadow-sm:  0 2px 8px rgba(0,0,0,0.7);
       --shadow-md:  0 8px 28px rgba(0,0,0,0.65);
       --shadow-lg:  0 20px 60px rgba(0,0,0,0.75);
@@ -252,7 +252,7 @@
     }
     .lk-card-sub {
       font-family: 'Barlow Condensed', sans-serif;
-      font-size: 12px; color: var(--muted); margin-top: 4px; line-height: 1.4;
+      font-size: 12px; color: var(--cream2); margin-top: 4px; line-height: 1.4;
     }
 
     .lk-section {
@@ -287,7 +287,7 @@
     .panel { padding: 14px 16px; border-bottom: 1px solid var(--border); position: relative; }
     .panel-title {
       font-family: 'Space Mono', monospace; font-size: 9px; font-weight: 700;
-      color: var(--muted); text-transform: uppercase; letter-spacing: .2em;
+      color: var(--cream2); text-transform: uppercase; letter-spacing: .2em;
       margin-bottom: 12px; display: flex; align-items: center; gap: 8px;
     }
     .panel-title::before { content: '//'; color: var(--amber); font-size: 10px; }
@@ -357,7 +357,7 @@
 
     label {
       font-family: 'Space Mono', monospace; font-size: 9px; letter-spacing: 0.15em;
-      text-transform: uppercase; color: var(--muted);
+      text-transform: uppercase; color: var(--cream2);
       display: block; margin-bottom: 5px; margin-top: 12px;
     }
     label:first-child { margin-top: 0; }
@@ -541,11 +541,11 @@
     .comic-card:hover .comic-title { animation: glitch-flash 4s infinite; }
     .comic-sub {
       font-family: 'Space Mono', monospace; font-size: 9px;
-      letter-spacing: 0.05em; color: var(--muted); margin-top: 3px;
+      letter-spacing: 0.05em; color: var(--cream2); margin-top: 3px;
     }
     .comic-range {
       font-family: 'Barlow Condensed', sans-serif;
-      font-size: 11px; color: rgba(237,231,218,0.45); margin-top: 2px;
+      font-size: 11px; color: rgba(237,231,218,0.75); margin-top: 2px;
     }
 
     .comic-price {
@@ -1123,7 +1123,7 @@
     .fees-title::before { content: '//'; color: var(--amber); }
     .fees-label {
       font-family: 'Space Mono', monospace; font-size: 9px; font-weight: 700;
-      letter-spacing: .1em; text-transform: uppercase; color: var(--muted);
+      letter-spacing: .1em; text-transform: uppercase; color: var(--cream2);
       margin-bottom: 4px; margin-top: 14px; display: block;
     }
     .fees-label:first-of-type { margin-top: 0; }
@@ -1131,7 +1131,7 @@
     .fees-select { width: 100%; padding: 10px 12px; font-size: 11px; font-family: 'Space Mono', monospace; }
     .fees-hint {
       font-family: 'Barlow Condensed', sans-serif; font-size: 11px;
-      color: var(--dim); margin-top: 4px;
+      color: var(--muted); margin-top: 4px;
     }
     .fees-result-panel {
       padding: 16px; flex: 1; display: flex; flex-direction: column; gap: 16px;
