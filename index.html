@@ -1590,6 +1590,7 @@
         <button class="btn-primary" onclick="exportCSV()">⬇ Download CSV</button>
         <button onclick="togglePreview()">⊞ Preview</button>
       </div>
+      <div style="margin-top:8px;font-family:'Space Mono',monospace;font-size:9px;color:var(--muted);letter-spacing:0.05em">⚠ Photo links in CSV expire after 24h — download your CSV before then.</div>
       <pre id="csv-preview" style="display:none;margin-top:10px;font-size:10px;font-family:'Space Mono',monospace;background:var(--ink);padding:10px;border:1px solid var(--border2);overflow-x:auto;white-space:pre;max-height:120px;overflow-y:auto;color:var(--cream2)"></pre>
     </div>
 
@@ -2250,7 +2251,7 @@ async function readApiJson(response, label) {
 async function uploadImageToBlob(base64) {
   try {
     const blob = dataURLToBlob('data:image/jpeg;base64,' + base64);
-    const res = await fetch('/api/upload-image.js', {
+    const res = await fetch('/api/upload-image', {
       method: 'POST',
       headers: { 'x-filename': `comic-${Date.now()}.jpg` },
       body: blob
