@@ -6,7 +6,7 @@
   <title>LongboxLens — Whatnot Price Tool</title>
   <!-- PWA -->
   <link rel="manifest" href="/manifest.json">
-  <meta name="theme-color" content="#ffb627">
+  <meta name="theme-color" content="#f5a623">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="apple-mobile-web-app-title" content="LongboxLens">
@@ -18,34 +18,34 @@
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
     :root {
-      --ink:        #0f0d0a;
-      --coal:       #171410;
-      --surface:    #1c1a13;
-      --sfc2:       #23201a;
-      --sfc3:       #2c2920;
-      --sfc4:       #363027;
-      --cream:      #ede7da;
-      --cream2:     #cec7bb;
-      --muted:      #8a8278;
-      --dim:        #6e6860;
-      --amber:      #ffb627;
-      --amber-d:    #d98c10;
-      --amber-glow: rgba(255,182,39,0.3);
-      --red:        #e8162a;
-      --red-glow:   rgba(232,22,42,0.18);
+      --ink:        #0b0f14;
+      --coal:       #0f1419;
+      --surface:    #131820;
+      --sfc2:       #1a1f28;
+      --sfc3:       #252d38;
+      --sfc4:       #2e3748;
+      --cream:      #e8eaed;
+      --cream2:     #d4d8dd;
+      --muted:      #8b8f96;
+      --dim:        #6b7280;
+      --amber:      #f5a623;
+      --amber-d:    #d4860d;
+      --amber-glow: rgba(245,166,35,0.25);
+      --red:        #ef4444;
+      --red-glow:   rgba(239,68,68,0.2);
       --cyan:       #00cfbe;
       --cyan-glow:  rgba(0,207,190,0.15);
-      --border:     rgba(237,231,218,0.09);
-      --border2:    rgba(237,231,218,0.16);
-      --border3:    rgba(237,231,218,0.28);
+      --border:     rgba(61,69,86,0.45);
+      --border2:    rgba(61,69,86,0.75);
+      --border3:    #3d4556;
       --shadow-sm:  0 2px 8px rgba(0,0,0,0.7);
       --shadow-md:  0 8px 28px rgba(0,0,0,0.65);
       --shadow-lg:  0 20px 60px rgba(0,0,0,0.75);
       /* kept for JS compat */
-      --green: #ffb627;
-      --green-dark: #d98c10;
-      --green-glow: rgba(255,182,39,0.3);
-      --text: #ede7da;
+      --green: #f5a623;
+      --green-dark: #d4860d;
+      --green-glow: rgba(245,166,35,0.25);
+      --text: #e8eaed;
     }
 
     /* CRT scanlines */
@@ -271,7 +271,7 @@
 
     .ebay-link {
       font-family: 'Space Mono', monospace; font-size: 9px; color: var(--muted);
-      text-decoration: none; border-bottom: 1px dotted rgba(237,231,218,0.15);
+      text-decoration: none; border-bottom: 1px dotted var(--border2);
       transition: color .15s; display: inline-flex; align-items: center; gap: 3px;
     }
     .ebay-link:hover { color: var(--amber); border-color: var(--amber); }
@@ -338,7 +338,7 @@
       box-shadow: 0 0 16px var(--amber-glow);
     }
     .btn-primary:hover {
-      background: #f7b030; box-shadow: 0 0 24px rgba(245,163,24,0.35); color: var(--ink);
+      background: #f0a820; box-shadow: 0 0 24px rgba(245,166,35,0.35); color: var(--ink);
     }
     .btn-danger { background: rgba(232,22,42,0.08); color: var(--red); border-color: rgba(232,22,42,0.2); }
     .btn-danger:hover { background: rgba(232,22,42,0.15); box-shadow: 0 0 12px var(--red-glow); }
@@ -365,7 +365,7 @@
     input, select, textarea {
       width: 100%; font-family: 'Barlow Condensed', sans-serif; font-size: 14px; font-weight: 500;
       padding: 8px 10px; border: 1px solid var(--border2);
-      border-radius: 0; background: var(--ink); color: var(--cream); outline: none;
+      border-radius: 0; background: var(--sfc3); color: var(--cream); outline: none;
       transition: border-color .15s, box-shadow .15s;
     }
     input:focus, select:focus, textarea:focus {
@@ -394,7 +394,7 @@
       padding: 7px 12px; display: flex; align-items: center; gap: 8px;
       border-bottom: 1px solid var(--border); flex-shrink: 0;
       overflow-x: auto; -webkit-overflow-scrolling: touch;
-      background: rgba(7,6,4,0.5);
+      background: rgba(0,0,0,0.3);
     }
     .filter-bar::-webkit-scrollbar { display: none; }
     .filter-bar select {
@@ -545,7 +545,7 @@
     }
     .comic-range {
       font-family: 'Barlow Condensed', sans-serif;
-      font-size: 11px; color: rgba(237,231,218,0.75); margin-top: 2px;
+      font-size: 11px; color: var(--cream2); margin-top: 2px;
     }
 
     .comic-price {
@@ -554,7 +554,7 @@
       color: var(--amber); white-space: nowrap;
     }
     .comic-price.loading { color: var(--muted); font-family: 'Space Mono', monospace; font-size: 10px; letter-spacing: 0; }
-    .comic-price.notfound { color: rgba(237,231,218,0.4); font-family: 'Space Mono', monospace; font-size: 10px; letter-spacing: 0; }
+    .comic-price.notfound { color: var(--muted); font-family: 'Space Mono', monospace; font-size: 10px; letter-spacing: 0; }
     .comic-price.error { color: var(--red); font-family: 'Space Mono', monospace; font-size: 10px; letter-spacing: 0; }
     .comic-price.overridden { color: #e5821a; }
 
@@ -573,7 +573,7 @@
     .price-edit-input {
       width: 64px; font-family: 'Space Mono', monospace; font-size: 13px; font-weight: 700;
       padding: 4px 6px; border: 1px solid var(--amber);
-      border-radius: 0; background: var(--ink); color: var(--cream);
+      border-radius: 0; background: var(--sfc3); color: var(--cream);
       text-align: right; box-shadow: 0 0 0 2px var(--amber-glow);
     }
     .btn-price-save {
@@ -604,7 +604,7 @@
     .starting-bid-input {
       width: 52px; font-family: 'Space Mono', monospace; font-size: 11px; padding: 2px 4px;
       border: 1px solid var(--border2); border-radius: 0;
-      background: var(--ink); color: var(--cream); text-align: right; min-height: auto;
+      background: var(--sfc3); color: var(--cream); text-align: right; min-height: auto;
     }
     .starting-bid-input:focus { border-color: var(--amber); outline: none; box-shadow: none; }
 
@@ -721,7 +721,7 @@
 
     /* Modal */
     .modal-overlay {
-      position: fixed; inset: 0; background: rgba(4,3,2,0.88);
+      position: fixed; inset: 0; background: rgba(0,0,0,0.88);
       z-index: 2000; display: flex; align-items: center;
       justify-content: center; padding: 20px;
       backdrop-filter: blur(2px);
@@ -777,8 +777,8 @@
 
     ::-webkit-scrollbar { width: 3px; }
     ::-webkit-scrollbar-track { background: transparent; }
-    ::-webkit-scrollbar-thumb { background: rgba(237,231,218,0.1); border-radius: 0; }
-    ::-webkit-scrollbar-thumb:hover { background: rgba(237,231,218,0.2); }
+    ::-webkit-scrollbar-thumb { background: rgba(61,69,86,0.4); border-radius: 0; }
+    ::-webkit-scrollbar-thumb:hover { background: rgba(61,69,86,0.65); }
 
     /* Mobile */
     .mobile-nav { display: none; }
@@ -970,7 +970,7 @@
 
     /* ── SETTINGS MODAL ─────────────────────────────────────────────── */
     #settings-modal {
-      position: fixed; inset: 0; background: rgba(4,3,2,0.92);
+      position: fixed; inset: 0; background: rgba(0,0,0,0.92);
       z-index: 25000; display: flex; align-items: center;
       justify-content: center; padding: 20px;
       backdrop-filter: blur(3px);
@@ -1048,7 +1048,7 @@
       font-weight: 700; box-shadow: 0 0 16px var(--amber-glow);
       width: 100%; justify-content: center; margin-top: 10px; padding: 10px;
     }
-    .btn-upgrade:hover { background: #f7b030; box-shadow: 0 0 24px rgba(245,163,24,0.35); color: var(--ink); }
+    .btn-upgrade:hover { background: #f0a820; box-shadow: 0 0 24px rgba(245,166,35,0.35); color: var(--ink); }
     .pro-chip {
       font-family: 'Space Mono', monospace; font-size: 7px; font-weight: 700;
       letter-spacing: 0.08em; text-transform: uppercase;
@@ -1171,9 +1171,9 @@
     }
     .fees-receive-block {
       padding: 20px 22px;
-      border: 1px solid rgba(255,182,39,0.4); border-left: 3px solid var(--amber);
-      background: rgba(255,182,39,0.07);
-      box-shadow: 0 0 20px rgba(255,182,39,0.08);
+      border: 1px solid rgba(245,166,35,0.4); border-left: 3px solid var(--amber);
+      background: rgba(245,166,35,0.07);
+      box-shadow: 0 0 20px rgba(245,166,35,0.08);
     }
     .fees-receive-label {
       font-family: 'Space Mono', monospace; font-size: 9px; font-weight: 700;
@@ -1188,8 +1188,8 @@
     }
     .fees-info-box {
       margin: 0 20px 20px; padding: 10px 12px;
-      border: 1px solid var(--border2); border-left: 2px solid rgba(245,163,24,0.35);
-      background: rgba(245,163,24,0.03);
+      border: 1px solid var(--border2); border-left: 2px solid rgba(245,166,35,0.4);
+      background: rgba(245,166,35,0.04);
       font-family: 'Barlow Condensed', sans-serif; font-size: 12px; color: var(--muted);
       line-height: 1.5;
     }
@@ -1288,15 +1288,15 @@
         <path d="M8 24 L24 31 L24 54 L8 47 Z" fill="#9c6228"/>
         <path d="M24 31 L70 25 L70 48 L24 54 Z" fill="#a8702f"/>
         <path d="M28 24.5 L33 23.9 L33 30 L28 30.6 Z" fill="#e23b3b"/>
-        <path d="M34 23.8 L39 23.2 L39 29.3 L34 29.9 Z" fill="#f5a318"/>
+        <path d="M34 23.8 L39 23.2 L39 29.3 L34 29.9 Z" fill="#f5a623"/>
         <path d="M40 23.1 L45 22.5 L45 28.6 L40 29.2 Z" fill="#3b7de2"/>
         <path d="M46 22.4 L51 21.8 L51 27.9 L46 28.5 Z" fill="#3bbf6a"/>
-        <text font-family="'Space Mono',monospace" x="47" y="42" font-size="6.5" fill="#ede7da" text-anchor="middle" transform="rotate(-7 47 42)" letter-spacing="0.5" opacity="0.55">COMICS</text>
-        <circle cx="60" cy="40" r="12" fill="none" stroke="#ede7da" stroke-width="2.5" opacity="0.75"/>
-        <circle cx="60" cy="40" r="4" fill="#f5a318"/>
-        <line x1="68" y1="48" x2="74" y2="54" stroke="#ede7da" stroke-width="3" stroke-linecap="round" opacity="0.75"/>
+        <text font-family="'Space Mono',monospace" x="47" y="42" font-size="6.5" fill="#e8eaed" text-anchor="middle" transform="rotate(-7 47 42)" letter-spacing="0.5" opacity="0.55">COMICS</text>
+        <circle cx="60" cy="40" r="12" fill="none" stroke="#e8eaed" stroke-width="2.5" opacity="0.75"/>
+        <circle cx="60" cy="40" r="4" fill="#f5a623"/>
+        <line x1="68" y1="48" x2="74" y2="54" stroke="#e8eaed" stroke-width="3" stroke-linecap="round" opacity="0.75"/>
       </g>
-      <text font-family="'Bebas Neue',Impact,sans-serif" font-size="38" letter-spacing="2" x="92" y="52" fill="#ede7da">Longbox<tspan fill="#f5a318">Lens</tspan></text>
+      <text font-family="'Bebas Neue',Impact,sans-serif" font-size="38" letter-spacing="2" x="92" y="52" fill="#e8eaed">Longbox<tspan fill="#f5a623">Lens</tspan></text>
     </svg>
     <div class="header-meta">
       <span class="badge">UK Market</span>
