@@ -310,23 +310,31 @@ export default async function handler(req, res) {
     let usedQuery = '';
     let isSoldData = true;
 
-    // Try sold listings first
+    // Try sold listings first (Finding API — may not be available on all accounts)
+    let soldApiWorking = true;
     for (const { query, type } of queries) {
-      const raw = await searchSold(query, appId);
-      const filtered = raw.filter(r => r.price > 0 && isValidListing(r.title, type));
-      if (filtered.length >= 3) {
-        bestResults = filtered;
-        usedQuery = query;
-        break;
-      }
-      if (filtered.length > bestResults.length) {
-        bestResults = filtered;
-        usedQuery = query;
+      try {
+        const raw = await searchSold(query, appId);
+        const filtered = raw.filter(r => r.price > 0 && isValidListing(r.title, type));
+        if (filtered.length >= 3) {
+          bestResults = filtered;
+          usedQuery = query;
+          break;
+        }
+        if (filtered.length > bestResults.length) {
+          bestResults = filtered;
+          usedQuery = query;
+        }
+      } catch (soldErr) {
+        console.warn('[ebay] sold search failed (rate limit / sandbox key?):', soldErr.message);
+        soldApiWorking = false;
+        break; // stop trying sold queries, go straight to active fallback
       }
     }
 
-    // Active listing fallback if no sold data found
+    // Active listing fallback if no sold data found or sold API unavailable
     if (!bestResults.length) {
+      isSoldData = false;
       for (const { query, type } of queries) {
         const raw = await searchActive(query, appId);
         if (!raw) break;
@@ -334,13 +342,11 @@ export default async function handler(req, res) {
         if (filtered.length >= 3) {
           bestResults = filtered;
           usedQuery = query;
-          isSoldData = false;
           break;
         }
         if (filtered.length > bestResults.length) {
           bestResults = filtered;
           usedQuery = query;
-          isSoldData = false;
         }
       }
     }
