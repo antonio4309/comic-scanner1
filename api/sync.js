@@ -1,9 +1,11 @@
-import { kv } from '@vercel/kv';
+import { Redis } from '@upstash/redis';
+
+const redis = Redis.fromEnv();
 
 async function getSession(req) {
   const auth = req.headers.authorization;
   if (!auth?.startsWith('Bearer ')) return null;
-  return kv.get(`session:${auth.slice(7)}`);
+  return redis.get(`session:${auth.slice(7)}`);
 }
 
 export default async function handler(req, res) {
@@ -16,7 +18,7 @@ export default async function handler(req, res) {
   if (!sess) return res.status(401).json({ error: 'Not authenticated' });
 
   if (req.method === 'GET') {
-    const inventory = await kv.get(`inventory:${sess.userId}`) || [];
+    const inventory = await redis.get(`inventory:${sess.userId}`) || [];
     return res.status(200).json({ inventory });
   }
 
@@ -25,7 +27,7 @@ export default async function handler(req, res) {
     if (!Array.isArray(inventory)) return res.status(400).json({ error: 'Expected inventory array' });
     // Strip base64 thumbnails — they are UI-only, imageUrl covers actual photos
     const toStore = inventory.map(({ thumb, ...rest }) => rest);
-    await kv.set(`inventory:${sess.userId}`, toStore);
+    await redis.set(`inventory:${sess.userId}`, toStore);
     return res.status(200).json({ ok: true });
   }
 
