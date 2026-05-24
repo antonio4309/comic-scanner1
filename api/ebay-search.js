@@ -3,22 +3,25 @@
 function classifyListing(title = '') {
   const t = title.toLowerCase();
 
-  // Always-bad categories
-  if (/\b(facsimile|replica|reproduction)\b/.test(t)) return 'REPRINT';
-  if (/\breprint\b/.test(t)) return 'REPRINT';
+  if (/\b(facsimile|replica|reproduction|reprint)\b/.test(t)) return 'REPRINT';
   if (/\b(lot|bundle|collection)\b/.test(t) || /\bset of \d/i.test(t)) return 'LOT';
-  if (/\b(poster|shirt|t-shirt|figure|funko|pop!?|dvd|blu-ray|sticker|magnet|badge|digital|pdf|empty|custom)\b/.test(t)) return 'MERCH';
+  if (/\b(poster|shirt|t-shirt|figure|funko|dvd|blu-ray|sticker|magnet|badge|digital|pdf|empty|custom)\b/.test(t)) return 'MERCH';
 
-  // Grade companies
-  if (/\bcgc\b/.test(t)) return 'CGC';
-  if (/\bcbcs\b/.test(t)) return 'CBCS';
-  if (/\bpgx\b/.test(t)) return 'PGX';
-  if (/\b(slab|slabbed|graded)\b/.test(t)) return 'GRADED';
+  // Only classify as graded if the grade company is NOT negated
+  // e.g. "raw not CGC" or "ungraded no CGC" should stay RAW
+  const negated = /\b(not|un|no|raw|ungraded)\b.{0,10}(cgc|cbcs|pgx|slab|graded)\b/.test(t)
+    || /\b(cgc|cbcs|pgx|slab|graded).{0,10}\b(not|free|without)\b/.test(t);
+
+  if (!negated) {
+    if (/\bcgc\b/.test(t)) return 'CGC';
+    if (/\bcbcs\b/.test(t)) return 'CBCS';
+    if (/\bpgx\b/.test(t)) return 'PGX';
+    if (/\b(slab|slabbed)\b/.test(t)) return 'GRADED';
+  }
 
   return 'RAW';
 }
 
-// Returns true if the listing is valid for the given search type
 function isValidListing(title, searchType) {
   const type = classifyListing(title);
   if (type === 'REPRINT' || type === 'LOT' || type === 'MERCH') return false;
@@ -30,9 +33,11 @@ function isValidListing(title, searchType) {
 }
 
 // ── QUERY BUILDER ─────────────────────────────────────────────────────────────
+// Keep query short — eBay truncates long keyword strings.
+// Negative keywords in the query handle the obvious junk; the classifier
+// handles graded vs raw after we receive results.
 
-const BASE_NEG = '-lot -bundle -"set of" -reprint -facsimile -poster -figure -funko -shirt -dvd -digital -pdf -sticker';
-const GRADE_NEG = '-cgc -cbcs -pgx -slab -graded';
+const CORE_NEG = '-lot -reprint -facsimile -poster -figure -funko -shirt -dvd -digital';
 
 function san(str) {
   return String(str || '').replace(/"/g, '').trim();
@@ -42,52 +47,55 @@ function buildQueries({ q, title, issue, year, edition, isSlabbed, slabCompany, 
   const hasStructured = title && title !== 'Unknown' && issue && issue !== 'Unknown';
 
   if (!hasStructured) {
+    // Fall back to the AI-generated search query
     const base = san(q || '');
     if (isSlabbed) {
-      const co = san(slabCompany).toUpperCase() || 'CGC';
-      return [{ query: `${base} -lot -reprint -facsimile`, type: co }];
+      const co = (san(slabCompany) || 'CGC').toUpperCase();
+      return [{ query: `${base} ${CORE_NEG}`, type: co }];
     }
-    return [{ query: `${base} ${GRADE_NEG} -lot -reprint -facsimile`, type: 'RAW' }];
+    return [
+      { query: `${base} ${CORE_NEG}`, type: 'RAW' },
+      { query: san(q || ''), type: 'RAW' },
+    ];
   }
 
   const t = `"${san(title)}"`;
   const i = `"${san(issue)}"`;
   const y = year && year !== 'Unknown' ? san(year) : '';
 
-  // Graded comic
+  // Graded slab
   if (isSlabbed && slabCompany) {
     const co = san(slabCompany).toUpperCase();
     const gr = san(slabGrade);
-    const queries = [];
     if (gr) {
-      queries.push({ query: `${t} ${i} "${co} ${gr}" ${BASE_NEG}`, type: co });
-      queries.push({ query: `${t} ${i} ${co} ${gr} ${BASE_NEG}`, type: co });
-    } else {
-      queries.push({ query: `${t} ${i} ${co} ${BASE_NEG}`, type: co });
+      return [
+        { query: `${t} ${i} "${co} ${gr}" ${CORE_NEG}`, type: co },
+        { query: `${t} ${i} ${co} ${gr} ${CORE_NEG}`, type: co },
+      ];
     }
-    return queries;
+    return [{ query: `${t} ${i} ${co} ${CORE_NEG}`, type: co }];
   }
 
-  // Newsstand edition
+  // Newsstand
   if (edition === 'Newsstand') {
     return [
-      { query: `${t} ${i} ${y} newsstand ${GRADE_NEG} ${BASE_NEG}`.trim(), type: 'RAW' },
-      { query: `${t} ${i} newsstand ${GRADE_NEG} ${BASE_NEG}`.trim(), type: 'RAW' },
+      { query: `${t} ${i} ${y} newsstand ${CORE_NEG}`.trim(), type: 'RAW' },
+      { query: `${t} ${i} newsstand ${CORE_NEG}`.trim(), type: 'RAW' },
     ];
   }
 
   // Canadian Price Variant
   if (edition === 'Canadian Price Variant') {
     return [
-      { query: `${t} ${i} ${y} canadian ${GRADE_NEG} ${BASE_NEG}`.trim(), type: 'RAW' },
-      { query: `${t} ${i} ${y} ${GRADE_NEG} ${BASE_NEG}`.trim(), type: 'RAW' },
+      { query: `${t} ${i} ${y} canadian ${CORE_NEG}`.trim(), type: 'RAW' },
+      { query: `${t} ${i} ${y} ${CORE_NEG}`.trim(), type: 'RAW' },
     ];
   }
 
-  // Standard raw comic
+  // Standard raw
   return [
-    { query: `${t} ${i} ${y} ${GRADE_NEG} ${BASE_NEG}`.trim(), type: 'RAW' },
-    { query: `${t} ${i} ${GRADE_NEG} ${BASE_NEG}`.trim(), type: 'RAW' },
+    { query: `${t} ${i} ${y} comic ${CORE_NEG}`.trim(), type: 'RAW' },
+    { query: `${t} ${i} ${CORE_NEG}`.trim(), type: 'RAW' },
   ];
 }
 
@@ -137,13 +145,9 @@ function calculateStats(results) {
 
   const rawPrices = weighted.map(r => r.price);
   const cleanPrices = removeOutliers(rawPrices);
-  const cleanSet = new Set(cleanPrices);
-  // Keep only items whose price survived outlier removal
-  const clean = weighted.filter(r => {
-    const min = Math.min(...cleanPrices);
-    const max = Math.max(...cleanPrices);
-    return r.price >= min && r.price <= max && cleanSet.has(r.price);
-  });
+  const lo = Math.min(...cleanPrices);
+  const hi = Math.max(...cleanPrices);
+  const clean = weighted.filter(r => r.price >= lo && r.price <= hi);
 
   if (!clean.length) return null;
 
@@ -152,7 +156,6 @@ function calculateStats(results) {
   const avg = clean.reduce((s, i) => s + i.price, 0) / clean.length;
   const avgW = clean.reduce((s, i) => s + i.w, 0) / clean.length;
 
-  // Confidence: size (0-50) + variance (0-30) + recency (0-20)
   const n = clean.length;
   const sizeScore = Math.min(n / 15, 1) * 50;
   const p25 = sorted[Math.floor(sorted.length * 0.25)] ?? sorted[0];
@@ -174,7 +177,7 @@ function calculateStats(results) {
   };
 }
 
-// ── EBAY FINDING API (SOLD ONLY) ──────────────────────────────────────────────
+// ── EBAY FINDING API (SOLD) ───────────────────────────────────────────────────
 
 async function searchSold(query, appId) {
   const since = new Date(Date.now() - 90 * 86400000).toISOString();
@@ -192,8 +195,6 @@ async function searchSold(query, appId) {
     '&itemFilter(0).value=true',
     '&itemFilter(1).name=EndTimeFrom',
     `&itemFilter(1).value=${since}`,
-    '&itemFilter(2).name=LocatedIn',
-    '&itemFilter(2).value=GB',
     '&sortOrder=StartTimeNewest',
     '&paginationInput.entriesPerPage=50',
   ].join('');
@@ -212,6 +213,43 @@ async function searchSold(query, appId) {
     condition: item.condition?.[0]?.conditionDisplayName?.[0] || '',
     endDate: item.listingInfo?.[0]?.endTime?.[0] || '',
     sold: true,
+  }));
+}
+
+// Active listings as last-resort fallback (lower confidence, clearly labelled)
+async function searchActive(query, appId) {
+  const clientId = process.env.EBAY_CLIENT_ID;
+  const clientSecret = process.env.EBAY_CLIENT_SECRET;
+  if (!clientId || !clientSecret) return null;
+
+  const auth = Buffer.from(`${clientId}:${clientSecret}`).toString('base64');
+  const tokenRes = await fetch('https://api.ebay.com/identity/v1/oauth2/token', {
+    method: 'POST',
+    headers: { Authorization: `Basic ${auth}`, 'Content-Type': 'application/x-www-form-urlencoded' },
+    body: 'grant_type=client_credentials&scope=https://api.ebay.com/oauth/api_scope',
+  });
+  const tokenData = await tokenRes.json();
+  if (!tokenData.access_token) return null;
+
+  const res = await fetch(
+    `https://api.ebay.com/buy/browse/v1/item_summary/search?q=${encodeURIComponent(query)}&limit=30&category_ids=259104`,
+    {
+      headers: {
+        Authorization: `Bearer ${tokenData.access_token}`,
+        'X-EBAY-C-MARKETPLACE-ID': 'EBAY_GB',
+      },
+    }
+  );
+  const data = await res.json();
+  return (data.itemSummaries || []).map(item => ({
+    title: item.title || '',
+    price: Number(item.price?.value || 0),
+    currency: item.price?.currency || 'GBP',
+    url: item.itemWebUrl || '',
+    image: item.image?.imageUrl || '',
+    condition: item.condition || '',
+    endDate: '',
+    sold: false,
   }));
 }
 
@@ -247,20 +285,40 @@ export default async function handler(req, res) {
   try {
     let bestResults = [];
     let usedQuery = '';
+    let isSoldData = true;
 
+    // Try sold listings first
     for (const { query, type } of queries) {
       const raw = await searchSold(query, appId);
       const filtered = raw.filter(r => r.price > 0 && isValidListing(r.title, type));
-
       if (filtered.length >= 3) {
         bestResults = filtered;
         usedQuery = query;
         break;
       }
-      // Keep the largest set seen so far as fallback
       if (filtered.length > bestResults.length) {
         bestResults = filtered;
         usedQuery = query;
+      }
+    }
+
+    // Active listing fallback if no sold data found
+    if (!bestResults.length) {
+      for (const { query, type } of queries) {
+        const raw = await searchActive(query, appId);
+        if (!raw) break;
+        const filtered = raw.filter(r => r.price > 0 && isValidListing(r.title, type));
+        if (filtered.length >= 3) {
+          bestResults = filtered;
+          usedQuery = query;
+          isSoldData = false;
+          break;
+        }
+        if (filtered.length > bestResults.length) {
+          bestResults = filtered;
+          usedQuery = query;
+          isSoldData = false;
+        }
       }
     }
 
@@ -272,17 +330,20 @@ export default async function handler(req, res) {
         query: q || '',
         usedQuery,
         gradeBucket: primaryType,
-        source: 'No usable eBay sold results',
+        source: 'No usable eBay results',
         results: [],
       });
     }
+
+    // Cap confidence for active-listing estimates
+    const confidence = isSoldData ? stats.confidence : Math.min(stats.confidence, 30);
 
     return res.status(200).json({
       found: true,
       query: q || '',
       usedQuery,
       gradeBucket: primaryType,
-      source: 'eBay UK sold listings',
+      source: isSoldData ? 'eBay UK sold listings' : 'eBay UK active listings (estimate)',
       count: stats.count,
       prices: stats.prices,
       marketPrice: stats.marketPrice,
@@ -290,7 +351,7 @@ export default async function handler(req, res) {
       average: stats.average,
       min: stats.min,
       max: stats.max,
-      confidence: stats.confidence,
+      confidence,
       currency: 'GBP',
       whatnotPrice: Math.ceil(stats.marketPrice * 1.15),
       results: bestResults.slice(0, 10).map(r => ({
@@ -299,6 +360,7 @@ export default async function handler(req, res) {
         url: r.url,
         image: r.image,
         endDate: r.endDate,
+        sold: r.sold,
       })),
     });
   } catch (err) {
