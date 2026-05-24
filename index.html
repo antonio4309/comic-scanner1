@@ -4029,7 +4029,7 @@ async function fetchEbayPrice(comic, forceRefresh = false) {
       slabCompany: comic.slabCompany || '',
       slabGrade: comic.slabGrade || '',
     });
-    const res = await fetch(`/api/ebay-search.js?${params}`);
+    const res = await fetch(`/api/ebay-search?${params}`);
     const data = await readApiJson(res, 'eBay pricing API');
     if (!data.found) {
       comic.ebayStatus = 'notfound'; comic.ebayPrice = null;
@@ -4791,7 +4791,7 @@ async function lookupScan() {
       slabCompany: identified.slabCompany || '',
       slabGrade: identified.slabGrade || '',
     });
-    const res = await fetch(`/api/ebay-search.js?${lkParams}`);
+    const res = await fetch(`/api/ebay-search?${lkParams}`);
     ebayData = await readApiJson(res, 'eBay pricing');
   } catch (e) {
     ebayData = { found: false };
