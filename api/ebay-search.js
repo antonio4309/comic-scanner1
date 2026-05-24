@@ -199,9 +199,18 @@ async function searchSold(query, appId) {
     '&paginationInput.entriesPerPage=50',
   ].join('');
 
+  console.log('[ebay] Finding API query:', query.slice(0, 120));
   const r = await fetch(url);
-  if (!r.ok) throw new Error(`eBay Finding API returned ${r.status}`);
+  console.log('[ebay] Finding API status:', r.status);
+  if (!r.ok) {
+    const body = await r.text();
+    console.error('[ebay] Finding API error body:', body.slice(0, 600));
+    throw new Error(`eBay Finding API returned ${r.status}`);
+  }
   const data = await r.json();
+  const ack = data?.findCompletedItemsResponse?.[0]?.ack?.[0];
+  const errMsg = data?.findCompletedItemsResponse?.[0]?.errorMessage?.[0]?.error?.[0]?.message?.[0];
+  console.log('[ebay] Finding API ack:', ack, errMsg ? '| error: ' + errMsg : '');
   const items = data?.findCompletedItemsResponse?.[0]?.searchResult?.[0]?.item || [];
 
   return items.map(item => {
@@ -275,6 +284,7 @@ export default async function handler(req, res) {
   if (req.method !== 'GET') return res.status(405).json({ error: 'Method not allowed' });
 
   const appId = process.env.EBAY_APP_ID;
+  console.log('[ebay] handler called — appId present:', !!appId, appId ? `(prefix: ${appId.slice(0, 12)}...)` : '(missing)');
   if (!appId) return res.status(500).json({ error: 'EBAY_APP_ID not configured' });
 
   const { q, title, issue, year, edition, isSlabbed, slabCompany, slabGrade } = req.query;
@@ -334,6 +344,7 @@ export default async function handler(req, res) {
       }
     }
 
+    console.log('[ebay] bestResults count:', bestResults.length, '| isSoldData:', isSoldData, '| usedQuery:', usedQuery.slice(0, 80));
     const stats = calculateStats(bestResults);
 
     if (!stats) {
@@ -392,7 +403,8 @@ export default async function handler(req, res) {
       })),
     });
   } catch (err) {
-    console.error('eBay pricing error:', err);
+    console.error('[ebay] HANDLER ERROR:', err.message);
+    console.error('[ebay] stack:', err.stack);
     return res.status(502).json({ error: 'eBay fetch failed: ' + err.message });
   }
 }
