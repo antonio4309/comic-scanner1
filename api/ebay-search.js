@@ -182,7 +182,7 @@ function calculateStats(results) {
 async function searchSold(query, appId) {
   const since = new Date(Date.now() - 90 * 86400000).toISOString();
   const url = [
-    'https://svcs.ebay.co.uk/services/search/FindingService/v1',
+    'https://svcs.ebay.com/services/search/FindingService/v1',
     '?OPERATION-NAME=findCompletedItems',
     '&SERVICE-VERSION=1.13.0',
     `&SECURITY-APPNAME=${appId}`,
