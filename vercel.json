@@ -13,6 +13,7 @@
     { "source": "/api/cleanup-blobs",  "destination": "/api/cleanup-blobs.js" },
     { "source": "/api/auth",           "destination": "/api/auth.js" },
     { "source": "/api/sync",           "destination": "/api/sync.js" },
+    { "source": "/api/debug",          "destination": "/api/debug.js" },
     { "source": "/((?!api/).*)",       "destination": "/index.html" }
   ]
 }
