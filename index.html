@@ -2181,6 +2181,278 @@
       .fees-input-col { flex: 0 0 auto; }
       .fees-result-col { flex: 1; }
     }
+
+    /* ═══════════════════════════════════════════════════════════════
+       FRONTEND REDESIGN — Collector-Grade Terminal Aesthetic
+       ═══════════════════════════════════════════════════════════════ */
+
+    /* ── GLOBAL POLISH ─────────────────────────────────────────────── */
+
+    /* Amber accent line at very top of every screen */
+    body::before {
+      content: ''; display: block; position: fixed;
+      top: 0; left: 0; right: 0; height: 2px; z-index: 99999;
+      background: linear-gradient(90deg, transparent 0%, var(--amber) 25%, var(--amber) 75%, transparent 100%);
+      opacity: 0.55; pointer-events: none;
+    }
+
+    /* Header: subtle warm gradient fade, stronger rule */
+    .header-top {
+      background: linear-gradient(180deg, rgba(245,166,35,0.055) 0%, transparent 100%);
+    }
+
+    /* Panel titles — bigger, more editorial */
+    .panel-title {
+      font-size: 10px !important; letter-spacing: 0.24em !important;
+      color: var(--muted) !important;
+    }
+
+    /* Stat values — Bebas for impact */
+    .stat-value {
+      font-family: 'Bebas Neue', Impact, sans-serif !important;
+      font-size: 22px !important; letter-spacing: 0.04em !important;
+    }
+
+    /* Primary button — stronger glow */
+    .btn-primary {
+      box-shadow: 0 0 0 0 rgba(245,166,35,0);
+      transition: background .15s, transform .1s, box-shadow .2s;
+    }
+    .btn-primary:hover {
+      box-shadow: 0 4px 20px rgba(245,166,35,0.35);
+    }
+
+    /* ── COMIC CARDS — bigger type hierarchy ───────────────────────── */
+
+    .comic-title {
+      font-family: 'Barlow Condensed', sans-serif !important;
+      font-size: 15px !important; font-weight: 600 !important;
+      letter-spacing: 0.01em !important; line-height: 1.25 !important;
+    }
+
+    .comic-meta {
+      font-family: 'Space Mono', monospace !important;
+      font-size: 8px !important; letter-spacing: 0.08em !important;
+    }
+
+    /* Price — Bebas Neue for that market-data feel */
+    .comic-price {
+      font-family: 'Bebas Neue', Impact, sans-serif !important;
+      font-size: 18px !important; letter-spacing: 0.06em !important;
+    }
+    .comic-price.notfound { font-size: 12px !important; }
+    .comic-price.loading { font-size: 12px !important; }
+
+    /* Card hover — more dramatic amber sweep */
+    .comic-card:hover {
+      background: var(--sfc3) !important;
+      box-shadow: inset 3px 0 0 var(--amber) !important;
+    }
+    .card-selected {
+      box-shadow: inset 3px 0 0 var(--amber) !important;
+    }
+
+    /* Key issue badge — glow */
+    .badge-key {
+      box-shadow: 0 0 8px rgba(245,166,35,0.3);
+    }
+
+    /* ── LANDING PAGE ───────────────────────────────────────────────── */
+
+    /* Kill the colored side spines — not collector-grade */
+    .lp-hero-spines { display: none !important; }
+
+    /* Hero: dot-grid texture + cinematic amber core */
+    .lp-hero {
+      background-image: radial-gradient(circle at 1px 1px, rgba(245,166,35,0.07) 1px, transparent 0);
+      background-size: 28px 28px;
+      padding-top: 100px; padding-bottom: 140px;
+    }
+    .lp-hero::before {
+      background:
+        radial-gradient(ellipse 65% 52% at 50% 38%, rgba(245,166,35,0.14) 0%, transparent 60%),
+        radial-gradient(ellipse 110% 65% at 50% -8%, rgba(245,166,35,0.05) 0%, transparent 55%);
+    }
+    /* Thin amber line at hero bottom */
+    .lp-hero::after {
+      content: ''; position: absolute; bottom: 0; left: 0; right: 0; height: 1px;
+      background: linear-gradient(90deg, transparent 0%, rgba(245,166,35,0.4) 30%, rgba(245,166,35,0.4) 70%, transparent 100%);
+      pointer-events: none;
+    }
+
+    /* Hero headline — much bigger, tighter, cinematic */
+    .lp-headline {
+      font-size: clamp(84px, 14vw, 172px) !important;
+      line-height: 0.83 !important; letter-spacing: 0.005em !important;
+    }
+    .lp-headline em {
+      text-shadow: 0 0 80px rgba(245,166,35,0.55), 0 0 160px rgba(245,166,35,0.18) !important;
+    }
+
+    /* Logo — slightly bigger */
+    .lp-logo-wrap svg { width: 320px !important; height: auto !important; }
+
+    /* Sub — more space mono crispness */
+    .lp-sub { font-size: 9px !important; letter-spacing: 0.22em !important; }
+
+    /* CTA buttons — sharper, more confident */
+    .lp-btn-primary {
+      padding: 16px 48px !important; font-size: 11px !important;
+      letter-spacing: 0.18em !important;
+      box-shadow: 0 0 0 0 rgba(245,166,35,0);
+      transition: background .15s, transform .1s, box-shadow .2s;
+    }
+    .lp-btn-primary:hover {
+      box-shadow: 0 6px 32px rgba(245,166,35,0.4) !important;
+    }
+    .lp-btn-secondary {
+      padding: 16px 48px !important; font-size: 11px !important;
+      letter-spacing: 0.18em !important;
+    }
+
+    /* Scroll hint — slightly more visible */
+    .lp-scroll-hint { color: var(--dim) !important; }
+
+    /* Features section — redesign as numbered catalog list */
+    .lp-features-grid {
+      display: flex !important; flex-direction: column !important;
+      gap: 0 !important; margin-top: 52px !important;
+      border: 1px solid var(--border2) !important;
+      background: transparent !important;
+      counter-reset: feat;
+    }
+    .lp-feat-card {
+      display: grid !important;
+      grid-template-columns: 62px 1fr !important;
+      grid-template-rows: auto auto auto !important;
+      background: var(--surface) !important;
+      border: none !important; border-bottom: 1px solid var(--border) !important;
+      transition: background .15s !important; padding: 0 !important;
+      counter-increment: feat;
+    }
+    .lp-feat-card:last-child { border-bottom: none !important; }
+    .lp-feat-card:hover { background: var(--sfc2) !important; }
+
+    /* Number in left column via CSS counter */
+    .lp-feat-card::before {
+      content: counter(feat, decimal-leading-zero);
+      font-family: 'Bebas Neue', Impact, sans-serif;
+      font-size: 32px; color: rgba(245,166,35,0.22);
+      display: flex; align-items: center; justify-content: center;
+      grid-column: 1; grid-row: 1 / 4;
+      border-right: 1px solid var(--border);
+      padding: 16px 8px; flex-shrink: 0;
+    }
+
+    /* Hide old SVG icons — replaced by numbers */
+    .lp-feat-icon { display: none !important; }
+    .lp-feat-name {
+      grid-column: 2 !important; grid-row: 1 !important;
+      padding: 18px 24px 5px !important; font-size: 20px !important;
+    }
+    .lp-feat-desc {
+      grid-column: 2 !important; grid-row: 2 !important;
+      padding: 0 24px 8px !important; font-size: 13px !important;
+    }
+    .lp-feat-tags {
+      grid-column: 2 !important; grid-row: 3 !important;
+      padding: 0 24px 16px !important;
+    }
+
+    /* Section labels — amber, wider tracking */
+    .lp-label {
+      font-size: 9px !important; letter-spacing: 0.35em !important;
+    }
+
+    /* Section titles — tighter */
+    .lp-title { line-height: 0.92 !important; }
+
+    /* Steps section — tighter, more editorial */
+    .lp-step {
+      padding: 24px 20px !important;
+    }
+    .lp-step-num {
+      font-family: 'Bebas Neue', Impact, sans-serif !important;
+      font-size: 52px !important; line-height: 1 !important;
+      color: rgba(245,166,35,0.18) !important;
+      margin-bottom: 10px !important;
+    }
+
+    /* CTA section — tighter */
+    .lp-cta-section {
+      background: var(--sfc2) !important;
+      border-top: 1px solid var(--border2) !important;
+      border-bottom: 1px solid var(--border2) !important;
+    }
+
+    /* Bands */
+    .lp-dark-band { border-top: 1px solid var(--border) !important; }
+    .lp-mid-band  { border-top: 1px solid var(--border) !important; }
+
+    /* ── AUTH PAGE ──────────────────────────────────────────────────── */
+
+    /* Auth screen: same dot grid as landing hero */
+    #auth-screen {
+      background-image: radial-gradient(circle at 1px 1px, rgba(245,166,35,0.05) 1px, transparent 0);
+      background-size: 24px 24px;
+    }
+    /* Soft amber radial behind the form */
+    #auth-screen::before {
+      content: ''; position: fixed; inset: 0;
+      background: radial-gradient(ellipse 70% 60% at 50% 40%, rgba(245,166,35,0.07) 0%, transparent 60%);
+      pointer-events: none; z-index: 0;
+    }
+
+    /* Auth box: bordered card with amber crown */
+    .auth-box {
+      border: 1px solid var(--border2) !important;
+      padding: 36px 40px !important;
+      background: var(--surface) !important;
+      position: relative; z-index: 2;
+      max-width: 460px !important;
+    }
+    .auth-box::before {
+      content: ''; position: absolute; top: 0; left: 0; right: 0;
+      height: 2px; background: var(--amber);
+    }
+
+    /* Bigger, more dramatic wordmark */
+    .auth-wordmark {
+      font-size: 64px !important; letter-spacing: 0.04em !important;
+    }
+    .auth-tagline {
+      font-size: 8px !important; letter-spacing: 0.38em !important;
+    }
+
+    /* Auth rule — stronger */
+    .auth-rule {
+      opacity: 0.5 !important; width: 80% !important;
+    }
+
+    /* Tabs — cleaner */
+    .auth-tabs {
+      border: 1px solid var(--border3) !important;
+    }
+    .auth-tab {
+      font-size: 10px !important; letter-spacing: 0.18em !important;
+    }
+
+    /* Submit button — full amber */
+    .auth-submit {
+      padding: 14px !important; font-size: 11px !important;
+      letter-spacing: 0.18em !important;
+      box-shadow: 0 0 0 0 rgba(245,166,35,0);
+      transition: background .15s, transform .1s, box-shadow .2s !important;
+    }
+    .auth-submit:hover {
+      box-shadow: 0 4px 24px rgba(245,166,35,0.38) !important;
+    }
+
+    /* Auth back link */
+    .lp-back-link {
+      font-size: 8px !important; letter-spacing: 0.2em !important;
+    }
+
   </style>
 </head>
 <body>
