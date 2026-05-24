@@ -241,7 +241,7 @@ async function searchSold(query, appId) {
 async function getOAuthToken(scope = 'https://api.ebay.com/oauth/api_scope') {
   const clientId = process.env.EBAY_CLIENT_ID;
   const clientSecret = process.env.EBAY_CLIENT_SECRET;
-  if (!clientId || !clientSecret) return null;
+  if (!clientId || !clientSecret) { console.warn('[ebay] OAuth: missing CLIENT_ID or CLIENT_SECRET'); return null; }
   const auth = Buffer.from(`${clientId}:${clientSecret}`).toString('base64');
   const tokenRes = await fetch('https://api.ebay.com/identity/v1/oauth2/token', {
     method: 'POST',
@@ -249,6 +249,12 @@ async function getOAuthToken(scope = 'https://api.ebay.com/oauth/api_scope') {
     body: `grant_type=client_credentials&scope=${encodeURIComponent(scope)}`,
   });
   const d = await tokenRes.json();
+  const shortScope = scope.split('/').pop();
+  if (!d.access_token) {
+    console.warn(`[ebay] OAuth token failed (scope=${shortScope}):`, d.error, d.error_description);
+  } else {
+    console.log(`[ebay] OAuth token OK (scope=${shortScope})`);
+  }
   return d.access_token || null;
 }
 
