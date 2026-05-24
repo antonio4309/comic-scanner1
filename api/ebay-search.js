@@ -1,90 +1,184 @@
-function isBadListing(title = '') {
-  const lower = title.toLowerCase();
+// ── LISTING CLASSIFICATION ────────────────────────────────────────────────────
 
-  const badWords = [
-    'facsimile',
-    'reprint',
-    'poster',
-    'print',
-    'shirt',
-    't-shirt',
-    'figure',
-    'funko',
-    'pop',
-    'dvd',
-    'blu-ray',
-    'sticker',
-    'card',
-    'magnet',
-    'badge',
-    'cgc',
-    'cbcs',
-    'slab',
-    'graded',
-    '9.8',
-    '9.6',
-    '9.4',
-    'pgx',
-    'lot',
-    'bundle',
-    'set of'
-  ];
+function classifyListing(title = '') {
+  const t = title.toLowerCase();
 
-  return badWords.some(word => lower.includes(word));
+  // Always-bad categories
+  if (/\b(facsimile|replica|reproduction)\b/.test(t)) return 'REPRINT';
+  if (/\breprint\b/.test(t)) return 'REPRINT';
+  if (/\b(lot|bundle|collection)\b/.test(t) || /\bset of \d/i.test(t)) return 'LOT';
+  if (/\b(poster|shirt|t-shirt|figure|funko|pop!?|dvd|blu-ray|sticker|magnet|badge|digital|pdf|empty|custom)\b/.test(t)) return 'MERCH';
+
+  // Grade companies
+  if (/\bcgc\b/.test(t)) return 'CGC';
+  if (/\bcbcs\b/.test(t)) return 'CBCS';
+  if (/\bpgx\b/.test(t)) return 'PGX';
+  if (/\b(slab|slabbed|graded)\b/.test(t)) return 'GRADED';
+
+  return 'RAW';
 }
 
-function cleanSearchQuery(q = '') {
-  return q
-    .replace(/#/g, '')
-    .replace(/\band\b/gi, '')
-    .replace(/[^\w\s-]/g, ' ')
-    .replace(/\s+/g, ' ')
-    .trim();
+// Returns true if the listing is valid for the given search type
+function isValidListing(title, searchType) {
+  const type = classifyListing(title);
+  if (type === 'REPRINT' || type === 'LOT' || type === 'MERCH') return false;
+  if (searchType === 'RAW') return type === 'RAW';
+  if (searchType === 'CGC') return type === 'CGC';
+  if (searchType === 'CBCS') return type === 'CBCS';
+  if (searchType === 'PGX') return type === 'PGX';
+  return true;
 }
 
-function calculateStats(results) {
-  let prices = results
-    .map(r => Number(r.price))
-    .filter(p => !Number.isNaN(p) && p > 1 && p < 100000)
-    .sort((a, b) => a - b);
+// ── QUERY BUILDER ─────────────────────────────────────────────────────────────
 
-  if (!prices.length) return null;
+const BASE_NEG = '-lot -bundle -"set of" -reprint -facsimile -poster -figure -funko -shirt -dvd -digital -pdf -sticker';
+const GRADE_NEG = '-cgc -cbcs -pgx -slab -graded';
 
-  if (prices.length > 6) {
-    prices = prices.slice(1, prices.length - 1);
+function san(str) {
+  return String(str || '').replace(/"/g, '').trim();
+}
+
+function buildQueries({ q, title, issue, year, edition, isSlabbed, slabCompany, slabGrade }) {
+  const hasStructured = title && title !== 'Unknown' && issue && issue !== 'Unknown';
+
+  if (!hasStructured) {
+    const base = san(q || '');
+    if (isSlabbed) {
+      const co = san(slabCompany).toUpperCase() || 'CGC';
+      return [{ query: `${base} -lot -reprint -facsimile`, type: co }];
+    }
+    return [{ query: `${base} ${GRADE_NEG} -lot -reprint -facsimile`, type: 'RAW' }];
   }
 
-  const mid = Math.floor(prices.length / 2);
+  const t = `"${san(title)}"`;
+  const i = `"${san(issue)}"`;
+  const y = year && year !== 'Unknown' ? san(year) : '';
 
-  const median =
-    prices.length % 2 === 0
-      ? (prices[mid - 1] + prices[mid]) / 2
-      : prices[mid];
+  // Graded comic
+  if (isSlabbed && slabCompany) {
+    const co = san(slabCompany).toUpperCase();
+    const gr = san(slabGrade);
+    const queries = [];
+    if (gr) {
+      queries.push({ query: `${t} ${i} "${co} ${gr}" ${BASE_NEG}`, type: co });
+      queries.push({ query: `${t} ${i} ${co} ${gr} ${BASE_NEG}`, type: co });
+    } else {
+      queries.push({ query: `${t} ${i} ${co} ${BASE_NEG}`, type: co });
+    }
+    return queries;
+  }
 
-  const average =
-    prices.reduce((sum, price) => sum + price, 0) / prices.length;
+  // Newsstand edition
+  if (edition === 'Newsstand') {
+    return [
+      { query: `${t} ${i} ${y} newsstand ${GRADE_NEG} ${BASE_NEG}`.trim(), type: 'RAW' },
+      { query: `${t} ${i} newsstand ${GRADE_NEG} ${BASE_NEG}`.trim(), type: 'RAW' },
+    ];
+  }
 
-  const conservativeIndex = Math.floor(prices.length * 0.35);
-  const marketPrice = prices[conservativeIndex] || median;
+  // Canadian Price Variant
+  if (edition === 'Canadian Price Variant') {
+    return [
+      { query: `${t} ${i} ${y} canadian ${GRADE_NEG} ${BASE_NEG}`.trim(), type: 'RAW' },
+      { query: `${t} ${i} ${y} ${GRADE_NEG} ${BASE_NEG}`.trim(), type: 'RAW' },
+    ];
+  }
+
+  // Standard raw comic
+  return [
+    { query: `${t} ${i} ${y} ${GRADE_NEG} ${BASE_NEG}`.trim(), type: 'RAW' },
+    { query: `${t} ${i} ${GRADE_NEG} ${BASE_NEG}`.trim(), type: 'RAW' },
+  ];
+}
+
+// ── RECENCY WEIGHT ────────────────────────────────────────────────────────────
+
+function recencyWeight(endDate) {
+  if (!endDate) return 0.5;
+  const days = (Date.now() - new Date(endDate).getTime()) / 86400000;
+  if (days <= 7)  return 1.0;
+  if (days <= 30) return 0.8;
+  if (days <= 90) return 0.5;
+  return 0.2;
+}
+
+// ── IQR OUTLIER REMOVAL ───────────────────────────────────────────────────────
+
+function removeOutliers(prices) {
+  if (prices.length < 4) return prices;
+  const s = [...prices].sort((a, b) => a - b);
+  const q1 = s[Math.floor(s.length * 0.25)];
+  const q3 = s[Math.floor(s.length * 0.75)];
+  const fence = (q3 - q1) * 1.5;
+  return prices.filter(p => p >= q1 - fence && p <= q3 + fence);
+}
+
+// ── WEIGHTED MEDIAN ───────────────────────────────────────────────────────────
+
+function weightedMedian(items) {
+  const sorted = [...items].sort((a, b) => a.price - b.price);
+  const total = sorted.reduce((s, i) => s + i.w, 0);
+  let cum = 0;
+  for (const item of sorted) {
+    cum += item.w;
+    if (cum >= total / 2) return item.price;
+  }
+  return sorted[sorted.length - 1].price;
+}
+
+// ── STATS + CONFIDENCE ────────────────────────────────────────────────────────
+
+function calculateStats(results) {
+  const weighted = results
+    .map(r => ({ price: Number(r.price), w: recencyWeight(r.endDate) }))
+    .filter(r => r.price > 0.5 && r.price < 100000 && !isNaN(r.price));
+
+  if (!weighted.length) return null;
+
+  const rawPrices = weighted.map(r => r.price);
+  const cleanPrices = removeOutliers(rawPrices);
+  const cleanSet = new Set(cleanPrices);
+  // Keep only items whose price survived outlier removal
+  const clean = weighted.filter(r => {
+    const min = Math.min(...cleanPrices);
+    const max = Math.max(...cleanPrices);
+    return r.price >= min && r.price <= max && cleanSet.has(r.price);
+  });
+
+  if (!clean.length) return null;
+
+  const sorted = clean.map(i => i.price).sort((a, b) => a - b);
+  const marketPrice = weightedMedian(clean);
+  const avg = clean.reduce((s, i) => s + i.price, 0) / clean.length;
+  const avgW = clean.reduce((s, i) => s + i.w, 0) / clean.length;
+
+  // Confidence: size (0-50) + variance (0-30) + recency (0-20)
+  const n = clean.length;
+  const sizeScore = Math.min(n / 15, 1) * 50;
+  const p25 = sorted[Math.floor(sorted.length * 0.25)] ?? sorted[0];
+  const p75 = sorted[Math.floor(sorted.length * 0.75)] ?? sorted[sorted.length - 1];
+  const spread = marketPrice > 0 ? (p75 - p25) / marketPrice : 1;
+  const varianceScore = Math.max(0, 1 - spread * 2) * 30;
+  const recencyScore = avgW * 20;
+  const confidence = Math.min(Math.round(sizeScore + varianceScore + recencyScore), 100);
 
   return {
-    prices,
-    median: Number(median.toFixed(2)),
-    average: Number(average.toFixed(2)),
-    marketPrice: Number(marketPrice.toFixed(2)),
-    min: Number(prices[0].toFixed(2)),
-    max: Number(prices[prices.length - 1].toFixed(2))
+    count: n,
+    prices: sorted,
+    marketPrice: +marketPrice.toFixed(2),
+    median: +marketPrice.toFixed(2),
+    average: +avg.toFixed(2),
+    min: +sorted[0].toFixed(2),
+    max: +sorted[sorted.length - 1].toFixed(2),
+    confidence,
   };
 }
 
-async function searchSoldWithFindingAPI(searchTerm) {
-  const appId = process.env.EBAY_APP_ID;
+// ── EBAY FINDING API (SOLD ONLY) ──────────────────────────────────────────────
 
-  if (!appId) return null;
-
-  const ninetyDaysAgo = new Date(Date.now() - 90 * 24 * 60 * 60 * 1000).toISOString();
-
-  const ebayUrl = [
+async function searchSold(query, appId) {
+  const since = new Date(Date.now() - 90 * 86400000).toISOString();
+  const url = [
     'https://svcs.ebay.co.uk/services/search/FindingService/v1',
     '?OPERATION-NAME=findCompletedItems',
     '&SERVICE-VERSION=1.13.0',
@@ -92,210 +186,123 @@ async function searchSoldWithFindingAPI(searchTerm) {
     '&RESPONSE-DATA-FORMAT=JSON',
     '&GLOBAL-ID=EBAY-GB',
     '&siteid=3',
-    `&keywords=${encodeURIComponent(searchTerm)}`,
+    `&keywords=${encodeURIComponent(query)}`,
     '&categoryId=259104',
     '&itemFilter(0).name=SoldItemsOnly',
     '&itemFilter(0).value=true',
     '&itemFilter(1).name=EndTimeFrom',
-    `&itemFilter(1).value=${ninetyDaysAgo}`,
+    `&itemFilter(1).value=${since}`,
     '&itemFilter(2).name=LocatedIn',
     '&itemFilter(2).value=GB',
     '&sortOrder=StartTimeNewest',
-    '&paginationInput.entriesPerPage=50'
+    '&paginationInput.entriesPerPage=50',
   ].join('');
 
-  const response = await fetch(ebayUrl);
-
-  if (!response.ok) {
-    throw new Error(`Finding API returned ${response.status}`);
-  }
-
-  const data = await response.json();
-
-  const items =
-    data?.findCompletedItemsResponse?.[0]?.searchResult?.[0]?.item || [];
+  const r = await fetch(url);
+  if (!r.ok) throw new Error(`eBay Finding API returned ${r.status}`);
+  const data = await r.json();
+  const items = data?.findCompletedItemsResponse?.[0]?.searchResult?.[0]?.item || [];
 
   return items.map(item => ({
     title: item.title?.[0] || '',
-    price: Number(
-      item.sellingStatus?.[0]?.currentPrice?.[0]?.['__value__'] || 0
-    ),
-    currency:
-      item.sellingStatus?.[0]?.currentPrice?.[0]?.['@currencyId'] || 'GBP',
+    price: Number(item.sellingStatus?.[0]?.currentPrice?.[0]?.['__value__'] || 0),
+    currency: item.sellingStatus?.[0]?.currentPrice?.[0]?.['@currencyId'] || 'GBP',
     url: item.viewItemURL?.[0] || '',
     image: item.galleryURL?.[0] || '',
     condition: item.condition?.[0]?.conditionDisplayName?.[0] || '',
     endDate: item.listingInfo?.[0]?.endTime?.[0] || '',
-    sold: true
+    sold: true,
   }));
 }
 
-async function searchActiveWithBrowseAPI(searchTerm) {
-  const clientId = process.env.EBAY_CLIENT_ID;
-  const clientSecret = process.env.EBAY_CLIENT_SECRET;
-
-  if (!clientId || !clientSecret) return null;
-
-  const auth = Buffer.from(`${clientId}:${clientSecret}`).toString('base64');
-
-  const tokenRes = await fetch(
-    'https://api.ebay.com/identity/v1/oauth2/token',
-    {
-      method: 'POST',
-      headers: {
-        Authorization: `Basic ${auth}`,
-        'Content-Type': 'application/x-www-form-urlencoded'
-      },
-      body:
-        'grant_type=client_credentials&scope=https://api.ebay.com/oauth/api_scope'
-    }
-  );
-
-  const tokenData = await tokenRes.json();
-
-  if (!tokenData.access_token) {
-    throw new Error('Could not get eBay token');
-  }
-
-  const res = await fetch(
-    `https://api.ebay.com/buy/browse/v1/item_summary/search?q=${encodeURIComponent(
-      searchTerm
-    )}&limit=50&category_ids=259104&filter=buyingOptions%3A%7BFIXED_PRICE%7D`,
-    {
-      headers: {
-        Authorization: `Bearer ${tokenData.access_token}`,
-        'X-EBAY-C-MARKETPLACE-ID': 'EBAY_GB',
-        'X-EBAY-C-ENDUSERCTX': 'contextualLocation=country%3DGB'
-      }
-    }
-  );
-
-  const data = await res.json();
-
-  const items = data.itemSummaries || [];
-
-  return items.map(item => ({
-    title: item.title || '',
-    price: Number(item.price?.value || 0),
-    currency: item.price?.currency || 'GBP',
-    url: item.itemWebUrl || '',
-    image: item.image?.imageUrl || '',
-    condition: item.condition || '',
-    sold: false
-  }));
-}
-
-function filterResults(results = []) {
-  return results
-    .filter(r => {
-      if (!r.price || r.price <= 0) return false;
-      if (isBadListing(r.title)) return false;
-      return true;
-    })
-    .slice(0, 30);
-}
+// ── HANDLER ───────────────────────────────────────────────────────────────────
 
 export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
-
   if (req.method === 'OPTIONS') return res.status(200).end();
+  if (req.method !== 'GET') return res.status(405).json({ error: 'Method not allowed' });
 
-  if (req.method !== 'GET') {
-    return res.status(405).json({
-      error: 'Method not allowed'
-    });
-  }
+  const appId = process.env.EBAY_APP_ID;
+  if (!appId) return res.status(500).json({ error: 'EBAY_APP_ID not configured' });
 
-  const { q } = req.query;
+  const { q, title, issue, year, edition, isSlabbed, slabCompany, slabGrade } = req.query;
+  if (!q && !title) return res.status(400).json({ error: 'Missing search query' });
 
-  if (!q) {
-    return res.status(400).json({
-      error: 'Missing search query'
-    });
-  }
+  const params = {
+    q: q || '',
+    title: title || '',
+    issue: issue || '',
+    year: year || '',
+    edition: edition || '',
+    isSlabbed: isSlabbed === '1' || isSlabbed === 'true',
+    slabCompany: slabCompany || '',
+    slabGrade: slabGrade || '',
+  };
 
-  const cleaned = cleanSearchQuery(q);
-
-  const searches = [
-    `${cleaned} comic`,
-    cleaned,
-    `${cleaned} raw comic`,
-    `${cleaned} marvel comic`,
-    `${cleaned} dc comic`
-  ];
+  const queries = buildQueries(params);
+  const primaryType = queries[0]?.type || 'RAW';
 
   try {
-    let finalResults = [];
+    let bestResults = [];
     let usedQuery = '';
-    let source = '';
 
-    for (const search of searches) {
-      const soldResults = await searchSoldWithFindingAPI(search);
+    for (const { query, type } of queries) {
+      const raw = await searchSold(query, appId);
+      const filtered = raw.filter(r => r.price > 0 && isValidListing(r.title, type));
 
-      if (soldResults) {
-        const filteredSold = filterResults(soldResults);
-
-        if (filteredSold.length >= 1) {
-          finalResults = filteredSold;
-          usedQuery = search;
-          source = 'eBay UK sold listings';
-          break;
-        }
+      if (filtered.length >= 3) {
+        bestResults = filtered;
+        usedQuery = query;
+        break;
+      }
+      // Keep the largest set seen so far as fallback
+      if (filtered.length > bestResults.length) {
+        bestResults = filtered;
+        usedQuery = query;
       }
     }
 
-    if (!finalResults.length) {
-      for (const search of searches) {
-        const activeResults = await searchActiveWithBrowseAPI(search);
-
-        if (activeResults) {
-          const filteredActive = filterResults(activeResults);
-
-          if (filteredActive.length >= 3) {
-            finalResults = filteredActive;
-            usedQuery = search;
-            source = 'eBay UK active listings fallback';
-            break;
-          }
-        }
-      }
-    }
-
-    const stats = calculateStats(finalResults);
+    const stats = calculateStats(bestResults);
 
     if (!stats) {
       return res.status(200).json({
         found: false,
-        query: cleaned,
-        tried: searches,
-        source: 'No usable eBay results',
-        results: []
+        query: q || '',
+        usedQuery,
+        gradeBucket: primaryType,
+        source: 'No usable eBay sold results',
+        results: [],
       });
     }
 
     return res.status(200).json({
       found: true,
-      query: cleaned,
+      query: q || '',
       usedQuery,
-      source,
-      count: stats.prices.length,
+      gradeBucket: primaryType,
+      source: 'eBay UK sold listings',
+      count: stats.count,
       prices: stats.prices,
+      marketPrice: stats.marketPrice,
       median: stats.median,
       average: stats.average,
-      marketPrice: stats.marketPrice,
       min: stats.min,
       max: stats.max,
+      confidence: stats.confidence,
       currency: 'GBP',
       whatnotPrice: Math.ceil(stats.marketPrice * 1.15),
-      results: finalResults.slice(0, 10)
+      results: bestResults.slice(0, 10).map(r => ({
+        title: r.title,
+        price: r.price,
+        url: r.url,
+        image: r.image,
+        endDate: r.endDate,
+      })),
     });
   } catch (err) {
-    console.error('eBay fetch error:', err);
-
-    return res.status(502).json({
-      error: 'Failed to fetch from eBay: ' + err.message
-    });
+    console.error('eBay pricing error:', err);
+    return res.status(502).json({ error: 'eBay fetch failed: ' + err.message });
   }
 }

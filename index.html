@@ -3697,10 +3697,12 @@ async function fetchEbayPrice(comic, forceRefresh = false) {
         comic.ebayStatus = 'notfound'; comic.ebayPrice = null;
       } else {
         comic.ebayStatus = 'ok';
-        comic.ebayPrice = cached.median;
+        comic.ebayPrice = cached.marketPrice || cached.median;
         comic.ebayMin = cached.min;
         comic.ebayMax = cached.max;
         comic.ebayCount = cached.count;
+        comic.ebayConfidence = cached.confidence || 0;
+        comic.ebayGradeBucket = cached.gradeBucket || 'RAW';
         comic.ebayResults = cached.results || [];
       }
       renderList(); updateStats();
@@ -3709,19 +3711,29 @@ async function fetchEbayPrice(comic, forceRefresh = false) {
   }
 
   try {
-    const q = encodeURIComponent(cacheKey);
-    const c = encodeURIComponent(comic.condition);
-    const res = await fetch(`/api/ebay-search.js?q=${q}&condition=${c}`);
+    const params = new URLSearchParams({
+      q: cacheKey,
+      title: comic.title || '',
+      issue: comic.issue || '',
+      year: comic.year || '',
+      edition: comic.edition || '',
+      isSlabbed: comic.isSlabbed ? '1' : '0',
+      slabCompany: comic.slabCompany || '',
+      slabGrade: comic.slabGrade || '',
+    });
+    const res = await fetch(`/api/ebay-search.js?${params}`);
     const data = await readApiJson(res, 'eBay pricing API');
     if (!data.found) {
       comic.ebayStatus = 'notfound'; comic.ebayPrice = null;
       setCachedPrice(cacheKey, { found: false });
     } else {
       comic.ebayStatus = 'ok';
-      comic.ebayPrice = data.median;
+      comic.ebayPrice = data.marketPrice || data.median;
       comic.ebayMin = data.min;
       comic.ebayMax = data.max;
       comic.ebayCount = data.count;
+      comic.ebayConfidence = data.confidence || 0;
+      comic.ebayGradeBucket = data.gradeBucket || 'RAW';
       comic.ebayResults = data.results || [];
       setCachedPrice(cacheKey, data);
     }
@@ -4042,10 +4054,13 @@ function renderList() {
       } else {
         cls = 'comic-price error'; titleText = c.ebayError || 'eBay error'; display = 'Err';
       }
-      const thinData = c.ebayStatus === 'ok' && c.ebayCount < 3;
+      const conf = c.ebayConfidence || 0;
+      const thinData = c.ebayStatus === 'ok' && (c.ebayCount < 3 || conf < 40);
+      const confLabel = conf >= 70 ? '' : conf >= 40 ? `⚠ ${c.ebayCount}` : `⚠ LOW`;
+      const confTitle = conf >= 70 ? '' : `${c.ebayCount} sold comp${c.ebayCount === 1 ? '' : 's'} · confidence ${conf}% — treat as estimate`;
       priceHtml = `<div class="price-col">
         <span class="${cls}" title="${escapeHtml(titleText)}">${display}</span>
-        ${thinData ? `<span class="price-thin" title="${c.ebayCount} sold result${c.ebayCount === 1 ? '' : 's'} — limited data">⚠ ${c.ebayCount}</span>` : ''}
+        ${thinData ? `<span class="price-thin" title="${confTitle}">${confLabel}</span>` : ''}
         <button class="btn-edit-price" onclick="startEditPrice(${c.id})" title="Edit price">✏ edit</button>
       </div>`;
     }
@@ -4053,7 +4068,7 @@ function renderList() {
     const sub = [c.publisher, c.year, c.condition, c.qty > 1 ? 'Qty: ' + c.qty : '']
       .filter(x => x && x !== 'Unknown').join(' · ');
     const range = c.ebayStatus === 'ok'
-      ? `eBay UK: £${c.ebayMin.toFixed(2)} – £${c.ebayMax.toFixed(2)} (${c.ebayCount} sold) · Whatnot: £${whatnot}`
+      ? `eBay UK: £${c.ebayMin.toFixed(2)} – £${c.ebayMax.toFixed(2)} (${c.ebayCount} sold · ${c.ebayConfidence || 0}% conf) · Whatnot: £${whatnot}`
       : '';
 
     // Profit calc (Whatnot takes ~11% all-in fees)
@@ -4412,9 +4427,17 @@ async function lookupScan() {
 
   let ebayData = null;
   try {
-    const q = encodeURIComponent(identified.searchQuery || `${identified.title} ${identified.issue} comic`);
-    const c = encodeURIComponent(identified.condition || '');
-    const res = await fetch(`/api/ebay-search.js?q=${q}&condition=${c}`);
+    const lkParams = new URLSearchParams({
+      q: identified.searchQuery || `${identified.title} ${identified.issue} comic`,
+      title: identified.title || '',
+      issue: identified.issue || '',
+      year: identified.year || '',
+      edition: identified.edition || '',
+      isSlabbed: identified.isSlabbed ? '1' : '0',
+      slabCompany: identified.slabCompany || '',
+      slabGrade: identified.slabGrade || '',
+    });
+    const res = await fetch(`/api/ebay-search.js?${lkParams}`);
     ebayData = await readApiJson(res, 'eBay pricing');
   } catch (e) {
     ebayData = { found: false };
