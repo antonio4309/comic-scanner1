@@ -204,16 +204,28 @@ async function searchSold(query, appId) {
   const data = await r.json();
   const items = data?.findCompletedItemsResponse?.[0]?.searchResult?.[0]?.item || [];
 
-  return items.map(item => ({
-    title: item.title?.[0] || '',
-    price: Number(item.sellingStatus?.[0]?.currentPrice?.[0]?.['__value__'] || 0),
-    currency: item.sellingStatus?.[0]?.currentPrice?.[0]?.['@currencyId'] || 'GBP',
-    url: item.viewItemURL?.[0] || '',
-    image: item.galleryURL?.[0] || '',
-    condition: item.condition?.[0]?.conditionDisplayName?.[0] || '',
-    endDate: item.listingInfo?.[0]?.endTime?.[0] || '',
-    sold: true,
-  }));
+  return items.map(item => {
+    const shipInfo = item.shippingInfo?.[0];
+    const shipCostRaw = shipInfo?.shippingServiceCost?.[0]?.['__value__'];
+    const shipType = shipInfo?.shippingType?.[0] || '';
+    const shippingCost = shipType === 'Free' ? 0
+      : shipCostRaw != null ? Number(shipCostRaw)
+      : null;
+
+    return {
+      title: item.title?.[0] || '',
+      price: Number(item.sellingStatus?.[0]?.currentPrice?.[0]?.['__value__'] || 0),
+      currency: item.sellingStatus?.[0]?.currentPrice?.[0]?.['@currencyId'] || 'GBP',
+      url: item.viewItemURL?.[0] || '',
+      image: item.galleryURL?.[0] || '',
+      condition: item.condition?.[0]?.conditionDisplayName?.[0] || '',
+      endDate: item.listingInfo?.[0]?.endTime?.[0] || '',
+      country: item.country?.[0] || '',
+      location: item.location?.[0] || '',
+      shippingCost,
+      sold: true,
+    };
+  });
 }
 
 // Active listings as last-resort fallback (lower confidence, clearly labelled)
@@ -354,12 +366,28 @@ export default async function handler(req, res) {
       confidence,
       currency: 'GBP',
       whatnotPrice: Math.ceil(stats.marketPrice * 1.15),
+      lastSold: (() => {
+        const r = bestResults.find(x => x.sold && x.price > 0);
+        if (!r) return null;
+        return {
+          title: r.title,
+          price: r.price,
+          url: r.url,
+          endDate: r.endDate,
+          country: r.country,
+          location: r.location,
+          shippingCost: r.shippingCost,
+        };
+      })(),
       results: bestResults.slice(0, 10).map(r => ({
         title: r.title,
         price: r.price,
         url: r.url,
         image: r.image,
         endDate: r.endDate,
+        country: r.country,
+        location: r.location,
+        shippingCost: r.shippingCost,
         sold: r.sold,
       })),
     });

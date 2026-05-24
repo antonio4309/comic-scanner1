@@ -2453,6 +2453,35 @@
       font-size: 8px !important; letter-spacing: 0.2em !important;
     }
 
+    /* ── LAST SOLD BOX ─────────────────────────────────────────────── */
+    .last-sold-box {
+      margin-top: 5px;
+      padding: 5px 8px 5px 10px;
+      background: rgba(245,166,35,0.05);
+      border: 1px solid rgba(245,166,35,0.15);
+      border-left: 2px solid rgba(245,166,35,0.5);
+      display: flex; flex-direction: column; gap: 2px;
+    }
+    .ls-label {
+      font-family: 'Space Mono', monospace;
+      font-size: 7px; letter-spacing: 0.22em; color: var(--amber);
+      opacity: 0.75; text-transform: uppercase;
+    }
+    .ls-row1 { display: flex; align-items: baseline; gap: 7px; }
+    .ls-price {
+      font-family: 'Bebas Neue', Impact, sans-serif;
+      font-size: 17px; letter-spacing: 0.04em; color: var(--fg);
+      line-height: 1;
+    }
+    .ls-date {
+      font-family: 'Space Mono', monospace;
+      font-size: 8px; color: var(--muted);
+    }
+    .ls-origin {
+      font-family: 'Space Mono', monospace;
+      font-size: 8px; color: var(--dim);
+    }
+
   </style>
 </head>
 <body>
@@ -3982,6 +4011,7 @@ async function fetchEbayPrice(comic, forceRefresh = false) {
         comic.ebayConfidence = cached.confidence || 0;
         comic.ebayGradeBucket = cached.gradeBucket || 'RAW';
         comic.ebayResults = cached.results || [];
+        comic.ebayLastSold = cached.lastSold || null;
       }
       renderList(); updateStats();
       return;
@@ -4013,6 +4043,7 @@ async function fetchEbayPrice(comic, forceRefresh = false) {
       comic.ebayConfidence = data.confidence || 0;
       comic.ebayGradeBucket = data.gradeBucket || 'RAW';
       comic.ebayResults = data.results || [];
+      comic.ebayLastSold = data.lastSold || null;
       setCachedPrice(cacheKey, data);
     }
   } catch (e) {
@@ -4253,6 +4284,35 @@ function buildCGCCensusUrl(title, issue) {
   return 'https://www.cgccomics.com/census/search-result/#q=' + encodeURIComponent((title + ' ' + issue).trim()) + '&ctype=3';
 }
 
+function formatLastSoldBox(ls) {
+  if (!ls || !ls.price) return '';
+  const price = `£${Number(ls.price).toFixed(2)}`;
+  let dateStr = '';
+  if (ls.endDate) {
+    const d = new Date(ls.endDate);
+    const days = Math.floor((Date.now() - d.getTime()) / 86400000);
+    if (days === 0) dateStr = 'Today';
+    else if (days === 1) dateStr = 'Yesterday';
+    else if (days < 7) dateStr = `${days}d ago`;
+    else dateStr = d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short' });
+  }
+  const countryMap = { US: 'USA', GB: 'UK', CA: 'Canada', AU: 'Australia', DE: 'Germany', FR: 'France', IT: 'Italy', ES: 'Spain', JP: 'Japan' };
+  const countryName = ls.country ? (countryMap[ls.country] || ls.country) : '';
+  const shipStr = ls.shippingCost === 0 ? 'Free shipping'
+    : ls.shippingCost > 0 ? `+£${Number(ls.shippingCost).toFixed(2)} shipping`
+    : '';
+  const origin = [countryName ? `Sold in ${countryName}` : '', shipStr].filter(Boolean).join(' · ');
+  const link = ls.url ? ` href="${escapeHtml(ls.url)}" target="_blank" rel="noopener"` : '';
+  return `<a class="last-sold-box"${link} style="text-decoration:none;display:flex;flex-direction:column;gap:2px;">
+    <span class="ls-label">Last Sold</span>
+    <span class="ls-row1">
+      <span class="ls-price">${escapeHtml(price)}</span>
+      ${dateStr ? `<span class="ls-date">${escapeHtml(dateStr)}</span>` : ''}
+    </span>
+    ${origin ? `<span class="ls-origin">${escapeHtml(origin)}</span>` : ''}
+  </a>`;
+}
+
 function getWhatnotPrice(c) {
   if (c.priceOverride != null) return c.priceOverride;
   const base = c.customPrice != null ? c.customPrice : c.ebayPrice;
@@ -4375,6 +4435,7 @@ function renderList() {
         ${c.keyInfo && c.keyInfo !== 'Unknown' && c.keyInfo ? `<div class="comic-range">${escapeHtml(c.keyInfo)}</div>` : ''}
         ${c.conditionReason ? `<div class="comic-range">Condition${c.conditionGrade ? ' ~' + escapeHtml(c.conditionGrade) : ''}: ${escapeHtml(c.conditionReason)}</div>` : ''}
         ${range ? `<div class="comic-range">${escapeHtml(range)}</div>` : ''}
+        ${c.ebayLastSold ? formatLastSoldBox(c.ebayLastSold) : ''}
         ${c.searchQuery ? `<div class="comic-range"><a href="${escapeHtml(buildEbaySoldUrl(c.searchQuery))}" target="_blank" rel="noopener" class="ebay-link">🔗 eBay sold</a>${c.isSlabbed ? `&ensp;<a href="${escapeHtml(buildCGCCensusUrl(c.title, c.issue))}" target="_blank" rel="noopener" class="cgc-link">📊 CGC Census</a>` : ''}</div>` : (c.isSlabbed ? `<div class="comic-range"><a href="${escapeHtml(buildCGCCensusUrl(c.title, c.issue))}" target="_blank" rel="noopener" class="cgc-link">📊 CGC Census</a></div>` : '')}
         <div class="comic-badges">
           ${c.isKeyIssue || c.firstAppearance ? `<span class="cbadge cbadge-key" title="${escapeHtml(c.keyInfo)}">⭐ Key Issue</span>` : ''}
