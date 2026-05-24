@@ -942,6 +942,242 @@
       body { background: #000; }
     }
 
+    /* ═══════════════════════════════════════════════════════════════
+       MOBILE NATIVE REDESIGN
+       Phone-first layout — completely separate from desktop
+       ═══════════════════════════════════════════════════════════════ */
+
+    /* ── SCAN TAB: camera-first ───────────────────────────────── */
+    @media (max-width: 768px) {
+      .sidebar.mob-active {
+        display: flex; flex-direction: column;
+        height: 100%; overflow-y: auto; overflow-x: hidden;
+        -webkit-overflow-scrolling: touch; padding: 0;
+      }
+      /* Camera panel: flush, no decoration */
+      .sidebar.mob-active > .panel:first-child {
+        padding: 0; border: none; border-radius: 0;
+        background: #000; flex-shrink: 0;
+      }
+      .sidebar.mob-active > .panel:first-child > .panel-title { display: none; }
+
+      /* Video: full width, fixed aspect */
+      #video-wrap {
+        width: 100% !important; max-width: 100% !important;
+        aspect-ratio: 4/3; max-height: 58vw; min-height: 220px;
+        background: #000; position: relative; overflow: hidden;
+        border-radius: 0 !important;
+      }
+      #video-wrap #video,
+      #video-wrap #preview-img {
+        width: 100%; height: 100%; object-fit: cover; display: block;
+      }
+      #video-wrap .cam-placeholder {
+        position: absolute; inset: 0; display: flex; flex-direction: column;
+        align-items: center; justify-content: center; gap: 12px;
+        background: var(--sfc2); color: var(--muted);
+      }
+
+      /* Camera button row: Activate | CAPTURE | Upload */
+      .sidebar.mob-active > .panel:first-child > .btn-row {
+        display: grid; grid-template-columns: 1fr 2fr 1fr;
+        gap: 8px; padding: 10px 12px;
+        background: var(--coal); border-bottom: 1px solid var(--border);
+      }
+      #start-cam-btn {
+        font-size: 11px !important; padding: 12px 4px !important;
+      }
+      #capture-btn {
+        font-size: 13px !important; padding: 14px 4px !important;
+        background: var(--amber) !important; color: var(--ink) !important;
+        font-weight: 700 !important; letter-spacing: 0.08em;
+      }
+      #capture-btn:disabled {
+        background: var(--sfc3) !important; color: var(--muted) !important;
+      }
+      #retake-btn { font-size: 12px !important; padding: 12px 4px !important; }
+      .sidebar.mob-active > .panel:first-child > .btn-row label {
+        font-size: 11px !important; padding: 12px 4px !important;
+        justify-content: center !important; min-height: unset;
+      }
+
+      /* Classification panel: compact */
+      .sidebar.mob-active > .panel:last-child {
+        flex: 0 0 auto; overflow: visible; padding: 14px;
+        border: none; border-radius: 0; border-top: 1px solid var(--border);
+      }
+      .sidebar.mob-active > .panel:last-child > .panel-title { display: none; }
+
+      /* Pending photos: horizontal scroll strip */
+      .pending-grid {
+        display: flex !important; flex-direction: row !important;
+        grid-template-columns: unset !important;
+        overflow-x: auto !important; overflow-y: hidden !important;
+        gap: 6px !important;
+        padding: 0 !important; padding-bottom: 10px !important;
+        margin: 0 -14px !important;
+        padding-left: 14px !important; padding-right: 14px !important;
+        scroll-snap-type: x mandatory;
+        -webkit-overflow-scrolling: touch;
+        scrollbar-width: none;
+      }
+      .pending-grid::-webkit-scrollbar { display: none; }
+      .pending-item {
+        flex: 0 0 72px !important; width: 72px !important;
+        height: 96px !important; scroll-snap-align: start;
+        position: relative; border: 1px solid var(--border2);
+      }
+      .pending-item img { width: 100%; height: 100%; object-fit: cover; display: block; }
+      .pending-remove {
+        position: absolute; top: 3px; right: 3px;
+        width: 22px !important; height: 22px !important;
+        min-height: unset !important; padding: 0 !important;
+        font-size: 14px !important; line-height: 1;
+        background: rgba(0,0,0,0.8) !important;
+        display: flex; align-items: center; justify-content: center;
+      }
+
+      /* Condition + qty: side by side */
+      .sidebar.mob-active .field-row {
+        grid-template-columns: 2fr 1fr !important;
+      }
+
+      /* Identify button: full width, tall */
+      #scan-btn {
+        font-size: 13px !important; padding: 16px !important;
+        width: 100% !important; justify-content: center !important;
+        margin-top: 14px;
+      }
+      #scan-status, .progress-wrap { margin: 10px 0; }
+      .sidebar.mob-active > .panel:last-child { padding-bottom: 14px; }
+      .pending-caption { font-size: 9px; margin-bottom: 6px; }
+    }
+
+    /* ── ARCHIVE TAB: bigger cards, sticky export ─────────────── */
+    @media (max-width: 768px) {
+      .main.mob-active {
+        display: flex; flex-direction: column;
+        height: 100%; overflow: hidden;
+      }
+      .comic-list {
+        flex: 1 !important; overflow-y: auto; min-height: 0;
+        -webkit-overflow-scrolling: touch;
+        padding-bottom: 8px !important;
+      }
+
+      /* Cards: bigger, more readable */
+      .comic-card { padding: 10px 12px !important; gap: 10px !important; border-left-width: 3px !important; }
+      .comic-thumb { width: 52px !important; height: 70px !important; }
+      .comic-title { font-size: 15px !important; line-height: 1.3 !important; }
+      .comic-sub   { font-size: 12px !important; }
+      .comic-range { font-size: 11px !important; }
+      .price-val   { font-size: 17px !important; }
+
+      /* Action buttons: easier to tap */
+      .card-actions { display: flex; flex-direction: column; gap: 4px; }
+      .btn-rescan {
+        width: 36px !important; height: 36px !important;
+        font-size: 16px !important; opacity: 1 !important;
+        display: flex !important; align-items: center !important; justify-content: center !important;
+      }
+      .del-btn {
+        width: 36px !important; height: 36px !important;
+        font-size: 18px !important;
+        display: flex !important; align-items: center !important; justify-content: center !important;
+      }
+
+      /* List header */
+      .list-header { padding: 10px 12px; flex-shrink: 0; }
+      .list-header h2 { font-size: 18px; }
+      .list-header-btns button { font-size: 9px !important; padding: 6px 9px !important; }
+
+      /* Filter bar: no wrap, horizontal scroll */
+      .filter-bar {
+        padding: 6px 12px; flex-shrink: 0;
+        overflow-x: auto; flex-wrap: nowrap; scrollbar-width: none;
+      }
+      .filter-bar::-webkit-scrollbar { display: none; }
+      .filter-bar select { min-width: 130px; flex-shrink: 0; }
+
+      /* Stats: compact */
+      .stats-row { flex-shrink: 0; }
+      .stat { min-width: 100px; padding: 8px 14px; }
+      .stat-val { font-size: 20px !important; }
+
+      /* Export panel: always visible above nav, simplified */
+      .export-panel {
+        flex-shrink: 0 !important; position: static !important;
+        padding: 10px 12px !important;
+        padding-bottom: calc(10px + env(safe-area-inset-bottom, 0px)) !important;
+        border-top: 1px solid var(--border2) !important;
+        border-radius: 0 !important; background: var(--ink) !important;
+      }
+      .export-title   { display: none !important; }
+      .export-options { display: none !important; }
+      .export-btns {
+        display: flex !important; gap: 8px !important; width: 100% !important;
+      }
+      .export-btns button:first-child {
+        flex: 1 !important; justify-content: center !important;
+        font-size: 12px !important; padding: 13px !important;
+      }
+      .export-btns button:last-child {
+        font-size: 12px !important; padding: 13px 14px !important;
+      }
+    }
+
+    /* ── LOOKUP TAB: camera-first ─────────────────────────────── */
+    @media (max-width: 768px) {
+      #lk-video-wrap {
+        width: 100% !important; max-width: 100% !important;
+        aspect-ratio: 4/3 !important; max-height: 58vw !important;
+        min-height: 200px !important; height: auto !important;
+      }
+      #lk-video-wrap #lk-video,
+      #lk-video-wrap #lk-preview-img {
+        width: 100%; height: 100%; object-fit: cover;
+      }
+      .lookup-cam-col > .panel:first-child {
+        padding: 0 !important; border: none !important;
+        background: #000;
+      }
+      .lookup-cam-col > .panel:first-child > .panel-title { display: none !important; }
+      .lookup-cam-col > .panel:first-child > .btn-row {
+        display: grid; grid-template-columns: 1fr 2fr 1fr;
+        gap: 8px; padding: 10px 12px;
+        background: var(--coal); border-bottom: 1px solid var(--border);
+      }
+      #lk-start-btn   { font-size: 11px !important; padding: 12px 4px !important; }
+      #lk-capture-btn {
+        font-size: 13px !important; padding: 14px 4px !important;
+        background: var(--amber) !important; color: var(--ink) !important;
+        font-weight: 700 !important;
+      }
+      #lk-capture-btn:disabled {
+        background: var(--sfc3) !important; color: var(--muted) !important;
+      }
+      #lk-retake-btn { font-size: 12px !important; padding: 12px 4px !important; }
+      .lookup-cam-col > .panel:first-child > .btn-row label {
+        font-size: 11px !important; padding: 12px 4px !important; justify-content: center !important;
+      }
+      .lookup-cam-col > .panel:last-child {
+        padding: 14px !important; border: none !important;
+        border-top: 1px solid var(--border) !important; border-radius: 0 !important;
+      }
+      #lk-scan-btn {
+        font-size: 13px !important; padding: 16px !important;
+        width: 100% !important; justify-content: center !important;
+      }
+      .lk-result, .lk-empty { padding-bottom: 80px !important; }
+    }
+
+    /* ── BOTTOM NAV: bigger hit targets ──────────────────────── */
+    @media (max-width: 768px) {
+      .mobile-nav { height: 68px !important; }
+      .mobile-nav-btn { font-size: 9px; gap: 5px; }
+      .mobile-nav-btn svg { width: 24px !important; height: 24px !important; }
+    }
+
     /* ── LANDING PAGE ─────────────────────────────────────────── */
     #landing-screen {
       position: fixed; inset: 0; z-index: 19999;
@@ -3883,10 +4119,12 @@ function switchMobileTab(tab) {
   });
   if (tab === 'lookup') {
     switchTab('lookup');
+    if (!lkStream) lkStartCamera();
   } else {
     switchTab('export');
     document.querySelector('.sidebar')?.classList.toggle('mob-active', tab === 'scan');
     document.querySelector('.main')?.classList.toggle('mob-active', tab === 'inventory');
+    if (tab === 'scan' && !stream) startCamera();
   }
 }
 
