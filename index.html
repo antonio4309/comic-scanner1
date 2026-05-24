@@ -2249,20 +2249,14 @@ async function readApiJson(response, label) {
 }
 
 async function uploadImageToBlob(base64) {
-  try {
-    const blob = dataURLToBlob('data:image/jpeg;base64,' + base64);
-    const res = await fetch('/api/upload-image', {
-      method: 'POST',
-      headers: { 'x-filename': `comic-${Date.now()}.jpg` },
-      body: blob
-    });
-    const data = await readApiJson(res, 'Image upload');
-    if (data.error) throw new Error(data.error || 'Image upload failed');
-    return data.url || '';
-  } catch (e) {
-    console.warn('Image hosting failed, continuing without URL:', e);
-    return '';
-  }
+  const blob = dataURLToBlob('data:image/jpeg;base64,' + base64);
+  const res = await fetch('/api/upload-image', {
+    method: 'POST',
+    headers: { 'content-type': 'image/jpeg', 'x-filename': `comic-${Date.now()}.jpg` },
+    body: blob
+  });
+  const data = await readApiJson(res, 'Image upload');
+  return data.url || '';
 }
 
 // ── Scan & Add ───────────────────────────────────────────────────────────────
@@ -2284,6 +2278,7 @@ async function scanAndAdd() {
   const batch = [...pendingPhotos];
   let added = 0;
   showProgress(0, batch.length);
+  let uploadErrorMsg = '';
 
   for (let i = 0; i < batch.length; i++) {
     const photo = batch[i];
@@ -2299,7 +2294,12 @@ async function scanAndAdd() {
 
     try {
       showStatus('scan-status', 'info', `<span class="spin">⟳</span> Uploading image ${i + 1} of ${batch.length}...`);
-      const imageUrl = await uploadImageToBlob(photo.base64);
+      let imageUrl = '';
+      try {
+        imageUrl = await uploadImageToBlob(photo.base64);
+      } catch (uploadErr) {
+        uploadErrorMsg = uploadErr.message;
+      }
 
       showStatus('scan-status', 'info', `<span class="spin">⟳</span> Identifying comic ${i + 1} of ${batch.length}...`);
       const identified = await identifyComic(photo.base64, override);
@@ -2366,12 +2366,15 @@ async function scanAndAdd() {
 
   if (added > 0) {
     saveInventory();
-    // Collect any photo advice from the batch
-    const adviceSet = [...new Set(comics.slice(0, added).map(c => c.photoAdvice).filter(Boolean))];
-    if (adviceSet.length) {
-      showStatus('scan-status', 'warn', `⚠ ${adviceSet[0]}${adviceSet.length > 1 ? ` (+${adviceSet.length - 1} more tips)` : ''}`);
+    if (uploadErrorMsg) {
+      showStatus('scan-status', 'warn', `⚠ ${added} comic${added === 1 ? '' : 's'} added but photo upload failed: ${uploadErrorMsg}. Use the 📷 button on each card to retry.`);
     } else {
-      showStatus('scan-status', 'success', `✓ Added ${added} comic${added === 1 ? '' : 's'} — fetching eBay UK prices...`);
+      const adviceSet = [...new Set(comics.slice(0, added).map(c => c.photoAdvice).filter(Boolean))];
+      if (adviceSet.length) {
+        showStatus('scan-status', 'warn', `⚠ ${adviceSet[0]}${adviceSet.length > 1 ? ` (+${adviceSet.length - 1} more tips)` : ''}`);
+      } else {
+        showStatus('scan-status', 'success', `✓ Added ${added} comic${added === 1 ? '' : 's'} — fetching eBay UK prices...`);
+      }
     }
     if (isMobile()) setTimeout(() => switchMobileTab('inventory'), 1200);
   } else {
@@ -2690,8 +2693,12 @@ async function handleRescan(event) {
     comic.confidence = identified.confidence || 'Low';
     comic.searchQuery = identified.searchQuery || comic.searchQuery;
 
-    const imageUrl = await uploadImageToBlob(base64);
-    if (imageUrl) comic.imageUrl = imageUrl;
+    try {
+      const imageUrl = await uploadImageToBlob(base64);
+      if (imageUrl) comic.imageUrl = imageUrl;
+    } catch (uploadErr) {
+      showStatus('scan-status', 'warn', `⚠ Re-scan saved but photo upload failed: ${uploadErr.message}`);
+    }
 
     renderList();
     await fetchEbayPrice(comic);

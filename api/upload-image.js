@@ -8,6 +8,10 @@ export default async function handler(req, res) {
   if (req.method === 'OPTIONS') return res.status(200).end();
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
 
+  if (!process.env.BLOB_READ_WRITE_TOKEN) {
+    return res.status(500).json({ error: 'Vercel Blob not connected. Go to your Vercel project → Storage → Create a Blob store and link it to this project.' });
+  }
+
   try {
     const chunks = [];
     for await (const chunk of req) chunks.push(chunk);
