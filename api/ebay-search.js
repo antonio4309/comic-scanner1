@@ -283,9 +283,10 @@ export default async function handler(req, res) {
   if (req.method === 'OPTIONS') return res.status(200).end();
   if (req.method !== 'GET') return res.status(405).json({ error: 'Method not allowed' });
 
-  const appId = process.env.EBAY_APP_ID;
-  console.log('[ebay] handler called — appId present:', !!appId, appId ? `(prefix: ${appId.slice(0, 12)}...)` : '(missing)');
-  if (!appId) return res.status(500).json({ error: 'EBAY_APP_ID not configured' });
+  // EBAY_APP_ID and EBAY_CLIENT_ID are the same credential — fall back gracefully
+  const appId = process.env.EBAY_APP_ID || process.env.EBAY_CLIENT_ID;
+  console.log('[ebay] appId source:', process.env.EBAY_APP_ID ? 'EBAY_APP_ID' : process.env.EBAY_CLIENT_ID ? 'EBAY_CLIENT_ID (fallback)' : 'MISSING');
+  if (!appId) return res.status(500).json({ error: 'No eBay App ID configured (set EBAY_APP_ID or EBAY_CLIENT_ID)' });
 
   const { q, title, issue, year, edition, isSlabbed, slabCompany, slabGrade } = req.query;
   if (!q && !title) return res.status(400).json({ error: 'Missing search query' });
