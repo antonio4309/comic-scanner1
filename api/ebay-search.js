@@ -237,6 +237,75 @@ async function searchSold(query, appId) {
   });
 }
 
+// Scrape eBay completed-items search page (no API key required)
+async function searchSoldScrape(query) {
+  try {
+    const params = new URLSearchParams({
+      _nkw: query,
+      LH_Sold: '1',
+      LH_Complete: '1',
+      _sop: '13',   // newest first
+      _ipg: '50',
+      _sacat: '259104',
+    });
+    const url = `https://www.ebay.co.uk/sch/i.html?${params}`;
+    const r = await fetch(url, {
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+        'Accept-Language': 'en-GB,en;q=0.9',
+      },
+    });
+    console.log('[ebay] Scrape status:', r.status, 'url:', url.slice(0, 120));
+    if (!r.ok) return null;
+    const html = await r.text();
+    console.log('[ebay] Scrape HTML length:', html.length);
+
+    // Extract items — eBay embeds structured s-item blocks in the HTML for SEO
+    const items = [];
+    // Split on item boundaries (each sold result has data-viewport)
+    const blocks = html.split(/s-item__info|s-item clearfix/);
+
+    for (const block of blocks) {
+      // Title
+      const titleM = block.match(/s-item__title[^>]*>([^<]{5,120})<\/span>/);
+      // Price in GBP
+      const priceM = block.match(/£([\d,]+\.\d{2})/);
+      // Date sold
+      const dateM = block.match(/SOLD\s+([\w]+ \d+,?\s*\d*)/i) || block.match(/(\d+ [A-Za-z]+ \d{4})/);
+      // Item URL
+      const urlM = block.match(/href="(https:\/\/www\.ebay\.co\.uk\/itm\/[^"]+)"/);
+
+      if (!priceM) continue;
+      const price = parseFloat(priceM[1].replace(',', ''));
+      if (!price || price < 0.5) continue;
+
+      const title = titleM ? titleM[1].replace(/<[^>]+>/g, '').trim() : '';
+      if (!title || title.toLowerCase().includes('shop on ebay')) continue;
+
+      items.push({
+        title,
+        price,
+        currency: 'GBP',
+        url: urlM ? urlM[1] : '',
+        image: '',
+        condition: '',
+        endDate: dateM ? dateM[1] : '',
+        country: 'GB',
+        location: '',
+        shippingCost: null,
+        sold: true,
+      });
+    }
+
+    console.log('[ebay] Scrape extracted', items.length, 'items');
+    return items.length > 0 ? items : null;
+  } catch (e) {
+    console.warn('[ebay] Scrape error:', e.message);
+    return null;
+  }
+}
+
 // Helper: get OAuth application token
 async function getOAuthToken(scope = 'https://api.ebay.com/oauth/api_scope') {
   const clientId = process.env.EBAY_CLIENT_ID;
@@ -396,6 +465,22 @@ export default async function handler(req, res) {
         }
       }
       if (bestResults.length) isSoldData = true; // insights gives real sold data
+    }
+
+    // Scrape eBay completed-items page — no API key needed
+    if (!bestResults.length) {
+      for (const { query, type } of queries) {
+        const raw = await searchSoldScrape(query);
+        if (!raw) break;
+        const filtered = raw.filter(r => r.price > 0 && isValidListing(r.title, type));
+        console.log('[ebay] Scrape filtered:', filtered.length, '/', raw.length);
+        if (filtered.length >= 2) {
+          bestResults = filtered; usedQuery = query; isSoldData = true; break;
+        }
+        if (filtered.length > bestResults.length) {
+          bestResults = filtered; usedQuery = query; isSoldData = true;
+        }
+      }
     }
 
     // Active listing fallback — last resort
