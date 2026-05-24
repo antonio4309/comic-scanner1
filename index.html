@@ -1921,6 +1921,12 @@ function getInventoryKey(uid) { return 'lbl_inv_' + uid; }
 function saveInventory() {
   if (!currentUserId) return;
   try { localStorage.setItem(getInventoryKey(currentUserId), JSON.stringify(comics)); } catch(e) {}
+  // Debounced server sync (3s after last change)
+  const session = getSession();
+  if (session?.token) {
+    clearTimeout(syncTimer);
+    syncTimer = setTimeout(() => syncInventoryToServer(session.token), 3000);
+  }
 }
 
 function loadInventory() {
@@ -1993,16 +1999,55 @@ function showAuthErr(id, msg) {
   if (el) { el.textContent = msg; el.classList.add('show'); }
 }
 
-function doLogin() {
+async function doLogin() {
   const email = document.getElementById('login-email').value.trim();
   const pw    = document.getElementById('login-password').value;
   if (!email || !pw) { showAuthErr('login-error', 'Please fill in all fields.'); return; }
-  const r = authLogin(email, pw);
-  if (!r.ok) { showAuthErr('login-error', r.error); return; }
-  activateApp(r.session);
+  const btn = document.querySelector('#auth-form-login .auth-submit');
+  btn.disabled = true; btn.textContent = '⟳ Signing in...';
+  try {
+    const res = await fetch('/api/auth', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ action: 'login', email, password: pw })
+    });
+    const data = await res.json();
+    if (!res.ok) {
+      // Server doesn't know this account yet — try local and auto-migrate
+      const local = authLogin(email, pw);
+      if (local.ok) {
+        const regRes = await fetch('/api/auth', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ action: 'register', name: local.session.name, email, password: pw })
+        });
+        if (regRes.ok) {
+          const reg = await regRes.json();
+          const session = { userId: reg.userId, email: reg.email, name: reg.name, features: local.session.features, plan: reg.plan, token: reg.token };
+          saveSession(session);
+          // Migrate local inventory under old userId to server under new userId
+          const oldInv = JSON.parse(localStorage.getItem(getInventoryKey(local.session.userId)) || '[]');
+          if (oldInv.length) { currentUserId = reg.userId; comics = oldInv; saveInventory(); syncInventoryToServer(reg.token); }
+          activateApp(session);
+          return;
+        }
+      }
+      showAuthErr('login-error', data.error || 'Login failed'); return;
+    }
+    const session = { userId: data.userId, email: data.email, name: data.name, features: data.features, plan: data.plan, token: data.token };
+    saveSession(session);
+    activateApp(session);
+  } catch (e) {
+    // Offline fallback — use local auth
+    const local = authLogin(email, pw);
+    if (local.ok) { activateApp(local.session); }
+    else { showAuthErr('login-error', 'Connection error. Check your internet and try again.'); }
+  } finally {
+    btn.disabled = false; btn.textContent = '→ Authenticate';
+  }
 }
 
-function doRegister() {
+async function doRegister() {
   const name    = document.getElementById('reg-name').value.trim();
   const email   = document.getElementById('reg-email').value.trim();
   const pw      = document.getElementById('reg-password').value;
@@ -2010,12 +2055,31 @@ function doRegister() {
   if (!name || !email || !pw) { showAuthErr('reg-error', 'Please fill in all fields.'); return; }
   if (pw !== confirm) { showAuthErr('reg-error', 'Passwords do not match.'); return; }
   if (pw.length < 6) { showAuthErr('reg-error', 'Password must be at least 6 characters.'); return; }
-  const r = authRegister(name, email, pw);
-  if (!r.ok) { showAuthErr('reg-error', r.error); return; }
-  pendingUser = r.user;
-  selectedFeatures = new Set(['export', 'lookup']);
-  renderFeatureCards();
-  switchAuthMode('features');
+  const btn = document.querySelector('#auth-form-register .auth-submit');
+  btn.disabled = true; btn.textContent = '⟳ Creating account...';
+  try {
+    const res = await fetch('/api/auth', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ action: 'register', name, email, password: pw })
+    });
+    const data = await res.json();
+    if (!res.ok) { showAuthErr('reg-error', data.error || 'Registration failed'); return; }
+    pendingUser = { id: data.userId, name: data.name, email: data.email, token: data.token, plan: data.plan };
+    selectedFeatures = new Set(['export', 'lookup']);
+    renderFeatureCards();
+    switchAuthMode('features');
+  } catch (e) {
+    // Offline fallback — create local-only account
+    const r = authRegister(name, email, pw);
+    if (!r.ok) { showAuthErr('reg-error', r.error); return; }
+    pendingUser = r.user;
+    selectedFeatures = new Set(['export', 'lookup']);
+    renderFeatureCards();
+    switchAuthMode('features');
+  } finally {
+    btn.disabled = false; btn.textContent = '→ Continue';
+  }
 }
 
 function toggleFeature(f) {
@@ -2033,12 +2097,12 @@ function doSelectFeatures() {
   if (!selectedFeatures.size) { showAuthErr('feat-error', 'Please select at least one option.'); return; }
   const features = Array.from(selectedFeatures);
   updateUserFeatures(pendingUser.id, features);
-  const session = { userId: pendingUser.id, email: pendingUser.email, name: pendingUser.name, features };
+  const session = { userId: pendingUser.id, email: pendingUser.email, name: pendingUser.name, features, plan: pendingUser.plan || 'free', token: pendingUser.token || null };
   saveSession(session);
   activateApp(session);
 }
 
-function activateApp(session) {
+async function activateApp(session) {
   currentUserId = session.userId;
   document.getElementById('auth-screen').style.display = 'none';
   const app = document.getElementById('main-app');
@@ -2046,12 +2110,44 @@ function activateApp(session) {
   app.style.flexDirection = 'column';
   app.style.flex = '1';
   app.style.minHeight = '0';
-  loadInventory();
+  loadInventory(); // local cache first (instant)
   applyFeatureRestrictions(session.features);
   renderHeaderUser(session);
   renderList();
   updateStats();
   if (isMobile()) switchMobileTab('scan');
+
+  // If we have a server token, pull the authoritative inventory in the background
+  if (session.token) {
+    try {
+      const res = await fetch('/api/sync', { headers: { 'Authorization': `Bearer ${session.token}` } });
+      if (res.ok) {
+        const { inventory: serverInv } = await res.json();
+        if (serverInv.length > 0) {
+          // Restore local thumbnails where we have them
+          const localMap = new Map(comics.map(c => [c.id, c]));
+          comics = serverInv.map(sc => {
+            const lc = localMap.get(sc.id);
+            return lc?.thumb ? { ...sc, thumb: lc.thumb } : sc;
+          });
+          saveInventory();
+          renderList(); updateStats();
+        }
+      }
+    } catch (_) { /* offline — use local cache */ }
+  }
+}
+
+let syncTimer = null;
+async function syncInventoryToServer(token) {
+  try {
+    const toStore = comics.map(({ thumb, ...rest }) => rest);
+    await fetch('/api/sync', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+      body: JSON.stringify({ inventory: toStore })
+    });
+  } catch (_) { /* silently ignore — localStorage is the fallback */ }
 }
 
 function applyFeatureRestrictions(features) {
@@ -2082,9 +2178,7 @@ function renderHeaderUser(session) {
   const el = document.getElementById('header-user-area');
   if (!el) return;
   const labels = session.features.map(f => f === 'export' ? 'Export' : 'Lookup').join(' + ');
-  const users = getUsers();
-  const user = users.find(u => u.id === session.userId);
-  const userIsPro = user?.plan === 'pro';
+  const userIsPro = session.plan === 'pro';
   el.innerHTML = `
     <button class="user-chip-btn" onclick="showSettings()">
       <span style="color:var(--amber)">◆</span>
@@ -3384,8 +3478,7 @@ function showSettings() {
   const session = getSession();
   if (!session) return;
   const users = getUsers();
-  const user = users.find(u => u.id === session.userId);
-  if (!user) return;
+  const user = users.find(u => u.id === session.userId) || { plan: session.plan || 'free' };
 
   document.getElementById('st-name').value = session.name;
   document.getElementById('st-email').value = session.email;
@@ -3518,9 +3611,20 @@ function doUpgrade() {
   showStMsg('st-name-ok', '✓ Upgraded to Pro! Billing activates when subscriptions launch.');
 }
 
-function doDeleteAccount() {
+async function doDeleteAccount() {
   if (!confirm('Permanently delete your account and all data? This cannot be undone.')) return;
   const session = getSession();
+  // Delete from server
+  if (session?.token) {
+    try {
+      await fetch('/api/auth', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${session.token}` },
+        body: JSON.stringify({ action: 'delete-account', email: session.email, password: '' })
+      });
+    } catch (_) {}
+  }
+  // Clear local data
   let users = getUsers();
   users = users.filter(u => u.id !== session.userId);
   saveUsers(users);
