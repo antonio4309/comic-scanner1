@@ -3637,7 +3637,7 @@ async function startCamera() {
     document.getElementById('start-cam-btn').disabled = true;
     document.getElementById('start-cam-btn').textContent = '✓ Active';
   } catch (e) {
-    showStatus('scan-status', 'error', '✗ Camera error: ' + e.message);
+    showStatus('scan-status', 'error', '✗ Camera error: ' + escapeHtml(e.message));
   }
 }
 
@@ -3784,7 +3784,8 @@ async function scanAndAdd() {
     // Free tier limit check
     const users = getUsers();
     const activeUser = users.find(u => u.id === currentUserId);
-    if (activeUser?.plan !== 'pro' && comics.length >= FREE_COMIC_LIMIT) {
+    const activePlan = activeUser?.plan ?? getSession()?.plan ?? 'free';
+    if (activePlan !== 'pro' && comics.length >= FREE_COMIC_LIMIT) {
       showStatus('scan-status', 'warn', `⚠ Free plan limit (${FREE_COMIC_LIMIT} comics). Upgrade to Pro for unlimited archive.`);
       showUpgradePrompt();
       break;
@@ -3853,7 +3854,7 @@ async function scanAndAdd() {
       fetchEbayPrice(comic);
     } catch (e) {
       console.error(e);
-      showStatus('scan-status', 'warn', `Comic ${i + 1} failed: ${e.message}`);
+      showStatus('scan-status', 'warn', `Comic ${i + 1} failed: ${escapeHtml(e.message)}`);
     }
     showProgress(i + 1, batch.length);
   }
@@ -3932,7 +3933,7 @@ async function handleFileUpload(event) {
       document.getElementById('retake-btn').style.display = 'inline-flex';
     } catch (e) {
       console.error(e);
-      showStatus('scan-status', 'warn', 'One image could not be loaded: ' + e.message);
+      showStatus('scan-status', 'warn', 'One image could not be loaded: ' + escapeHtml(e.message));
     }
   }
 
@@ -3960,7 +3961,12 @@ function loadImage(src) {
 }
 
 async function fetchEbayPrice(comic, forceRefresh = false) {
-  const cacheKey = comic.searchQuery || `${comic.title} ${comic.issue} comic`;
+  const cacheKey = [
+    comic.searchQuery || `${comic.title} ${comic.issue} comic`,
+    comic.edition && comic.edition !== 'Unknown' ? comic.edition : '',
+    comic.isSlabbed ? (comic.slabCompany || 'slab') : '',
+    comic.slabGrade || ''
+  ].filter(Boolean).join('|');
 
   if (!forceRefresh) {
     const cached = getCachedPrice(cacheKey);
@@ -4012,10 +4018,11 @@ async function fetchEbayPrice(comic, forceRefresh = false) {
   } catch (e) {
     comic.ebayStatus = 'error';
     comic.ebayError = e.message;
-    showStatus('scan-status', 'warn', 'Comic added, but pricing failed: ' + e.message);
+    showStatus('scan-status', 'warn', 'Comic added, but pricing failed: ' + escapeHtml(e.message));
   }
   renderList();
   updateStats();
+  saveInventory();
 }
 
 // ── Re-fetch all prices ───────────────────────────────────────────────────────
@@ -4215,7 +4222,7 @@ async function handleRescan(event) {
     saveInventory();
   } catch (e) {
     console.error(e);
-    showStatus('scan-status', 'warn', 'Re-scan failed: ' + e.message);
+    showStatus('scan-status', 'warn', 'Re-scan failed: ' + escapeHtml(e.message));
   }
 
   event.target.value = '';
@@ -4328,8 +4335,9 @@ function renderList() {
       }
       const conf = c.ebayConfidence || 0;
       const thinData = c.ebayStatus === 'ok' && (c.ebayCount < 3 || conf < 40);
-      const confLabel = conf >= 70 ? '' : conf >= 40 ? `⚠ ${c.ebayCount}` : `⚠ LOW`;
-      const confTitle = conf >= 70 ? '' : `${c.ebayCount} sold comp${c.ebayCount === 1 ? '' : 's'} · confidence ${conf}% — treat as estimate`;
+      const ebayCount = c.ebayCount ?? 0;
+      const confLabel = conf >= 70 ? '' : conf >= 40 ? `⚠ ${ebayCount}` : `⚠ LOW`;
+      const confTitle = conf >= 70 ? '' : `${ebayCount} sold comp${ebayCount === 1 ? '' : 's'} · confidence ${conf}% — treat as estimate`;
       priceHtml = `<div class="price-col">
         <span class="${cls}" title="${escapeHtml(titleText)}">${display}</span>
         ${thinData ? `<span class="price-thin" title="${confTitle}">${confLabel}</span>` : ''}
@@ -4339,8 +4347,8 @@ function renderList() {
 
     const sub = [c.publisher, c.year, c.condition, c.qty > 1 ? 'Qty: ' + c.qty : '']
       .filter(x => x && x !== 'Unknown').join(' · ');
-    const range = c.ebayStatus === 'ok'
-      ? `eBay UK: £${c.ebayMin.toFixed(2)} – £${c.ebayMax.toFixed(2)} (${c.ebayCount} sold · ${c.ebayConfidence || 0}% conf) · Whatnot: £${whatnot}`
+    const range = c.ebayStatus === 'ok' && c.ebayMin != null && c.ebayMax != null
+      ? `eBay UK: £${c.ebayMin.toFixed(2)} – £${c.ebayMax.toFixed(2)} (${c.ebayCount ?? '?'} sold · ${c.ebayConfidence || 0}% conf) · Whatnot: £${whatnot}`
       : '';
 
     // Profit calc (Whatnot takes ~11% all-in fees)
@@ -4367,7 +4375,7 @@ function renderList() {
         ${c.keyInfo && c.keyInfo !== 'Unknown' && c.keyInfo ? `<div class="comic-range">${escapeHtml(c.keyInfo)}</div>` : ''}
         ${c.conditionReason ? `<div class="comic-range">Condition${c.conditionGrade ? ' ~' + escapeHtml(c.conditionGrade) : ''}: ${escapeHtml(c.conditionReason)}</div>` : ''}
         ${range ? `<div class="comic-range">${escapeHtml(range)}</div>` : ''}
-        ${c.searchQuery ? `<div class="comic-range"><a href="${escapeHtml(buildEbaySoldUrl(c.searchQuery))}" target="_blank" rel="noopener" class="ebay-link">🔗 eBay sold</a>${c.isSlabbed ? `&ensp;<a href="${buildCGCCensusUrl(c.title, c.issue)}" target="_blank" rel="noopener" class="cgc-link">📊 CGC Census</a>` : ''}</div>` : (c.isSlabbed ? `<div class="comic-range"><a href="${buildCGCCensusUrl(c.title, c.issue)}" target="_blank" rel="noopener" class="cgc-link">📊 CGC Census</a></div>` : '')}
+        ${c.searchQuery ? `<div class="comic-range"><a href="${escapeHtml(buildEbaySoldUrl(c.searchQuery))}" target="_blank" rel="noopener" class="ebay-link">🔗 eBay sold</a>${c.isSlabbed ? `&ensp;<a href="${escapeHtml(buildCGCCensusUrl(c.title, c.issue))}" target="_blank" rel="noopener" class="cgc-link">📊 CGC Census</a>` : ''}</div>` : (c.isSlabbed ? `<div class="comic-range"><a href="${escapeHtml(buildCGCCensusUrl(c.title, c.issue))}" target="_blank" rel="noopener" class="cgc-link">📊 CGC Census</a></div>` : '')}
         <div class="comic-badges">
           ${c.isKeyIssue || c.firstAppearance ? `<span class="cbadge cbadge-key" title="${escapeHtml(c.keyInfo)}">⭐ Key Issue</span>` : ''}
           ${c.firstAppearance ? `<span class="cbadge cbadge-first" title="${escapeHtml(c.firstAppearance)}">1st ${escapeHtml(c.firstAppearance.replace(/^First (full )?appearance of /i,''))}</span>` : ''}
@@ -4522,6 +4530,18 @@ function csvCell(value) {
   return `"${clean}"`;
 }
 
+function toWhatnotCondition(condition, isSlabbed) {
+  if (isSlabbed) return 'Like New';
+  const c = (condition || '').toLowerCase();
+  if (c.includes('near mint') || c.includes('mint'))    return 'Like New';
+  if (c.includes('very fine'))                          return 'Like New';
+  if (c.includes('fine'))                               return 'Good';
+  if (c.includes('very good'))                          return 'Good';
+  if (c.includes('good'))                               return 'Good';
+  if (c.includes('fair') || c.includes('poor'))         return 'Acceptable';
+  return 'Good';
+}
+
 function buildCSV() {
   const headers = [
     'Category','Subcategory','Title','Description','Quantity','Type','Price',
@@ -4544,11 +4564,12 @@ function buildCSV() {
       ? c.startingBid
       : (getWhatnotPrice(c) || '');
 
+    const shippingProfile = c.isSlabbed ? 'Graded slab' : c.isBundle ? 'Bulk comics lot' : 'Bagged and boarded raw comic';
     rows.push([
       'Comics & Manga', getSubcategory(c.year), title, descParts,
       c.qty || 1, c.listingType || 'Buy it Now', price,
-      'Bagged and boarded raw comic', 'Yes', 'Not Hazmat',
-      c.condition || 'Very Fine', '', '',
+      shippingProfile, 'Yes', 'Not Hazmat',
+      toWhatnotCondition(c.condition, c.isSlabbed), '', '',
       c.imageUrl || '', '', '', '', '', '', '', ''
     ]);
   }
@@ -4671,7 +4692,7 @@ async function lkHandleUpload(event) {
     document.getElementById('lk-retake-btn').style.display = 'inline-flex';
     document.getElementById('lk-scan-btn').disabled = false;
   } catch (e) {
-    showStatus('lk-status', 'error', 'Could not load image: ' + e.message);
+    showStatus('lk-status', 'error', 'Could not load image: ' + escapeHtml(e.message));
   }
   event.target.value = '';
 }
@@ -4690,7 +4711,7 @@ async function lookupScan() {
   try {
     identified = await identifyComic(lkBase64, '');
   } catch (e) {
-    showStatus('lk-status', 'error', '✗ ' + e.message);
+    showStatus('lk-status', 'error', '✗ ' + escapeHtml(e.message));
     document.getElementById('lk-scan-btn').disabled = false;
     return;
   }
@@ -5052,20 +5073,42 @@ function doSaveName() {
   showStMsg('st-name-ok', '✓ Name updated.');
 }
 
-function doChangePassword() {
+async function doChangePassword() {
   const oldPw    = document.getElementById('st-pw-old').value;
   const newPw    = document.getElementById('st-pw-new').value;
   const confirm  = document.getElementById('st-pw-confirm').value;
   const session  = getSession();
   const users    = getUsers();
   const user     = users.find(u => u.id === session.userId);
-  if (!user) return;
   if (!oldPw || !newPw) { showStMsg('st-pw-error', 'Fill in all password fields.'); return; }
-  if (user.passwordHash !== hashPw(oldPw)) { showStMsg('st-pw-error', 'Current password is incorrect.'); return; }
   if (newPw.length < 6) { showStMsg('st-pw-error', 'New password must be at least 6 characters.'); return; }
   if (newPw !== confirm) { showStMsg('st-pw-error', 'New passwords do not match.'); return; }
-  user.passwordHash = hashPw(newPw);
-  saveUsers(users);
+  if (user && user.passwordHash !== hashPw(oldPw)) { showStMsg('st-pw-error', 'Current password is incorrect.'); return; }
+
+  // Update server first (authoritative)
+  if (session?.token) {
+    try {
+      const res = await fetch('/api/auth', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${session.token}` },
+        body: JSON.stringify({ action: 'change-password', password: oldPw, newPassword: newPw })
+      });
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        showStMsg('st-pw-error', err.error || 'Server rejected password change.');
+        return;
+      }
+    } catch (e) {
+      showStMsg('st-pw-error', 'Network error — password not changed.');
+      return;
+    }
+  }
+
+  // Mirror to localStorage cache if the user exists there
+  if (user) {
+    user.passwordHash = hashPw(newPw);
+    saveUsers(users);
+  }
   document.getElementById('st-pw-old').value = '';
   document.getElementById('st-pw-new').value = '';
   document.getElementById('st-pw-confirm').value = '';
@@ -5090,9 +5133,10 @@ function doUpgrade() {
   if (!user) return;
   user.plan = 'pro';
   saveUsers(users);
-  saveSession({ ...session });
-  renderHeaderUser(session);
-  renderStPlan(user, session);
+  const proSession = { ...session, plan: 'pro' };
+  saveSession(proSession);
+  renderHeaderUser(proSession);
+  renderStPlan(user, proSession);
   showStMsg('st-name-ok', '✓ Upgraded to Pro! Billing activates when subscriptions launch.');
 }
 
