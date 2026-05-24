@@ -1171,12 +1171,82 @@
       .lk-result, .lk-empty { padding-bottom: 80px !important; }
     }
 
-    /* ── BOTTOM NAV: bigger hit targets ──────────────────────── */
+    /* ── BOTTOM NAV: bigger hit targets + active accent ─────── */
     @media (max-width: 768px) {
       .mobile-nav { height: 68px !important; }
       .mobile-nav-btn { font-size: 9px; gap: 5px; }
       .mobile-nav-btn svg { width: 24px !important; height: 24px !important; }
+      .mobile-nav-btn.active::before {
+        content: '';
+        position: absolute; top: 0; left: 18%; right: 18%;
+        height: 2px;
+        background: var(--amber);
+        box-shadow: 0 0 8px var(--amber-glow);
+      }
     }
+
+    /* ── HEADER: compact on mobile ───────────────────────────── */
+    @media (max-width: 768px) {
+      header { position: sticky; top: 0; z-index: 100; }
+      .header-top { padding: 5px 12px !important; gap: 8px; }
+      .header-top > svg { width: 115px !important; height: 27px !important; }
+      .header-meta { display: none !important; }
+      .header-rule { display: none !important; }
+      .header-user { margin-left: auto; }
+    }
+
+    /* ── CAMERA VIEWFINDER CORNERS ───────────────────────────── */
+    .cam-viewfinder { position: absolute; inset: 0; pointer-events: none; z-index: 2; }
+    .cam-viewfinder span {
+      position: absolute; width: 26px; height: 26px;
+      border-style: solid; border-color: rgba(245,166,35,0.85);
+    }
+    .vf-tl { top: 13px; left: 13px; border-width: 2px 0 0 2px; }
+    .vf-tr { top: 13px; right: 13px; border-width: 2px 2px 0 0; }
+    .vf-bl { bottom: 13px; left: 13px; border-width: 0 0 2px 2px; }
+    .vf-br { bottom: 13px; right: 13px; border-width: 0 2px 2px 0; }
+    @media (min-width: 769px) { .cam-viewfinder { display: none; } }
+
+    /* ── MOBILE SEARCH BAR ───────────────────────────────────── */
+    .mob-search-bar { display: none; }
+    @media (max-width: 768px) {
+      .mob-search-bar {
+        display: flex; align-items: center;
+        padding: 7px 12px; gap: 0; flex-shrink: 0;
+        background: var(--coal); border-bottom: 1px solid var(--border);
+      }
+      .mob-search-bar input {
+        flex: 1; background: var(--sfc3); border: 1px solid var(--border2);
+        border-right: none;
+        color: var(--cream); padding: 9px 12px;
+        font-family: 'Barlow Condensed', sans-serif; font-size: 16px;
+        outline: none;
+      }
+      .mob-search-bar input::placeholder { color: var(--muted); }
+      .mob-search-bar input:focus { border-color: var(--amber); }
+      .mob-search-clear {
+        background: var(--sfc3); border: 1px solid var(--border2); border-left: none;
+        color: var(--muted); padding: 9px 12px; cursor: pointer; font-size: 16px;
+        min-height: unset; line-height: 1;
+      }
+      .mob-search-clear:hover { color: var(--cream); }
+    }
+
+    /* ── MOBILE TOAST ────────────────────────────────────────── */
+    #mob-toast {
+      display: none; position: fixed; top: 52px; left: 50%;
+      transform: translateX(-50%);
+      background: var(--amber); color: var(--ink);
+      font-family: 'Space Mono', monospace; font-size: 10px; font-weight: 700;
+      letter-spacing: 0.12em; text-transform: uppercase;
+      padding: 10px 24px; z-index: 9000; pointer-events: none;
+      white-space: nowrap; box-shadow: 0 4px 20px rgba(245,166,35,0.4);
+    }
+    @keyframes toastSlideIn {
+      from { opacity: 0; transform: translateX(-50%) translateY(-8px); }
+      to   { opacity: 1; transform: translateX(-50%) translateY(0); }
+    }
+    #mob-toast.visible { display: block; animation: toastSlideIn 0.18s ease; }
 
     /* ── LANDING PAGE ─────────────────────────────────────────── */
     #landing-screen {
@@ -2098,6 +2168,7 @@
         </div>
         <video id="video" autoplay playsinline></video>
         <img id="preview-img" alt="Captured comic" />
+        <div class="cam-viewfinder"><span class="vf-tl"></span><span class="vf-tr"></span><span class="vf-bl"></span><span class="vf-br"></span></div>
       </div>
       <div class="btn-row">
         <button id="start-cam-btn" onclick="startCamera()">▶ Activate</button>
@@ -2207,6 +2278,11 @@
       </div>
     </div>
 
+    <div class="mob-search-bar">
+      <input type="search" id="mob-search" placeholder="Search archive..." oninput="applyMobileSearch()" autocomplete="off" />
+      <button class="mob-search-clear" onclick="clearMobileSearch()">✕</button>
+    </div>
+
     <div class="bundle-bar" id="bundle-bar">
       <span><strong id="bundle-count">0</strong> files selected</span>
       <button class="btn-primary" onclick="bundleSelected()">⊞ Bundle Lot</button>
@@ -2282,6 +2358,7 @@
           </div>
           <video id="lk-video" autoplay playsinline style="width:100%;height:100%;object-fit:cover;display:none"></video>
           <img id="lk-preview-img" alt="Comic" style="width:100%;height:100%;object-fit:contain;display:none" />
+          <div class="cam-viewfinder"><span class="vf-tl"></span><span class="vf-tr"></span><span class="vf-bl"></span><span class="vf-br"></span></div>
         </div>
         <div class="btn-row">
           <button id="lk-start-btn" onclick="lkStartCamera()">▶ Activate</button>
@@ -2426,6 +2503,8 @@
     Lookup
   </button>
 </nav>
+
+<div id="mob-toast"></div>
 
 </div><!-- /main-app -->
 
@@ -2796,7 +2875,7 @@ async function activateApp(session) {
   renderHeaderUser(session);
   renderList();
   updateStats();
-  if (isMobile()) switchMobileTab('scan');
+  if (isMobile()) { switchMobileTab('scan'); initMobileSwipe(); initHaptic(); }
 
   // If we have a server token, pull the authoritative inventory in the background
   if (session.token) {
@@ -3151,7 +3230,7 @@ async function scanAndAdd() {
         showStatus('scan-status', 'success', `✓ Added ${added} comic${added === 1 ? '' : 's'} — fetching eBay UK prices...`);
       }
     }
-    if (isMobile()) setTimeout(() => switchMobileTab('inventory'), 1200);
+    if (isMobile()) { showMobToast(`✓ ${added} Comic${added === 1 ? '' : 's'} Saved`); setTimeout(() => switchMobileTab('inventory'), 1200); }
   } else {
     showStatus('scan-status', 'error', '✗ No comics were added.');
   }
@@ -4134,6 +4213,62 @@ function updateMobBadge() {
   const n = comics.length;
   badge.style.display = n > 0 ? 'block' : 'none';
   badge.textContent = n > 99 ? '99+' : n;
+}
+
+// ── Mobile: toast notification ────────────────────────────────────────────────
+let _toastTimer = null;
+function showMobToast(msg, duration = 2200) {
+  if (!isMobile()) return;
+  const t = document.getElementById('mob-toast');
+  if (!t) return;
+  t.textContent = msg;
+  t.classList.remove('visible');
+  void t.offsetWidth; // force reflow so animation restarts
+  t.classList.add('visible');
+  clearTimeout(_toastTimer);
+  _toastTimer = setTimeout(() => t.classList.remove('visible'), duration);
+}
+
+// ── Mobile: swipe between tabs ───────────────────────────────────────────────
+function initMobileSwipe() {
+  const el = document.getElementById('main-app');
+  if (!el) return;
+  const tabOrder = ['scan', 'inventory', 'lookup'];
+  let tx = 0, ty = 0;
+  el.addEventListener('touchstart', e => {
+    tx = e.touches[0].clientX;
+    ty = e.touches[0].clientY;
+  }, { passive: true });
+  el.addEventListener('touchend', e => {
+    const dx = e.changedTouches[0].clientX - tx;
+    const dy = e.changedTouches[0].clientY - ty;
+    if (Math.abs(dx) < 55 || Math.abs(dy) > Math.abs(dx) * 0.8) return;
+    const idx = tabOrder.indexOf(activeMobileTab);
+    if (dx < 0 && idx < tabOrder.length - 1) switchMobileTab(tabOrder[idx + 1]);
+    else if (dx > 0 && idx > 0) switchMobileTab(tabOrder[idx - 1]);
+  }, { passive: true });
+}
+
+// ── Mobile: haptic feedback ───────────────────────────────────────────────────
+function initHaptic() {
+  if (!('vibrate' in navigator)) return;
+  ['capture-btn', 'lk-capture-btn'].forEach(id => {
+    document.getElementById(id)?.addEventListener('click', () => navigator.vibrate(6), { passive: true });
+  });
+  document.getElementById('scan-btn')?.addEventListener('click', () => navigator.vibrate([5, 40, 12]), { passive: true });
+}
+
+// ── Mobile: archive search ────────────────────────────────────────────────────
+function applyMobileSearch() {
+  const q = (document.getElementById('mob-search')?.value || '').toLowerCase().trim();
+  document.querySelectorAll('#comic-list .comic-card').forEach(card => {
+    const title = (card.querySelector('.comic-title')?.textContent || '').toLowerCase();
+    card.style.display = (!q || title.includes(q)) ? '' : 'none';
+  });
+}
+function clearMobileSearch() {
+  const el = document.getElementById('mob-search');
+  if (el) { el.value = ''; applyMobileSearch(); }
 }
 
 window.addEventListener('DOMContentLoaded', () => {
