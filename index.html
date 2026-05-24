@@ -4012,6 +4012,7 @@ async function fetchEbayPrice(comic, forceRefresh = false) {
         comic.ebayGradeBucket = cached.gradeBucket || 'RAW';
         comic.ebayResults = cached.results || [];
         comic.ebayLastSold = cached.lastSold || null;
+        comic.ebaySource = cached.source || '';
       }
       renderList(); updateStats();
       return;
@@ -4044,6 +4045,7 @@ async function fetchEbayPrice(comic, forceRefresh = false) {
       comic.ebayGradeBucket = data.gradeBucket || 'RAW';
       comic.ebayResults = data.results || [];
       comic.ebayLastSold = data.lastSold || null;
+      comic.ebaySource = data.source || '';
       setCachedPrice(cacheKey, data);
     }
   } catch (e) {
@@ -4407,8 +4409,9 @@ function renderList() {
 
     const sub = [c.publisher, c.year, c.condition, c.qty > 1 ? 'Qty: ' + c.qty : '']
       .filter(x => x && x !== 'Unknown').join(' · ');
+    const isActiveEbay = c.ebaySource && c.ebaySource.includes('active');
     const range = c.ebayStatus === 'ok' && c.ebayMin != null && c.ebayMax != null
-      ? `eBay UK: £${c.ebayMin.toFixed(2)} – £${c.ebayMax.toFixed(2)} (${c.ebayCount ?? '?'} sold · ${c.ebayConfidence || 0}% conf) · Whatnot: £${whatnot}`
+      ? `${isActiveEbay ? '⚠ ASKING: ' : ''}eBay UK: £${c.ebayMin.toFixed(2)} – £${c.ebayMax.toFixed(2)} (${c.ebayCount ?? '?'} ${isActiveEbay ? 'listed' : 'sold'} · ${c.ebayConfidence || 0}% conf)${!isActiveEbay ? ` · Whatnot: £${whatnot}` : ' — not sold prices'}`
       : '';
 
     // Profit calc (Whatnot takes ~11% all-in fees)
@@ -4838,9 +4841,11 @@ function renderLookupResult(c, ebay, thumbSrc) {
   const soldUrl = buildEbaySoldUrl(c.searchQuery || `${c.title} ${c.issue} comic`);
   const censusUrl = buildCGCCensusUrl(c.title, c.issue);
 
+  const isActiveListing = ebay?.source && ebay.source.includes('active');
   const ebayHtml = ebay?.found
-    ? `<div class="lk-card-val">£${ebay.median}</div>
-       <div class="lk-card-sub">£${ebay.min} – £${ebay.max} · ${ebay.count} sold<br>Whatnot est. £${Math.ceil(ebay.median * 1.15)}</div>
+    ? `${isActiveListing ? `<div style="font-family:'Space Mono',monospace;font-size:8px;color:var(--amber);background:rgba(245,166,35,0.08);border:1px solid rgba(245,166,35,0.2);padding:4px 7px;margin-bottom:6px;letter-spacing:0.06em">⚠ ASKING PRICE — not a real sold price. Get production eBay keys for accuracy.</div>` : ''}
+       <div class="lk-card-val">£${ebay.median}</div>
+       <div class="lk-card-sub">£${ebay.min} – £${ebay.max} · ${ebay.count} ${isActiveListing ? 'active' : 'sold'}<br>${isActiveListing ? 'Estimate (active listings)' : `Whatnot est. £${Math.ceil(ebay.median * 1.15)}`}</div>
        <div style="margin-top:8px"><a href="${escapeHtml(soldUrl)}" target="_blank" rel="noopener" class="ebay-link">🔗 View sold listings on eBay</a></div>`
     : `<div class="lk-card-val" style="color:var(--muted);font-size:14px">No data</div>
        <div class="lk-card-sub">No UK sold results found</div>
@@ -4871,7 +4876,7 @@ function renderLookupResult(c, ebay, thumbSrc) {
         <div class="lk-card-sub">${escapeHtml(c.conditionReason || '')}</div>
       </div>
       <div class="lk-card">
-        <div class="lk-card-label">eBay UK · Last 90 days</div>
+        <div class="lk-card-label">${isActiveListing ? 'eBay UK · Active Listings' : 'eBay UK · Last 90 days'}</div>
         ${ebayHtml}
       </div>
     </div>
