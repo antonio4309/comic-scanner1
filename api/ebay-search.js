@@ -237,26 +237,69 @@ async function searchSold(query, appId) {
   });
 }
 
-// Active listings as last-resort fallback (lower confidence, clearly labelled)
-async function searchActive(query, appId) {
+// Helper: get OAuth application token
+async function getOAuthToken(scope = 'https://api.ebay.com/oauth/api_scope') {
   const clientId = process.env.EBAY_CLIENT_ID;
   const clientSecret = process.env.EBAY_CLIENT_SECRET;
   if (!clientId || !clientSecret) return null;
-
   const auth = Buffer.from(`${clientId}:${clientSecret}`).toString('base64');
   const tokenRes = await fetch('https://api.ebay.com/identity/v1/oauth2/token', {
     method: 'POST',
     headers: { Authorization: `Basic ${auth}`, 'Content-Type': 'application/x-www-form-urlencoded' },
-    body: 'grant_type=client_credentials&scope=https://api.ebay.com/oauth/api_scope',
+    body: `grant_type=client_credentials&scope=${encodeURIComponent(scope)}`,
   });
-  const tokenData = await tokenRes.json();
-  if (!tokenData.access_token) return null;
+  const d = await tokenRes.json();
+  return d.access_token || null;
+}
+
+// Marketplace Insights API — returns actual SOLD items via OAuth
+// (requires buy.marketplace.insights scope — may need special eBay approval)
+async function searchSoldInsights(query) {
+  try {
+    const token = await getOAuthToken('https://api.ebay.com/oauth/api_scope/buy.marketplace.insights');
+    if (!token) return null;
+
+    const url = `https://api.ebay.com/buy/marketplace_insights/v1_beta/item_sales/search` +
+      `?q=${encodeURIComponent(query)}&limit=50&category_ids=259104`;
+    const res = await fetch(url, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+        'X-EBAY-C-MARKETPLACE-ID': 'EBAY_GB',
+      },
+    });
+    console.log('[ebay] Marketplace Insights status:', res.status);
+    if (!res.ok) return null;
+
+    const data = await res.json();
+    return (data.itemSales || []).map(item => ({
+      title: item.title || '',
+      price: Number(item.lastSoldPrice?.value || item.price?.value || 0),
+      currency: item.lastSoldPrice?.currency || 'GBP',
+      url: item.itemWebUrl || '',
+      image: item.image?.imageUrl || '',
+      condition: item.condition || '',
+      endDate: item.itemEndDate || item.lastSoldDate || '',
+      country: item.itemLocation?.country || '',
+      location: '',
+      shippingCost: null,
+      sold: true,
+    }));
+  } catch (e) {
+    console.warn('[ebay] Marketplace Insights error:', e.message);
+    return null;
+  }
+}
+
+// Active listings as last-resort fallback (lower confidence, clearly labelled)
+async function searchActive(query) {
+  const token = await getOAuthToken('https://api.ebay.com/oauth/api_scope');
+  if (!token) return null;
 
   const res = await fetch(
     `https://api.ebay.com/buy/browse/v1/item_summary/search?q=${encodeURIComponent(query)}&limit=30&category_ids=259104`,
     {
       headers: {
-        Authorization: `Bearer ${tokenData.access_token}`,
+        Authorization: `Bearer ${token}`,
         'X-EBAY-C-MARKETPLACE-ID': 'EBAY_GB',
       },
     }
@@ -332,21 +375,35 @@ export default async function handler(req, res) {
       }
     }
 
-    // Active listing fallback if no sold data found or sold API unavailable
+    // Marketplace Insights API fallback — real sold data via OAuth
+    if (!bestResults.length) {
+      for (const { query, type } of queries) {
+        const raw = await searchSoldInsights(query);
+        if (!raw) break; // API not available for this account
+        const filtered = raw.filter(r => r.price > 0 && isValidListing(r.title, type));
+        console.log('[ebay] Insights results:', raw.length, '| filtered:', filtered.length);
+        if (filtered.length >= 3) {
+          bestResults = filtered; usedQuery = query; break;
+        }
+        if (filtered.length > bestResults.length) {
+          bestResults = filtered; usedQuery = query;
+        }
+      }
+      if (bestResults.length) isSoldData = true; // insights gives real sold data
+    }
+
+    // Active listing fallback — last resort
     if (!bestResults.length) {
       isSoldData = false;
       for (const { query, type } of queries) {
-        const raw = await searchActive(query, appId);
+        const raw = await searchActive(query);
         if (!raw) break;
         const filtered = raw.filter(r => r.price > 0 && isValidListing(r.title, type));
         if (filtered.length >= 3) {
-          bestResults = filtered;
-          usedQuery = query;
-          break;
+          bestResults = filtered; usedQuery = query; break;
         }
         if (filtered.length > bestResults.length) {
-          bestResults = filtered;
-          usedQuery = query;
+          bestResults = filtered; usedQuery = query;
         }
       }
     }
