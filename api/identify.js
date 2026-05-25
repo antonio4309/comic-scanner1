@@ -60,6 +60,12 @@ CANADIAN PRICE VARIANT (CPV):
   - CPVs are significantly rarer than US newsstand copies.
   - KEY RULE: Barcode present + Canadian price visible → "Canadian Price Variant".
 
+UK PENCE PRICE VARIANT:
+  - Some US comics from the 1960s–80s were distributed in the UK with a pence price stamped or printed over the US price (e.g. "10p", "12p", "15p", "25p").
+  - The barcode area is unchanged; only the price differs.
+  - These are called "Type 1A" (newsstand with pence stamp) or "UK Price Variants".
+  - KEY RULE: Pence price visible in the price box → note in variantDetails as "UK Pence Price Variant (Xp)".
+
 UNKNOWN: Only use if the bottom-left corner is completely obscured or cut off.
 
 COMMON MISTAKE TO AVOID: A Spider-Man face/head logo in the bottom-left = DIRECT EDITION (not newsstand). The Spider-Man logo was used on Marvel direct editions from 1979. Do NOT confuse the logo with a barcode.
@@ -97,9 +103,13 @@ COMMON MISTAKE TO AVOID: A Spider-Man face/head logo in the bottom-left = DIRECT
   Preacher #1, Watchmen #1-12, Dark Knight Returns #1-4, Sin City #1, Sandman #1,
   House of Secrets #92 (1st Swamp Thing), Werewolf by Night #32 (1st Moon Knight), Hero for Hire #1 (1st Luke Cage).
 
+=== IMPORTANT CHARACTERS ===
+- importantCharacters: List the main characters who appear on the cover or in the issue title (e.g. "Spider-Man, Mary Jane Watson, Venom"). If unknown, write "Unknown".
+
 === LOW PRINT RUN ===
-- lowPrintRun: true if low-circulation copy.
-- printRunNote: reason — e.g. "Direct edition newsstand — typically 10–15% of print run vs direct", "Canadian Price Variant — extremely scarce, <1% of print run", "Late newsstand (post-1990) — extremely rare, most sold as direct", "Independent publisher <10k print run", "Convention exclusive".
+- lowPrintRun: true ONLY for low-circulation copies. Direct editions are NOT low print run (they were the majority of sales).
+- Set lowPrintRun: true for: Newsstand edition (10–15% of print run), Canadian Price Variant (<1% of print run), Late newsstand post-1990 (extremely rare), independent publisher with <10k print run, convention exclusive.
+- printRunNote: reason — e.g. "Newsstand edition — typically 10–15% of print run vs direct edition", "Canadian Price Variant — extremely scarce, <1% of print run", "Late newsstand (post-1990) — extremely rare, most copies sold as direct", "Independent publisher low print run", "Convention exclusive".
 
 === GRADING ===
 CRITICAL: NEVER output condition "Unknown" unless cover is completely invisible. Always give best-effort estimate.
@@ -182,7 +192,7 @@ export default async function handler(req, res) {
         }],
         generationConfig: {
           temperature: 0.1,
-          maxOutputTokens: 1400,
+          maxOutputTokens: 2000,
           responseMimeType: 'application/json'
         }
       })
@@ -240,7 +250,7 @@ export default async function handler(req, res) {
       conditionGrade:  parsed.conditionGrade  || '',
       conditionReason: parsed.conditionReason || '',
       photoAdvice:     parsed.photoAdvice     || '',
-      searchQuery:     parsed.searchQuery     || `${title} ${issue} comic`.trim()
+      searchQuery:     parsed.searchQuery     || `${title} ${issue}`.trim()
     });
 
   } catch (err) {
