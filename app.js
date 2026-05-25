@@ -1086,9 +1086,14 @@ function renderList() {
   updatePublisherDropdown();
 
   if (!comics.length) {
-    list.innerHTML = `<div class="empty-state">
+    list.innerHTML = `<div class="empty-state empty-state-onboard">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>
-      Archive Empty<br/>Feed First Document →
+      <div class="empty-title">Archive is empty</div>
+      <div class="empty-steps">
+        <div class="empty-step"><span class="empty-num">1</span> Point your camera at a comic cover</div>
+        <div class="empty-step"><span class="empty-num">2</span> AI identifies title, edition &amp; condition</div>
+        <div class="empty-step"><span class="empty-num">3</span> Live eBay UK price fetched automatically</div>
+      </div>
     </div>`;
     updateStats();
     return;
@@ -1133,19 +1138,22 @@ function renderList() {
           : `Whatnot price after fees · eBay base £${c.ebayPrice ? c.ebayPrice.toFixed(2) : '?'}`;
         display = `£${whatnot}`;
       } else if (c.ebayStatus === 'notfound') {
-        cls = 'comic-price notfound'; titleText = 'No UK eBay results — click ✏ to set manually'; display = 'N/A';
+        cls = 'comic-price notfound'; titleText = 'No UK eBay results found — click ✏ to set a price manually'; display = '—';
       } else {
-        cls = 'comic-price error'; titleText = c.ebayError || 'eBay error'; display = 'Err';
+        cls = 'comic-price error'; titleText = 'eBay price lookup failed — click to retry'; display = '↻';
       }
       const conf = c.ebayConfidence || 0;
       const thinData = c.ebayStatus === 'ok' && (c.ebayCount < 3 || conf < 40);
       const ebayCount = c.ebayCount ?? 0;
       const confLabel = conf >= 70 ? '' : conf >= 40 ? `⚠ ${ebayCount}` : `⚠ LOW`;
       const confTitle = conf >= 70 ? '' : `${ebayCount} sold comp${ebayCount === 1 ? '' : 's'} · confidence ${conf}% — treat as estimate`;
+      const retryBtn = (c.ebayStatus === 'error')
+        ? `<button class="btn-edit-price" onclick="retryEbayPrice(${c.id})" title="Retry eBay lookup" style="color:var(--amber)">↻ retry</button>`
+        : `<button class="btn-edit-price" onclick="startEditPrice(${c.id})" title="Edit price">✏ edit</button>`;
       priceHtml = `<div class="price-col">
         <span class="${cls}" title="${escapeHtml(titleText)}">${display}</span>
         ${thinData ? `<span class="price-thin" title="${confTitle}">${confLabel}</span>` : ''}
-        <button class="btn-edit-price" onclick="startEditPrice(${c.id})" title="Edit price">✏ edit</button>
+        ${retryBtn}
       </div>`;
     }
 
@@ -1246,7 +1254,8 @@ function updateStats() {
 
   const withCost = comics.filter(c => c.costPrice != null && getWhatnotPrice(c));
   document.getElementById('stat-count').textContent = totalItems;
-  document.getElementById('stat-total').textContent = '£' + totalVal.toFixed(0);
+  // Show — instead of £0 when no comics have been priced yet
+  document.getElementById('stat-total').textContent = priced.length ? '£' + totalVal.toFixed(0) : '—';
 
   if (withCost.length > 0) {
     const totalProfit = withCost.reduce((s, c) => s + (getWhatnotPrice(c) * 0.89 - c.costPrice) * (c.qty || 1), 0);
@@ -1254,7 +1263,7 @@ function updateStats() {
     document.getElementById('stat-avg-label').textContent = 'Est. Profit';
     document.getElementById('stat-avg').style.color = totalProfit >= 0 ? '#00cfbe' : 'var(--red)';
   } else {
-    document.getElementById('stat-avg').textContent = '£' + avg.toFixed(0);
+    document.getElementById('stat-avg').textContent = priced.length ? '£' + avg.toFixed(0) : '—';
     document.getElementById('stat-avg-label').textContent = 'Avg Price';
     document.getElementById('stat-avg').style.color = '';
   }
@@ -1282,6 +1291,15 @@ function updatePricePreview(id) {
   if (!input || !preview) return;
   const net = parseFloat(input.value);
   preview.textContent = (!isNaN(net) && net > 0) ? `→ list at £${Math.ceil(net * 1.15)}` : '';
+}
+
+function retryEbayPrice(id) {
+  const comic = comics.find(c => c.id === id);
+  if (!comic) return;
+  comic.ebayStatus = 'loading';
+  comic.ebayPrice = null;
+  renderList();
+  fetchEbayPrice(comic, true);
 }
 
 function startEditPrice(id) {
