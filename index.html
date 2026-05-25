@@ -3016,10 +3016,11 @@
         </div>
       </div>
       <div class="export-btns">
-        <button class="btn-primary" onclick="exportCSV()">⬇ Download CSV</button>
+        <button class="btn-primary" onclick="exportCSV()">⬇ Whatnot CSV</button>
+        <button onclick="exportInventoryCSV()">⬇ Inventory CSV</button>
         <button onclick="togglePreview()">⊞ Preview</button>
       </div>
-      <div style="margin-top:8px;font-family:'Space Mono',monospace;font-size:9px;color:var(--muted);letter-spacing:0.05em">⚠ Photo links in CSV expire after 24h — download your CSV before then.</div>
+      <div style="margin-top:8px;font-family:'Space Mono',monospace;font-size:9px;color:var(--muted);letter-spacing:0.05em">⚠ Photo links in CSV expire after 24h — download before then. Inventory CSV includes full grading data.</div>
       <pre id="csv-preview" style="display:none;margin-top:10px;font-size:10px;font-family:'Space Mono',monospace;background:var(--ink);padding:10px;border:1px solid var(--border2);overflow-x:auto;white-space:pre;max-height:120px;overflow-y:auto;color:var(--cream2)"></pre>
     </div>
 
@@ -3908,24 +3909,26 @@ async function scanAndAdd() {
 
   if (added > 0) {
     saveInventory();
+    const dupCount = comics.slice(0, added).filter(c => c.possibleDuplicate).length;
+    const dupNote = dupCount > 0 ? ` · ⚠ ${dupCount} possible duplicate${dupCount > 1 ? 's' : ''} flagged` : '';
     if (uploadErrorMsg) {
       showStatus('scan-status', 'warn', `⚠ ${added} comic${added === 1 ? '' : 's'} added but photo upload failed: ${uploadErrorMsg}. Use the 📷 button on each card to retry.`);
     } else {
       const adviceSet = [...new Set(comics.slice(0, added).map(c => c.photoAdvice).filter(Boolean))];
       if (adviceSet.length) {
-        showStatus('scan-status', 'warn', `⚠ ${adviceSet[0]}${adviceSet.length > 1 ? ` (+${adviceSet.length - 1} more tips)` : ''}`);
+        showStatus('scan-status', 'warn', `⚠ ${adviceSet[0]}${adviceSet.length > 1 ? ` (+${adviceSet.length - 1} more tips)` : ''}${dupNote}`);
       } else {
-        showStatus('scan-status', 'success', `✓ Added ${added} comic${added === 1 ? '' : 's'} — fetching eBay UK prices...`);
+        showStatus('scan-status', dupCount ? 'warn' : 'success', `✓ Added ${added} comic${added === 1 ? '' : 's'} — fetching eBay UK prices...${dupNote}`);
       }
     }
-    if (isMobile()) { showMobToast(`✓ ${added} Comic${added === 1 ? '' : 's'} Saved`); setTimeout(() => switchMobileTab('inventory'), 1200); }
+    if (isMobile()) { showMobToast(`✓ ${added} Comic${added === 1 ? '' : 's'} Saved${dupNote}`); setTimeout(() => switchMobileTab('inventory'), 1200); }
   } else {
     showStatus('scan-status', 'error', '✗ No comics were added.');
   }
 }
 
 async function identifyComic(base64, override) {
-  const res = await fetch('/api/identify.js', {
+  const res = await fetch('/api/identify', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ base64, override: override || '' })
@@ -4718,6 +4721,56 @@ function togglePreview() {
   } else {
     pre.style.display = 'none';
   }
+}
+
+function exportInventoryCSV() {
+  if (!comics.length) { alert('No comics to export'); return; }
+
+  const headers = [
+    'Title', 'Issue', 'Publisher', 'Year', 'Edition', 'Variant',
+    'Condition', 'CGC Grade', 'Is Slabbed', 'Slab Company', 'Slab Grade',
+    'Key Issue', 'First Appearance', 'Key Info',
+    'eBay Market Price (£)', 'Whatnot Price (£)', 'Cost Price (£)',
+    'Important Characters', 'Confidence', 'Image URL', 'Date Added'
+  ];
+
+  const esc = v => {
+    const s = String(v ?? '').replace(/"/g, '""');
+    return s.includes(',') || s.includes('"') || s.includes('\n') ? `"${s}"` : s;
+  };
+
+  const rows = comics.map(c => [
+    esc(c.title),
+    esc(c.issue),
+    esc(c.publisher),
+    esc(c.year),
+    esc(c.edition),
+    esc(c.variantDetails || (c.isVariant ? 'Yes' : '')),
+    esc(c.condition),
+    esc(c.conditionGrade),
+    esc(c.isSlabbed ? 'Yes' : 'No'),
+    esc(c.slabCompany),
+    esc(c.slabGrade),
+    esc(c.isKeyIssue ? 'Yes' : 'No'),
+    esc(c.firstAppearance),
+    esc(c.keyInfo),
+    esc(c.ebayPrice != null ? c.ebayPrice.toFixed(2) : ''),
+    esc(getWhatnotPrice(c) != null ? getWhatnotPrice(c).toFixed(2) : ''),
+    esc(c.costPrice != null ? c.costPrice.toFixed(2) : ''),
+    esc(c.importantCharacters),
+    esc(c.confidence),
+    esc(c.imageUrl || ''),
+    esc(c.id ? new Date(parseInt(c.id, 16) || Date.now()).toISOString().slice(0, 10) : '')
+  ].join(','));
+
+  const csv = [headers.join(','), ...rows].join('\n');
+  const blob = new Blob(['﻿' + csv], { type: 'text/csv;charset=utf-8' }); // BOM for Excel
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `longboxlens_inventory_${new Date().toISOString().slice(0, 10)}.csv`;
+  document.body.appendChild(a); a.click();
+  document.body.removeChild(a); URL.revokeObjectURL(url);
 }
 
 // ── Tab switching ─────────────────────────────────────────────────────────────
