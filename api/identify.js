@@ -161,6 +161,33 @@ function buildPrompt(override) {
   return BASE_RULES;
 }
 
+// ── Rate limiting (10 scans / minute per IP, 100/day per IP) ─────────────────
+import { Redis } from '@upstash/redis';
+
+async function checkRateLimit(ip) {
+  // Skip rate limiting if Redis is not configured
+  if (!process.env.UPSTASH_REDIS_REST_URL || !process.env.UPSTASH_REDIS_REST_TOKEN) return null;
+  try {
+    const redis = Redis.fromEnv();
+    const minuteKey = `rl:identify:min:${ip}:${Math.floor(Date.now() / 60000)}`;
+    const dayKey    = `rl:identify:day:${ip}:${new Date().toISOString().slice(0, 10)}`;
+
+    const [minCount, dayCount] = await Promise.all([
+      redis.incr(minuteKey),
+      redis.incr(dayKey),
+    ]);
+    // Set TTL on first hit only (incr returns 1)
+    if (minCount === 1) await redis.expire(minuteKey, 90);   // 90s safety margin
+    if (dayCount === 1) await redis.expire(dayKey, 90000);   // 25h safety margin
+
+    if (minCount > 10)  return { error: 'Too many scans — wait a moment and try again.', retry: 60 };
+    if (dayCount > 100) return { error: 'Daily scan limit reached. Try again tomorrow.', retry: 3600 };
+    return null;
+  } catch {
+    return null; // Redis down → fail open, don't block the user
+  }
+}
+
 export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
@@ -168,6 +195,14 @@ export default async function handler(req, res) {
 
   if (req.method === 'OPTIONS') return res.status(200).end();
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
+
+  // Rate limit check
+  const ip = req.headers['x-forwarded-for']?.split(',')[0].trim() || req.socket?.remoteAddress || 'unknown';
+  const limited = await checkRateLimit(ip);
+  if (limited) {
+    res.setHeader('Retry-After', String(limited.retry));
+    return res.status(429).json({ error: limited.error });
+  }
 
   const GEMINI_KEY = process.env.GEMINI_API_KEY;
   if (!GEMINI_KEY) {

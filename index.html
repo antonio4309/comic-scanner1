@@ -2941,6 +2941,11 @@
         <option value="price-desc">Price: High → Low</option>
         <option value="price-asc">Price: Low → High</option>
         <option value="title">Title A–Z</option>
+        <option value="year-desc">Year: New → Old</option>
+        <option value="year-asc">Year: Old → New</option>
+      </select>
+      <select id="publisher-filter" onchange="applyPublisherFilter()" title="Filter by publisher">
+        <option value="">All Publishers</option>
       </select>
       <div class="chip-row">
         <button class="chip active" id="chip-all" onclick="applyFilter('all')">All</button>
@@ -2974,6 +2979,14 @@
       <div class="stat">
         <div class="stat-val" id="stat-avg">£0</div>
         <div class="stat-label" id="stat-avg-label">Avg Price</div>
+      </div>
+      <div class="stat stat-keys" onclick="applyFilter('key')" style="cursor:pointer" title="Show key issues">
+        <div class="stat-val" id="stat-keys" style="color:#f5a623">0</div>
+        <div class="stat-label">Key Issues</div>
+      </div>
+      <div class="stat">
+        <div class="stat-val" id="stat-top">—</div>
+        <div class="stat-label">Top Comic</div>
       </div>
     </div>
 
@@ -3640,6 +3653,7 @@ let editingPriceId = null;
 // Sort / filter
 let sortMode = 'newest';
 let filterMode = 'all';
+let publisherFilter = '';
 
 // Select / bundle
 let selectMode = false;
@@ -4083,14 +4097,23 @@ async function refetchAllPrices() {
 function getDisplayedComics() {
   let result = [...comics];
 
+  // Type filter (chips)
   if (filterMode === 'key')     result = result.filter(c => c.isKeyIssue || !!c.firstAppearance);
   else if (filterMode === 'news')    result = result.filter(c => c.edition === 'Newsstand');
   else if (filterMode === 'slab')    result = result.filter(c => c.isSlabbed);
   else if (filterMode === 'noprice') result = result.filter(c => !getWhatnotPrice(c));
 
+  // Publisher filter
+  if (publisherFilter) {
+    result = result.filter(c => (c.publisher || '').toLowerCase() === publisherFilter.toLowerCase());
+  }
+
+  // Sort
   if (sortMode === 'price-desc') result.sort((a, b) => (getWhatnotPrice(b) || 0) - (getWhatnotPrice(a) || 0));
   else if (sortMode === 'price-asc')  result.sort((a, b) => (getWhatnotPrice(a) || 0) - (getWhatnotPrice(b) || 0));
   else if (sortMode === 'title')      result.sort((a, b) => a.title.localeCompare(b.title));
+  else if (sortMode === 'year-desc')  result.sort((a, b) => (Number(b.year) || 0) - (Number(a.year) || 0));
+  else if (sortMode === 'year-asc')   result.sort((a, b) => (Number(a.year) || 0) - (Number(b.year) || 0));
 
   return result;
 }
@@ -4098,6 +4121,22 @@ function getDisplayedComics() {
 function applySort() {
   sortMode = document.getElementById('sort-mode').value;
   renderList();
+}
+
+function applyPublisherFilter() {
+  publisherFilter = document.getElementById('publisher-filter').value;
+  renderList();
+}
+
+function updatePublisherDropdown() {
+  const sel = document.getElementById('publisher-filter');
+  if (!sel) return;
+  const publishers = [...new Set(
+    comics.map(c => c.publisher).filter(p => p && p !== 'Unknown')
+  )].sort();
+  const current = sel.value;
+  sel.innerHTML = '<option value="">All Publishers</option>' +
+    publishers.map(p => `<option value="${escapeHtml(p)}"${p === current ? ' selected' : ''}>${escapeHtml(p)}</option>`).join('');
 }
 
 function applyFilter(mode) {
@@ -4342,6 +4381,7 @@ function escapeHtml(value) {
 function renderList() {
   const list = document.getElementById('comic-list');
   const displayed = getDisplayedComics();
+  updatePublisherDropdown();
 
   if (!comics.length) {
     list.innerHTML = `<div class="empty-state">
@@ -4515,6 +4555,22 @@ function updateStats() {
     document.getElementById('stat-avg').textContent = '£' + avg.toFixed(0);
     document.getElementById('stat-avg-label').textContent = 'Avg Price';
     document.getElementById('stat-avg').style.color = '';
+  }
+
+  // Key issues count
+  const keyCount = comics.filter(c => c.isKeyIssue || !!c.firstAppearance).length;
+  document.getElementById('stat-keys').textContent = keyCount;
+
+  // Top comic by price
+  const topComic = comics.filter(c => getWhatnotPrice(c)).sort((a, b) => (getWhatnotPrice(b) || 0) - (getWhatnotPrice(a) || 0))[0];
+  const topEl = document.getElementById('stat-top');
+  if (topComic) {
+    const shortTitle = (topComic.title || '?').replace(/^(The |Amazing |Uncanny |Incredible |Invincible )/i, '');
+    topEl.textContent = shortTitle.length > 12 ? shortTitle.slice(0, 11) + '…' : shortTitle;
+    topEl.title = `${topComic.title} #${topComic.issue} — £${getWhatnotPrice(topComic)}`;
+  } else {
+    topEl.textContent = '—';
+    topEl.title = '';
   }
 }
 
