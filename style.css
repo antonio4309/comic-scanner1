@@ -2943,257 +2943,181 @@
     }
 
     /* ═══════════════════════════════════════════════════════════════
-       SCROLL APP PREVIEW — 3D tilt-on-scroll device mockup
+       PHONE SCROLL REVEAL — Cleo-style: phone scales into frame
        ═══════════════════════════════════════════════════════════════ */
 
-    /* Aceternity ContainerScroll pattern — tall container, perspective inner, no sticky */
-    .lp-scroll-preview {
-      height: 80rem;          /* matches h-[80rem] */
+    /* Outer: provides the scroll distance; background always visible */
+    .lp-phone-outer {
+      height: 250vh;
+      position: relative;
+      background: var(--ink);
+      /* subtle warm radial glow behind phone */
+      background-image: radial-gradient(ellipse 60% 50% at 50% 60%, rgba(255,142,62,0.07) 0%, transparent 70%);
+    }
+
+    /* Sticky inner — stays in viewport during 250vh scroll */
+    .lp-phone-sticky {
+      position: sticky;
+      top: 0;
+      height: 100vh;
       display: flex;
       align-items: center;
       justify-content: center;
-      padding: 20px 80px;
-      background: var(--coal);
-      overflow: hidden;       /* clip rotated card edges */
-      position: relative;
-    }
-    .lp-scroll-preview-inner {
-      width: 100%;
-      position: relative;
-      perspective: 1000px;    /* matches style={{ perspective:"1000px" }} */
-      padding: 40px 0 160px;
-    }
-    .lp-scroll-preview-title {
-      max-width: 64rem;
-      margin: 0 auto;
-      text-align: center;
-      will-change: transform;
-      margin-bottom: 0;
-    }
-    .lp-scroll-preview-card {
-      max-width: 64rem;
-      margin: -48px auto 0;   /* matches -mt-12 */
-      width: 100%;
-      height: 40rem;          /* matches h-[40rem] */
-      border: 4px solid #3a2820;
-      padding: 8px 24px;
-      background: #1a0e0c;
-      border-radius: 30px;    /* matches rounded-[30px] */
-      box-shadow:
-        0 0 #0000004d,
-        0 9px 20px #0000004a,
-        0 37px 37px #00000042,
-        0 84px 50px #00000026,
-        0 149px 60px #0000000a,
-        0 233px 65px #00000003;
-      will-change: transform;
-      transform-origin: top center;
-    }
-    .lp-scroll-preview-screen {
-      height: 100%;
-      width: 100%;
       overflow: hidden;
-      border-radius: 18px;
+    }
+
+    /* Phone wrapper — JS applies scale() transform here */
+    .lp-phone-wrap {
+      will-change: transform;
+      transform-origin: center center;
+    }
+
+    /* ── iPhone-style device frame ─── */
+    .lp-phone-device {
+      position: relative;
+      width: 300px;
+      height: 620px;
+      background: #1c1c1e;            /* Apple titanium/graphite */
+      border-radius: 50px;
+      border: 10px solid #2c2c2e;     /* outer bezel */
+      box-shadow:
+        inset 0 0 0 1px #3a3a3c,      /* inner rim */
+        0 0 0 1px #0a0a0a,            /* outer edge */
+        0 30px 80px rgba(0,0,0,0.8),
+        0 0 60px rgba(255,142,62,0.06);
+      overflow: hidden;
+    }
+    /* Side buttons */
+    .lp-phone-btn-left {
+      position: absolute;
+      left: -12px; top: 120px;
+      width: 3px; height: 60px;
+      background: #2c2c2e;
+      border-radius: 2px 0 0 2px;
+    }
+    .lp-phone-btn-right1 {
+      position: absolute;
+      right: -12px; top: 100px;
+      width: 3px; height: 36px;
+      background: #2c2c2e;
+      border-radius: 0 2px 2px 0;
+    }
+    .lp-phone-btn-right2 {
+      position: absolute;
+      right: -12px; top: 160px;
+      width: 3px; height: 60px;
+      background: #2c2c2e;
+      border-radius: 0 2px 2px 0;
+    }
+
+    /* ── Screen area ─── */
+    .lp-phone-screen {
+      width: 100%;
+      height: 100%;
       background: var(--surface);
+      border-radius: 40px;
+      overflow: hidden;
       display: flex;
       flex-direction: column;
     }
 
-    /* ── Mock app header ─── */
-    .lp-mock-header {
+    /* Status bar with Dynamic Island */
+    .lp-phone-statusbar {
       display: flex;
       align-items: center;
-      gap: 12px;
-      padding: 8px 14px;
+      padding: 12px 20px 4px;
+      flex-shrink: 0;
+      position: relative;
+      background: var(--ink);
+    }
+    .lp-phone-time {
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--cream);
+    }
+    .lp-phone-island {
+      position: absolute;
+      left: 50%; top: 10px;
+      transform: translateX(-50%);
+      width: 90px; height: 26px;
+      background: #000;
+      border-radius: 20px;
+    }
+    .lp-phone-signal {
+      margin-left: auto;
+      font-size: 9px;
+      color: var(--cream);
+      letter-spacing: 1px;
+    }
+
+    /* ── App inside phone ─── */
+    .lp-phone-app {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      min-height: 0;
+      overflow: hidden;
+    }
+    .lp-phone-app-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 10px 16px 8px;
       background: var(--ink);
       border-bottom: 1px solid var(--border2);
       flex-shrink: 0;
     }
-    .lp-mock-logo {
-      font-family: 'Bebas Neue', Impact, sans-serif;
-      font-size: 18px;
-      letter-spacing: 1px;
-      color: var(--cream);
-      white-space: nowrap;
-    }
-    .lp-mock-logo span { color: var(--amber); }
-    .lp-mock-tabs {
-      display: flex;
-      gap: 2px;
-      margin-left: 8px;
-    }
-    .lp-mock-tab {
-      font-family: 'Plus Jakarta Sans', sans-serif;
-      font-size: 11px;
-      font-weight: 500;
-      padding: 5px 12px;
-      border-radius: 100px;
-      color: var(--muted);
-      background: transparent;
-      white-space: nowrap;
-    }
-    .lp-mock-tab-active {
-      background: rgba(255,142,62,0.12);
-      color: var(--amber);
-    }
-    .lp-mock-badge-live {
-      margin-left: auto;
-      font-family: 'Space Mono', monospace;
-      font-size: 9px;
-      color: var(--amber);
-      display: flex;
-      align-items: center;
-      gap: 5px;
-    }
-    .lp-mock-badge-live span {
-      width: 6px; height: 6px;
-      background: var(--amber);
-      border-radius: 50%;
-      display: inline-block;
-      animation: pulse-dot 2s ease-in-out infinite;
-    }
-
-    /* ── Mock body (two-column) ─── */
-    .lp-mock-body {
-      display: grid;
-      grid-template-columns: 240px 1fr;
-      flex: 1;
-      min-height: 0;
-      overflow: hidden;
-    }
-    .lp-mock-cam-col {
-      border-right: 1px solid var(--border2);
-      background: var(--ink);
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      gap: 12px;
-      padding: 12px;
-    }
-    .lp-mock-cam-area {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 8px;
-      width: 100%;
-    }
-    .lp-mock-cam-frame {
-      position: relative;
-      width: 140px;
-      height: 180px;
-      border-radius: 4px;
-      overflow: hidden;
-    }
-    .lp-mock-comic-cover {
-      width: 100%;
-      height: 100%;
-      display: flex;
-    }
-    .lp-mock-cover-spine {
-      width: 12px;
-      height: 100%;
-      flex-shrink: 0;
-    }
-    .lp-mock-cover-art {
-      flex: 1;
-      background: linear-gradient(160deg, #1a1a2e 0%, #0d0d1a 100%);
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      padding: 8px;
-    }
-    .lp-mock-cover-title {
-      font-family: 'Bebas Neue', Impact, sans-serif;
-      font-size: 13px;
-      letter-spacing: 1px;
-      color: #fff;
-      text-align: center;
-      line-height: 1.2;
-    }
-    .lp-mock-cover-issue {
+    .lp-phone-app-logo {
       font-family: 'Bebas Neue', Impact, sans-serif;
       font-size: 20px;
-      color: var(--amber);
-      margin-top: 4px;
+      letter-spacing: 1px;
+      color: var(--cream);
     }
-    /* Scan corner markers */
-    .lp-mock-cam-corner {
-      position: absolute;
-      width: 14px; height: 14px;
-      border-color: var(--amber);
-      border-style: solid;
-    }
-    .lp-mock-cam-tl { top: 4px; left: 4px; border-width: 2px 0 0 2px; }
-    .lp-mock-cam-tr { top: 4px; right: 4px; border-width: 2px 2px 0 0; }
-    .lp-mock-cam-bl { bottom: 4px; left: 4px; border-width: 0 0 2px 2px; }
-    .lp-mock-cam-br { bottom: 4px; right: 4px; border-width: 0 2px 2px 0; }
-    .lp-mock-scan-label {
+    .lp-phone-app-logo span { color: var(--amber); }
+    .lp-phone-app-badge {
       font-family: 'Space Mono', monospace;
-      font-size: 9px;
-      letter-spacing: 0.1em;
+      font-size: 8px;
       color: var(--amber);
-      opacity: 0.8;
-      animation: pulse-dot 1.5s ease-in-out infinite;
-    }
-    .lp-mock-scan-btn {
-      background: var(--gradient);
-      color: #fff;
-      font-family: 'Plus Jakarta Sans', sans-serif;
-      font-size: 11px;
-      font-weight: 600;
-      padding: 8px 20px;
-      border-radius: 100px;
-      cursor: default;
-    }
-
-    /* ── Inventory column ─── */
-    .lp-mock-inv-col {
-      display: flex;
-      flex-direction: column;
-      overflow: hidden;
-      background: var(--coal);
-    }
-    .lp-mock-inv-header {
       display: flex;
       align-items: center;
-      justify-content: space-between;
-      padding: 8px 14px;
-      border-bottom: 1px solid var(--border);
-      flex-shrink: 0;
+      gap: 4px;
     }
-    .lp-mock-inv-title {
-      font-family: 'Plus Jakarta Sans', sans-serif;
-      font-size: 11px; font-weight: 600;
-      color: var(--cream2);
+    .lp-phone-app-badge span {
+      width: 5px; height: 5px;
+      background: var(--amber);
+      border-radius: 50%;
+      animation: pulse-dot 2s ease-in-out infinite;
     }
-    .lp-mock-inv-count {
-      font-family: 'Space Mono', monospace;
-      font-size: 9px; color: var(--amber);
-    }
-    .lp-mock-card {
+    .lp-phone-app-body {
+      flex: 1;
+      overflow: hidden;
+      background: var(--coal);
       display: flex;
-      align-items: flex-start;
+      flex-direction: column;
+    }
+    .lp-phone-card {
+      display: flex;
+      align-items: center;
       gap: 10px;
       padding: 10px 14px;
       border-bottom: 1px solid var(--border);
       flex-shrink: 0;
     }
-    .lp-mock-card-thumb {
-      width: 40px; height: 52px;
+    .lp-phone-card-thumb {
+      width: 36px; height: 48px;
       border-radius: 3px;
       flex-shrink: 0;
       display: flex;
       align-items: center;
       justify-content: center;
       font-family: 'Bebas Neue', Impact, sans-serif;
-      font-size: 9px;
-      color: rgba(255,255,255,0.7);
+      font-size: 8px;
+      color: rgba(255,255,255,0.75);
       letter-spacing: 0.5px;
     }
-    .lp-mock-card-info { flex: 1; min-width: 0; }
-    .lp-mock-card-name {
+    .lp-phone-card-info { flex: 1; min-width: 0; }
+    .lp-phone-card-title {
       font-family: 'Plus Jakarta Sans', sans-serif;
       font-size: 11px; font-weight: 600;
       color: var(--cream);
@@ -3201,50 +3125,40 @@
       overflow: hidden;
       text-overflow: ellipsis;
     }
-    .lp-mock-card-meta {
+    .lp-phone-card-sub {
       font-family: 'Space Mono', monospace;
-      font-size: 8px; color: var(--muted);
+      font-size: 7px; color: var(--muted);
       margin-top: 2px;
     }
-    .lp-mock-card-price {
+    .lp-phone-card-price {
       font-family: 'Bebas Neue', Impact, sans-serif;
-      font-size: 15px; color: var(--cream);
-      margin-top: 3px;
-      letter-spacing: 0.5px;
+      font-size: 14px; color: var(--cream);
+      margin-top: 2px;
+      display: flex; align-items: center; gap: 6px;
     }
-    .lp-mock-card-tags {
-      display: flex;
-      flex-direction: column;
-      gap: 3px;
-      flex-shrink: 0;
-    }
-    .lp-mock-tag {
+    .lp-phone-tag {
       font-family: 'Space Mono', monospace;
-      font-size: 7px;
+      font-size: 6px; font-weight: 400;
       padding: 2px 5px;
       border-radius: 3px;
-      border: 1px solid rgba(255,255,255,0.1);
-      color: var(--muted);
+      background: rgba(255,142,62,0.12);
+      border: 1px solid rgba(255,142,62,0.3);
+      color: var(--amber);
       white-space: nowrap;
     }
-    .lp-mock-tag-key {
-      background: rgba(255,142,62,0.12);
-      border-color: rgba(255,142,62,0.3);
-      color: var(--amber);
+    .lp-phone-app-footer {
+      padding: 10px 14px;
+      background: var(--ink);
+      border-top: 1px solid var(--border2);
+      flex-shrink: 0;
     }
-
-    @media (max-width: 1024px) {
-      .lp-scroll-preview { padding: 20px 20px; }
-    }
-    @media (max-width: 900px) {
-      .lp-scroll-preview-card { height: 26rem; border-radius: 20px; padding: 6px; }
-      .lp-mock-body { grid-template-columns: 1fr; }
-      .lp-mock-cam-col { display: none; }
-    }
-    @media (max-width: 768px) {
-      /* matches h-[60rem] on mobile */
-      .lp-scroll-preview { height: 60rem; padding: 8px; }
-      .lp-scroll-preview-inner { padding: 40px 0; }
-      .lp-scroll-preview-card { height: 24rem; border-radius: 16px; padding: 4px; }
+    .lp-phone-export-btn {
+      background: var(--gradient);
+      color: #fff;
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      font-size: 11px; font-weight: 600;
+      padding: 10px;
+      border-radius: 100px;
+      text-align: center;
     }
 

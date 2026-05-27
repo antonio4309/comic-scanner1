@@ -80,95 +80,72 @@
     </div>
   </section>
 
-  <!-- SCROLL APP PREVIEW — Aceternity ContainerScroll pattern -->
-  <div class="lp-scroll-preview" id="lp-scroll-preview">
-    <div class="lp-scroll-preview-inner">
-      <div class="lp-scroll-preview-title" id="lp-scroll-preview-title">
-        <span class="lp-label">See it in action</span>
-        <h2 class="lp-title" style="font-size:clamp(28px,5vw,64px);margin-top:8px">Scan once. Sell smarter.</h2>
-      </div>
-      <div class="lp-scroll-preview-card" id="lp-scroll-preview-card">
-        <div class="lp-scroll-preview-screen">
-          <!-- App UI mockup -->
-          <div class="lp-mock-header">
-            <div class="lp-mock-logo">Longbox<span>Lens</span></div>
-            <div class="lp-mock-tabs">
-              <div class="lp-mock-tab lp-mock-tab-active">📦 Whatnot Export</div>
-              <div class="lp-mock-tab">🔍 Comic Lookup</div>
+  <!-- PHONE SCROLL REVEAL — Cleo-style: phone scales from viewport-fill to natural size -->
+  <div class="lp-phone-outer" id="lp-phone-outer">
+    <div class="lp-phone-sticky">
+
+      <!-- Phone frame -->
+      <div class="lp-phone-wrap" id="lp-phone-wrap">
+        <div class="lp-phone-device">
+          <!-- Side buttons -->
+          <div class="lp-phone-btn-left"></div>
+          <div class="lp-phone-btn-right1"></div>
+          <div class="lp-phone-btn-right2"></div>
+          <!-- Screen -->
+          <div class="lp-phone-screen">
+            <div class="lp-phone-statusbar">
+              <span class="lp-phone-time">9:41</span>
+              <div class="lp-phone-island"></div>
+              <div class="lp-phone-signal">▲ ▲ ▲</div>
             </div>
-            <div class="lp-mock-badge-live"><span></span>3 scanned</div>
-          </div>
-          <div class="lp-mock-body">
-            <div class="lp-mock-cam-col">
-              <div class="lp-mock-cam-area">
-                <div class="lp-mock-cam-frame">
-                  <div class="lp-mock-comic-cover">
-                    <div class="lp-mock-cover-spine" style="background:#e23b3b"></div>
-                    <div class="lp-mock-cover-art">
-                      <div class="lp-mock-cover-title">AMAZING<br>SPIDER-MAN</div>
-                      <div class="lp-mock-cover-issue">#300</div>
-                    </div>
+            <!-- App content inside phone -->
+            <div class="lp-phone-app">
+              <div class="lp-phone-app-header">
+                <div class="lp-phone-app-logo">Longbox<span>Lens</span></div>
+                <div class="lp-phone-app-badge"><span></span>3 scanned</div>
+              </div>
+              <div class="lp-phone-app-body">
+                <div class="lp-phone-card">
+                  <div class="lp-phone-card-thumb" style="background:linear-gradient(135deg,#e23b3b,#a82020)">ASM</div>
+                  <div class="lp-phone-card-info">
+                    <div class="lp-phone-card-title">Amazing Spider-Man #300</div>
+                    <div class="lp-phone-card-sub">1988 · Marvel · VF/NM</div>
+                    <div class="lp-phone-card-price">£48.00 <span class="lp-phone-tag">KEY · 1ST VENOM</span></div>
                   </div>
-                  <div class="lp-mock-cam-corner lp-mock-cam-tl"></div>
-                  <div class="lp-mock-cam-corner lp-mock-cam-tr"></div>
-                  <div class="lp-mock-cam-corner lp-mock-cam-bl"></div>
-                  <div class="lp-mock-cam-corner lp-mock-cam-br"></div>
                 </div>
-                <div class="lp-mock-scan-label">Identifying…</div>
-              </div>
-              <div class="lp-mock-scan-btn">📷 Scan Next</div>
-            </div>
-            <div class="lp-mock-inv-col">
-              <div class="lp-mock-inv-header">
-                <span class="lp-mock-inv-title">Inventory</span>
-                <span class="lp-mock-inv-count">3 items · £112.00</span>
-              </div>
-              <div class="lp-mock-card">
-                <div class="lp-mock-card-thumb" style="background:linear-gradient(135deg,#e23b3b,#a82020)">
-                  <span>ASM</span>
+                <div class="lp-phone-card">
+                  <div class="lp-phone-card-thumb" style="background:linear-gradient(135deg,#3b7de2,#1a4fa8)">X-M</div>
+                  <div class="lp-phone-card-info">
+                    <div class="lp-phone-card-title">X-Men #266</div>
+                    <div class="lp-phone-card-sub">1990 · Marvel · VF · Newsstand</div>
+                    <div class="lp-phone-card-price">£32.00 <span class="lp-phone-tag">KEY · 1ST GAMBIT</span></div>
+                  </div>
                 </div>
-                <div class="lp-mock-card-info">
-                  <div class="lp-mock-card-name">Amazing Spider-Man #300</div>
-                  <div class="lp-mock-card-meta">1988 · Marvel · VF/NM · Direct</div>
-                  <div class="lp-mock-card-price">£48.00</div>
+                <div class="lp-phone-card">
+                  <div class="lp-phone-card-thumb" style="background:linear-gradient(135deg,#c8853f,#8a4f18)">GL</div>
+                  <div class="lp-phone-card-info">
+                    <div class="lp-phone-card-title">Green Lantern #76</div>
+                    <div class="lp-phone-card-sub">1970 · DC · VG/FN</div>
+                    <div class="lp-phone-card-price">£32.00 <span class="lp-phone-tag">FA GREEN ARROW</span></div>
+                  </div>
                 </div>
-                <div class="lp-mock-card-tags">
-                  <span class="lp-mock-tag lp-mock-tag-key">KEY</span>
-                  <span class="lp-mock-tag">1ST VENOM</span>
+                <div class="lp-phone-card">
+                  <div class="lp-phone-card-thumb" style="background:linear-gradient(135deg,#9c6228,#6b3a10)">BM</div>
+                  <div class="lp-phone-card-info">
+                    <div class="lp-phone-card-title">Batman #181</div>
+                    <div class="lp-phone-card-sub">1966 · DC · FN</div>
+                    <div class="lp-phone-card-price">£24.00 <span class="lp-phone-tag">1ST POISON IVY</span></div>
+                  </div>
                 </div>
               </div>
-              <div class="lp-mock-card">
-                <div class="lp-mock-card-thumb" style="background:linear-gradient(135deg,#3b7de2,#1a4fa8)">
-                  <span>X-M</span>
-                </div>
-                <div class="lp-mock-card-info">
-                  <div class="lp-mock-card-name">X-Men #266</div>
-                  <div class="lp-mock-card-meta">1990 · Marvel · VF · Newsstand</div>
-                  <div class="lp-mock-card-price">£32.00</div>
-                </div>
-                <div class="lp-mock-card-tags">
-                  <span class="lp-mock-tag lp-mock-tag-key">KEY</span>
-                  <span class="lp-mock-tag">1ST GAMBIT</span>
-                </div>
-              </div>
-              <div class="lp-mock-card">
-                <div class="lp-mock-card-thumb" style="background:linear-gradient(135deg,#3bbf6a,#1a8040)">
-                  <span>GL</span>
-                </div>
-                <div class="lp-mock-card-info">
-                  <div class="lp-mock-card-name">Green Lantern #76</div>
-                  <div class="lp-mock-card-meta">1970 · DC · VG/FN · Direct</div>
-                  <div class="lp-mock-card-price">£32.00</div>
-                </div>
-                <div class="lp-mock-card-tags">
-                  <span class="lp-mock-tag">FA</span>
-                  <span class="lp-mock-tag">GREEN ARROW</span>
-                </div>
+              <div class="lp-phone-app-footer">
+                <div class="lp-phone-export-btn">Export CSV — £136.00 total</div>
               </div>
             </div>
           </div>
         </div>
       </div>
+
     </div>
   </div>
 
@@ -925,33 +902,32 @@
 <script src="/app.js"></script>
 <script>
 (function () {
-  var container = document.getElementById('lp-scroll-preview');
-  var card      = document.getElementById('lp-scroll-preview-card');
-  var title     = document.getElementById('lp-scroll-preview-title');
-  if (!container || !card || !title) return;
+  /* Cleo-style phone scale-in: phone fills viewport height at scroll=0,
+     shrinks to natural size at scroll=1 — seamless with hero scroll */
+  var outer = document.getElementById('lp-phone-outer');
+  var wrap  = document.getElementById('lp-phone-wrap');
+  if (!outer || !wrap) return;
+
+  var PHONE_H = 620; /* natural phone height in px */
 
   function update() {
-    var rect  = container.getBoundingClientRect();
+    var rect  = outer.getBoundingClientRect();
     var viewH = window.innerHeight;
-    var contH = container.offsetHeight;
+    var contH = outer.offsetHeight;
 
-    /* Matches Framer Motion useScroll({ target }) default offset ["start end","end start"]
-       progress 0 = element top  at viewport bottom
-       progress 1 = element bottom at viewport top  */
+    /* progress 0 = outer top at viewport bottom (phone enters)
+       progress 1 = outer bottom at viewport top (phone leaves) */
     var prog = (viewH - rect.top) / (viewH + contH);
     prog = Math.max(0, Math.min(1, prog));
 
-    var mobile = window.innerWidth <= 768;
-    var scaleStart = mobile ? 0.7  : 1.05;
-    var scaleEnd   = mobile ? 0.9  : 1.00;
+    /* ease-out feel — slow at end so phone "settles" */
+    var eased = 1 - Math.pow(1 - prog, 2);
 
-    /* Mirror the Framer Motion useTransform ranges */
-    var rotate = 20 * (1 - prog);                              /* [20,0] */
-    var scale  = scaleStart + (scaleEnd - scaleStart) * prog;  /* [1.05,1] */
-    var transY = -100 * prog;                                  /* [0,-100] */
+    /* Scale: viewH/PHONE_H fills the viewport height at start → 1 at end */
+    var scaleStart = viewH / PHONE_H;
+    var scale = scaleStart - (scaleStart - 1) * eased;
 
-    card.style.transform  = 'rotateX(' + rotate + 'deg) scale(' + scale + ')';
-    title.style.transform = 'translateY(' + transY + 'px)';
+    wrap.style.transform = 'scale(' + scale + ')';
   }
 
   window.addEventListener('scroll', update, { passive: true });
