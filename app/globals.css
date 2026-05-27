@@ -1,0 +1,36 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;1,400&display=swap');
+
+:root {
+  --ink:        #080403;
+  --coal:       #0e0807;
+  --surface:    #181009;
+  --sfc2:       #21160f;
+  --sfc3:       #2a1d16;
+  --cream:      #f8f6f2;
+  --cream2:     #d4c5c1;
+  --muted:      #8c7b78;
+  --amber:      #ff8e3e;
+  --amber-d:    #e67528;
+  --green:      #05df72;
+  --gradient:   linear-gradient(90deg, #ff8e3e 0%, #ffb627 55%, #ff6b35 100%);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  background: #0e0807;
+  color: #f8f6f2;
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}

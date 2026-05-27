@@ -7,13 +7,12 @@
     }
   ],
   "rewrites": [
-    { "source": "/api/identify",       "destination": "/api/identify.js" },
-    { "source": "/api/ebay-search",    "destination": "/api/ebay-search.js" },
-    { "source": "/api/upload-image",   "destination": "/api/upload-image.js" },
-    { "source": "/api/cleanup-blobs",  "destination": "/api/cleanup-blobs.js" },
-    { "source": "/api/auth",           "destination": "/api/auth.js" },
-    { "source": "/api/sync",           "destination": "/api/sync.js" },
-    { "source": "/api/debug",          "destination": "/api/debug.js" },
-    { "source": "/((?!api/).*)",       "destination": "/index.html" }
+    { "source": "/api/identify",      "destination": "/api/identify.js" },
+    { "source": "/api/ebay-search",   "destination": "/api/ebay-search.js" },
+    { "source": "/api/upload-image",  "destination": "/api/upload-image.js" },
+    { "source": "/api/cleanup-blobs", "destination": "/api/cleanup-blobs.js" },
+    { "source": "/api/auth",          "destination": "/api/auth.js" },
+    { "source": "/api/sync",          "destination": "/api/sync.js" },
+    { "source": "/api/debug",         "destination": "/api/debug.js" }
   ]
 }

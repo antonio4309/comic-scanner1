@@ -1,0 +1,945 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>LongboxLens — Whatnot Price Tool</title>
+  <!-- PWA -->
+  <link rel="manifest" href="/manifest.json">
+  <meta name="theme-color" content="#ff8e3e">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="LongboxLens">
+  <link rel="apple-touch-icon" href="/icon.svg">
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/style.css" />
+</head>
+<body>
+
+<!-- ── LANDING SCREEN ───────────────────────────────────────────── -->
+<div id="landing-screen">
+
+  <!-- HERO -->
+  <section class="lp-hero">
+    <div class="lp-hero-spines" aria-hidden="true">
+      <div class="lp-spine" style="background:#e23b3b"></div>
+      <div class="lp-spine" style="background:#f5a623"></div>
+      <div class="lp-spine" style="background:#3b7de2"></div>
+      <div class="lp-spine" style="background:#3bbf6a"></div>
+      <div class="lp-spine" style="background:#c8853f"></div>
+      <div class="lp-spine" style="background:#9c6228"></div>
+      <div class="lp-spine" style="background:#e23b3b"></div>
+      <div class="lp-spine" style="background:#f5a623"></div>
+      <div class="lp-spine" style="background:#3b7de2"></div>
+    </div>
+    <div class="lp-hero-spines" style="left:auto;right:0" aria-hidden="true">
+      <div class="lp-spine" style="background:#3bbf6a"></div>
+      <div class="lp-spine" style="background:#3b7de2"></div>
+      <div class="lp-spine" style="background:#f5a623"></div>
+      <div class="lp-spine" style="background:#e23b3b"></div>
+      <div class="lp-spine" style="background:#9c6228"></div>
+      <div class="lp-spine" style="background:#c8853f"></div>
+      <div class="lp-spine" style="background:#3bbf6a"></div>
+      <div class="lp-spine" style="background:#3b7de2"></div>
+      <div class="lp-spine" style="background:#f5a623"></div>
+    </div>
+
+    <div class="lp-logo-wrap">
+      <svg xmlns="http://www.w3.org/2000/svg" width="400" height="94" viewBox="0 0 340 80" fill="none">
+        <g transform="translate(6,7) scale(1.05)">
+          <path d="M8 24 L54 18 L70 25 L24 31 Z" fill="#c8853f"/>
+          <path d="M8 24 L24 31 L24 54 L8 47 Z" fill="#9c6228"/>
+          <path d="M24 31 L70 25 L70 48 L24 54 Z" fill="#a8702f"/>
+          <path d="M28 24.5 L33 23.9 L33 30 L28 30.6 Z" fill="#e23b3b"/>
+          <path d="M34 23.8 L39 23.2 L39 29.3 L34 29.9 Z" fill="#f5a623"/>
+          <path d="M40 23.1 L45 22.5 L45 28.6 L40 29.2 Z" fill="#3b7de2"/>
+          <path d="M46 22.4 L51 21.8 L51 27.9 L46 28.5 Z" fill="#3bbf6a"/>
+          <text font-family="'Space Mono',monospace" x="47" y="42" font-size="6.5" fill="#e8eaed" text-anchor="middle" transform="rotate(-7 47 42)" letter-spacing="0.5" opacity="0.55">COMICS</text>
+          <circle cx="60" cy="40" r="12" fill="none" stroke="#e8eaed" stroke-width="2.5" opacity="0.75"/>
+          <circle cx="60" cy="40" r="4" fill="#f5a623"/>
+          <line x1="68" y1="48" x2="74" y2="54" stroke="#e8eaed" stroke-width="3" stroke-linecap="round" opacity="0.75"/>
+        </g>
+        <text font-family="'Bebas Neue',Impact,sans-serif" font-size="38" letter-spacing="2" x="92" y="52" fill="#e8eaed">Longbox<tspan fill="#f5a623">Lens</tspan></text>
+      </svg>
+    </div>
+
+    <h1 class="lp-headline">Your Comics.<br><em>Professionally</em><br>Archived.</h1>
+    <p class="lp-sub">
+      AI Identification<span class="lp-sub-dot">·</span>Live UK eBay Pricing<span class="lp-sub-dot">·</span>Whatnot-Ready CSV Export
+    </p>
+    <div class="lp-actions">
+      <button class="lp-btn-primary" onclick="goToAuth('register')">→ Get Started Free</button>
+      <button class="lp-btn-secondary" onclick="goToAuth('login')">Sign In</button>
+    </div>
+
+    <div class="lp-scroll-hint">
+      <span>Scroll</span>
+      <div class="lp-scroll-line"></div>
+    </div>
+  </section>
+
+  <!-- PHONE SCROLL REVEAL — Cleo-style: phone scales from viewport-fill to natural size -->
+  <div class="lp-phone-outer" id="lp-phone-outer">
+    <div class="lp-phone-sticky">
+
+      <!-- Phone frame -->
+      <div class="lp-phone-wrap" id="lp-phone-wrap">
+        <div class="lp-phone-device">
+          <!-- Side buttons -->
+          <div class="lp-phone-btn-left"></div>
+          <div class="lp-phone-btn-right1"></div>
+          <div class="lp-phone-btn-right2"></div>
+          <!-- Screen -->
+          <div class="lp-phone-screen">
+            <div class="lp-phone-statusbar">
+              <span class="lp-phone-time">9:41</span>
+              <div class="lp-phone-island"></div>
+              <div class="lp-phone-signal">▲ ▲ ▲</div>
+            </div>
+            <!-- App content inside phone -->
+            <div class="lp-phone-app">
+              <div class="lp-phone-app-header">
+                <div class="lp-phone-app-logo">Longbox<span>Lens</span></div>
+                <div class="lp-phone-app-badge"><span></span>3 scanned</div>
+              </div>
+              <div class="lp-phone-app-body">
+                <div class="lp-phone-card">
+                  <div class="lp-phone-card-thumb" style="background:linear-gradient(135deg,#e23b3b,#a82020)">ASM</div>
+                  <div class="lp-phone-card-info">
+                    <div class="lp-phone-card-title">Amazing Spider-Man #300</div>
+                    <div class="lp-phone-card-sub">1988 · Marvel · VF/NM</div>
+                    <div class="lp-phone-card-price">£48.00 <span class="lp-phone-tag">KEY · 1ST VENOM</span></div>
+                  </div>
+                </div>
+                <div class="lp-phone-card">
+                  <div class="lp-phone-card-thumb" style="background:linear-gradient(135deg,#3b7de2,#1a4fa8)">X-M</div>
+                  <div class="lp-phone-card-info">
+                    <div class="lp-phone-card-title">X-Men #266</div>
+                    <div class="lp-phone-card-sub">1990 · Marvel · VF · Newsstand</div>
+                    <div class="lp-phone-card-price">£32.00 <span class="lp-phone-tag">KEY · 1ST GAMBIT</span></div>
+                  </div>
+                </div>
+                <div class="lp-phone-card">
+                  <div class="lp-phone-card-thumb" style="background:linear-gradient(135deg,#c8853f,#8a4f18)">GL</div>
+                  <div class="lp-phone-card-info">
+                    <div class="lp-phone-card-title">Green Lantern #76</div>
+                    <div class="lp-phone-card-sub">1970 · DC · VG/FN</div>
+                    <div class="lp-phone-card-price">£32.00 <span class="lp-phone-tag">FA GREEN ARROW</span></div>
+                  </div>
+                </div>
+                <div class="lp-phone-card">
+                  <div class="lp-phone-card-thumb" style="background:linear-gradient(135deg,#9c6228,#6b3a10)">BM</div>
+                  <div class="lp-phone-card-info">
+                    <div class="lp-phone-card-title">Batman #181</div>
+                    <div class="lp-phone-card-sub">1966 · DC · FN</div>
+                    <div class="lp-phone-card-price">£24.00 <span class="lp-phone-tag">1ST POISON IVY</span></div>
+                  </div>
+                </div>
+              </div>
+              <div class="lp-phone-app-footer">
+                <div class="lp-phone-export-btn">Export CSV — £136.00 total</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- FEATURES -->
+  <div class="lp-mid-band" style="border-top:1px solid var(--border)">
+    <div class="lp-section">
+      <span class="lp-label">What LongboxLens does</span>
+      <h2 class="lp-title">Six Tools. One Archive.</h2>
+      <p class="lp-title-sub">Everything a Whatnot seller or serious collector needs, built into one fast, focused system.</p>
+      <div class="lp-features-grid">
+
+        <div class="lp-feat-card">
+          <svg class="lp-feat-icon" viewBox="0 0 36 36" fill="none">
+            <rect x="4" y="5" width="20" height="27" rx="1" stroke="currentColor" stroke-width="1.5"/>
+            <circle cx="28" cy="26" r="6" stroke="currentColor" stroke-width="1.5"/>
+            <line x1="32.5" y1="30.5" x2="35" y2="33" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+            <line x1="8" y1="12" x2="20" y2="12" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+            <line x1="8" y1="17" x2="17" y2="17" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+          </svg>
+          <div class="lp-feat-name">AI Comic ID</div>
+          <div class="lp-feat-desc">Photograph any comic and get instant identification: title, issue number, publisher, year, and estimated condition grade.</div>
+          <div class="lp-feat-tags">
+            <span class="lp-feat-tag">AI-Powered</span><span class="lp-feat-tag">Photo Scan</span><span class="lp-feat-tag">Instant</span>
+          </div>
+        </div>
+
+        <div class="lp-feat-card">
+          <svg class="lp-feat-icon" viewBox="0 0 36 36" fill="none">
+            <polyline points="3,29 9,20 15,23 22,13 28,16 35,5" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round"/>
+            <circle cx="35" cy="5" r="2.5" fill="currentColor"/>
+            <line x1="3" y1="33" x2="35" y2="33" stroke="currentColor" stroke-width="1" stroke-linecap="round" opacity="0.35"/>
+          </svg>
+          <div class="lp-feat-name">Live UK Prices</div>
+          <div class="lp-feat-desc">Real-time eBay UK sold listings give you accurate market value — not guesswork. Pulled fresh with every search.</div>
+          <div class="lp-feat-tags">
+            <span class="lp-feat-tag">eBay UK</span><span class="lp-feat-tag">Live Data</span><span class="lp-feat-tag">Market Rate</span>
+          </div>
+        </div>
+
+        <div class="lp-feat-card">
+          <svg class="lp-feat-icon" viewBox="0 0 36 36" fill="none">
+            <rect x="3" y="3" width="30" height="30" rx="1" stroke="currentColor" stroke-width="1.5"/>
+            <line x1="3" y1="11" x2="33" y2="11" stroke="currentColor" stroke-width="1" opacity="0.45"/>
+            <line x1="3" y1="19" x2="33" y2="19" stroke="currentColor" stroke-width="1" opacity="0.45"/>
+            <line x1="3" y1="27" x2="33" y2="27" stroke="currentColor" stroke-width="1" opacity="0.45"/>
+            <line x1="12" y1="3" x2="12" y2="33" stroke="currentColor" stroke-width="1" opacity="0.45"/>
+            <line x1="23" y1="3" x2="23" y2="33" stroke="currentColor" stroke-width="1" opacity="0.45"/>
+          </svg>
+          <div class="lp-feat-name">Whatnot Export</div>
+          <div class="lp-feat-desc">One-click CSV export pre-filled with all Whatnot required fields: title, price, category, condition, and photo URL.</div>
+          <div class="lp-feat-tags">
+            <span class="lp-feat-tag">CSV</span><span class="lp-feat-tag">Whatnot</span><span class="lp-feat-tag">One Click</span>
+          </div>
+        </div>
+
+        <div class="lp-feat-card">
+          <svg class="lp-feat-icon" viewBox="0 0 36 36" fill="none">
+            <path d="M18 3 L21.5 13 L32 13 L23.5 19.5 L27 30 L18 23 L9 30 L12.5 19.5 L4 13 L14.5 13 Z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/>
+          </svg>
+          <div class="lp-feat-name">Condition Grading</div>
+          <div class="lp-feat-desc">AI assesses cover wear, spine stress, and page quality. Automatically flags key issues, 1st appearances, and variants.</div>
+          <div class="lp-feat-tags">
+            <span class="lp-feat-tag">CGC Grade</span><span class="lp-feat-tag">Key Issues</span><span class="lp-feat-tag">Variants</span>
+          </div>
+        </div>
+
+        <div class="lp-feat-card">
+          <svg class="lp-feat-icon" viewBox="0 0 36 36" fill="none">
+            <path d="M10 24 C6 24 3 21.5 3 18 C3 14.8 5.5 12.2 8.8 12 C9.5 9 12.2 7 15.5 7 C17.8 7 19.9 8.1 21.2 10 C22 9.3 23.2 8.8 24.5 8.8 C27.8 8.8 30.5 11.5 30.5 14.8 C30.5 15 30.48 15.2 30.45 15.4 C32.4 16.1 33.8 17.9 33.8 20.1 C33.8 22.8 31.6 25 28.9 25" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+            <line x1="18" y1="19" x2="18" y2="31" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+            <polyline points="14,27 18,31 22,27" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+          <div class="lp-feat-name">Cloud Archive</div>
+          <div class="lp-feat-desc">Your inventory syncs automatically. Access your full collection from any device — phone, tablet, or desktop.</div>
+          <div class="lp-feat-tags">
+            <span class="lp-feat-tag">Cross-Device</span><span class="lp-feat-tag">Auto-Sync</span><span class="lp-feat-tag">Secure</span>
+          </div>
+        </div>
+
+        <div class="lp-feat-card">
+          <svg class="lp-feat-icon" viewBox="0 0 36 36" fill="none">
+            <rect x="6" y="3" width="24" height="30" rx="1" stroke="currentColor" stroke-width="1.5"/>
+            <line x1="10" y1="11" x2="26" y2="11" stroke="currentColor" stroke-width="1" opacity="0.45"/>
+            <rect x="10" y="15" width="5" height="4" rx="0.5" stroke="currentColor" stroke-width="1"/>
+            <rect x="17" y="15" width="5" height="4" rx="0.5" stroke="currentColor" stroke-width="1"/>
+            <rect x="10" y="21" width="5" height="4" rx="0.5" stroke="currentColor" stroke-width="1"/>
+            <rect x="17" y="21" width="5" height="4" rx="0.5" fill="currentColor" fill-opacity="0.25" stroke="currentColor" stroke-width="1"/>
+            <text font-family="monospace" x="23.5" y="8.5" font-size="7" fill="currentColor" text-anchor="middle">£</text>
+          </svg>
+          <div class="lp-feat-name">Fee Calculator</div>
+          <div class="lp-feat-desc">Calculate your exact Whatnot seller fees, PayPal charges, and true profit margin before you set your starting price.</div>
+          <div class="lp-feat-tags">
+            <span class="lp-feat-tag">Whatnot Fees</span><span class="lp-feat-tag">Profit</span><span class="lp-feat-tag">UK Sellers</span>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- HOW IT WORKS -->
+  <div class="lp-dark-band" style="border-top:1px solid var(--border)">
+    <div class="lp-section">
+      <span class="lp-label">Simple workflow</span>
+      <h2 class="lp-title">Three Steps to Your Next Whatnot Show</h2>
+      <div class="lp-steps-flow">
+        <div class="lp-step">
+          <div class="lp-step-num">01</div>
+          <div class="lp-step-name">Scan Your Comics</div>
+          <div class="lp-step-desc">Photograph each comic with your phone camera. AI instantly identifies the title, issue, publisher, and condition — and flags key issues.</div>
+        </div>
+        <div class="lp-step-arrow">→</div>
+        <div class="lp-step">
+          <div class="lp-step-num">02</div>
+          <div class="lp-step-name">Get Live Prices</div>
+          <div class="lp-step-desc">Live UK eBay sold data loads automatically. Review the market rate, adjust if needed, then save to your cloud archive.</div>
+        </div>
+        <div class="lp-step-arrow">→</div>
+        <div class="lp-step">
+          <div class="lp-step-num">03</div>
+          <div class="lp-step-name">Export &amp; Sell</div>
+          <div class="lp-step-desc">Download your Whatnot-ready CSV in one click. Upload directly to Whatnot — ready to go live in minutes.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- DEMO VIDEO -->
+  <div class="lp-video-outer lp-mid-band">
+    <div class="lp-section lp-video-section">
+      <span class="lp-label">See it in action</span>
+      <h2 class="lp-title">Watch LongboxLens Work</h2>
+      <!--
+        TO ADD YOUR VIDEO — replace the lp-video-placeholder div with:
+        <iframe src="https://www.youtube.com/embed/YOUR_VIDEO_ID"
+          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+          allowfullscreen></iframe>
+        Get YOUR_VIDEO_ID from: https://www.youtube.com/watch?v=YOUR_VIDEO_ID
+      -->
+      <div class="lp-video-container">
+        <div class="lp-video-placeholder">
+          <div class="lp-play-btn">▶</div>
+          <div class="lp-video-label">Demo Video — Coming Soon</div>
+          <div style="font-family:'Barlow Condensed',sans-serif;font-size:13px;color:var(--dim);margin-top:6px">Record a walkthrough and drop your YouTube link in index.html</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- FINAL CTA -->
+  <div class="lp-cta-section">
+    <span class="lp-label">Free to get started</span>
+    <h2 class="lp-cta-headline">Ready to Build<br>Your <em>Archive?</em></h2>
+    <p class="lp-cta-sub">No credit card · Works on any device · Your data syncs automatically</p>
+    <div class="lp-actions">
+      <button class="lp-btn-primary" onclick="goToAuth('register')" style="padding:16px 48px;font-size:11px">→ Create Free Account</button>
+      <button class="lp-btn-secondary" onclick="goToAuth('login')" style="padding:16px 48px;font-size:11px">Sign In</button>
+    </div>
+  </div>
+
+  <!-- FOOTER -->
+  <div class="lp-footer">
+    <div class="lp-footer-text">© 2025 LongboxLens &nbsp;·&nbsp; Comic Archive &amp; Pricing System &nbsp;·&nbsp; UK Market</div>
+  </div>
+
+</div><!-- /landing-screen -->
+
+<!-- ── AUTH SCREEN ─────────────────────────────────────────────── -->
+<div id="auth-screen" style="display:none">
+  <div class="auth-box">
+    <div class="auth-logo">
+      <div class="auth-wordmark">Longbox<span>Lens</span></div>
+      <div class="auth-tagline">Comic Archive &amp; Pricing System</div>
+    </div>
+    <div class="auth-rule"></div>
+
+    <!-- Login / Register tabs -->
+    <div class="auth-tabs" id="auth-tabs">
+      <button class="auth-tab active" id="auth-tab-login" onclick="switchAuthMode('login')">Login</button>
+      <button class="auth-tab" id="auth-tab-register" onclick="switchAuthMode('register')">Register</button>
+    </div>
+
+    <!-- Login form -->
+    <div class="auth-form" id="auth-form-login">
+      <label>Email</label>
+      <input type="email" id="login-email" placeholder="your@email.com" autocomplete="email" onkeydown="if(event.key==='Enter')doLogin()" />
+      <label>Password</label>
+      <input type="password" id="login-password" placeholder="••••••••" autocomplete="current-password" onkeydown="if(event.key==='Enter')doLogin()" />
+      <div class="auth-error" id="login-error"></div>
+      <button class="btn-primary auth-submit" onclick="doLogin()">→ Authenticate</button>
+      <div class="auth-link">No account? <button onclick="switchAuthMode('register')">Create one</button></div>
+    </div>
+
+    <!-- Register form -->
+    <div class="auth-form" id="auth-form-register" style="display:none">
+      <label>Name</label>
+      <input type="text" id="reg-name" placeholder="Your name" autocomplete="name" />
+      <label>Email</label>
+      <input type="email" id="reg-email" placeholder="your@email.com" autocomplete="email" />
+      <label>Password</label>
+      <input type="password" id="reg-password" placeholder="Min 6 characters" autocomplete="new-password" />
+      <label>Confirm password</label>
+      <input type="password" id="reg-confirm" placeholder="Repeat password" autocomplete="new-password" onkeydown="if(event.key==='Enter')doRegister()" />
+      <div class="auth-error" id="reg-error"></div>
+      <button class="btn-primary auth-submit" onclick="doRegister()">→ Continue</button>
+      <div class="auth-link">Already have an account? <button onclick="switchAuthMode('login')">Log in</button></div>
+    </div>
+
+    <!-- Feature selection (step 2 of register) -->
+    <div class="auth-form" id="auth-form-features" style="display:none">
+      <div class="feat-heading">Choose Your Tools</div>
+      <div class="feat-sub">Select what you need — you can use one or both</div>
+      <div class="feature-grid">
+        <div class="feature-card selected" id="feat-export" onclick="toggleFeature('export')">
+          <span class="feature-check">✓</span>
+          <div class="feature-name">Whatnot Export</div>
+          <div class="feature-desc">Scan comics, fetch live UK eBay prices, and export a Whatnot-ready CSV.</div>
+          <div class="feature-tags">
+            <span class="feature-tag">Scan</span>
+            <span class="feature-tag">Price</span>
+            <span class="feature-tag">CSV</span>
+            <span class="feature-tag">Sellers</span>
+          </div>
+        </div>
+        <div class="feature-card selected" id="feat-lookup" onclick="toggleFeature('lookup')">
+          <span class="feature-check">✓</span>
+          <div class="feature-name">Comic Lookup</div>
+          <div class="feature-desc">Identify any comic, get condition assessment, key issue info and market data.</div>
+          <div class="feature-tags">
+            <span class="feature-tag">Identify</span>
+            <span class="feature-tag">Condition</span>
+            <span class="feature-tag">Key Issues</span>
+            <span class="feature-tag">Collectors</span>
+          </div>
+        </div>
+      </div>
+      <div class="auth-error" id="feat-error"></div>
+      <button class="btn-primary auth-submit" onclick="doSelectFeatures()">→ Enter Archive</button>
+    </div>
+    <button class="lp-back-btn" onclick="goToLanding()">← Back to Home</button>
+  </div>
+</div>
+
+<!-- ── MAIN APP ─────────────────────────────────────────────────── -->
+<div id="main-app" style="display:none;flex:1;flex-direction:column;min-height:0">
+
+<header>
+  <div class="header-top">
+    <svg xmlns="http://www.w3.org/2000/svg" width="196" height="44" viewBox="0 0 340 80" fill="none" style="flex-shrink:0">
+      <g transform="translate(6,7) scale(1.05)">
+        <path d="M8 24 L54 18 L70 25 L24 31 Z" fill="#c8853f"/>
+        <path d="M8 24 L24 31 L24 54 L8 47 Z" fill="#9c6228"/>
+        <path d="M24 31 L70 25 L70 48 L24 54 Z" fill="#a8702f"/>
+        <path d="M28 24.5 L33 23.9 L33 30 L28 30.6 Z" fill="#e23b3b"/>
+        <path d="M34 23.8 L39 23.2 L39 29.3 L34 29.9 Z" fill="#f5a623"/>
+        <path d="M40 23.1 L45 22.5 L45 28.6 L40 29.2 Z" fill="#3b7de2"/>
+        <path d="M46 22.4 L51 21.8 L51 27.9 L46 28.5 Z" fill="#3bbf6a"/>
+        <text font-family="'Space Mono',monospace" x="47" y="42" font-size="6.5" fill="#e8eaed" text-anchor="middle" transform="rotate(-7 47 42)" letter-spacing="0.5" opacity="0.55">COMICS</text>
+        <circle cx="60" cy="40" r="12" fill="none" stroke="#e8eaed" stroke-width="2.5" opacity="0.75"/>
+        <circle cx="60" cy="40" r="4" fill="#f5a623"/>
+        <line x1="68" y1="48" x2="74" y2="54" stroke="#e8eaed" stroke-width="3" stroke-linecap="round" opacity="0.75"/>
+      </g>
+      <text font-family="'Bebas Neue',Impact,sans-serif" font-size="38" letter-spacing="2" x="92" y="52" fill="#e8eaed">Longbox<tspan fill="#f5a623">Lens</tspan></text>
+    </svg>
+    <div class="header-meta">
+      <span class="badge">UK Market</span>
+      <span class="header-subtitle">eBay · Whatnot · Archive System</span>
+    </div>
+    <nav class="tab-nav">
+      <button class="tab-btn active" id="tab-btn-export" onclick="switchTab('export')">Whatnot Export</button>
+      <button class="tab-btn" id="tab-btn-lookup" onclick="switchTab('lookup')">Comic Lookup</button>
+      <button class="tab-btn" id="tab-btn-fees" onclick="switchTab('fees')">Fee Calculator</button>
+    </nav>
+    <div class="header-user" id="header-user-area"></div>
+  </div>
+  <div class="header-rule"></div>
+</header>
+
+<div id="pane-export">
+<div class="layout">
+
+  <!-- LEFT: Camera + Controls -->
+  <div class="sidebar">
+
+    <div class="panel" style="flex-shrink:0">
+      <div class="panel-title">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+        Document Intake
+      </div>
+      <div id="video-wrap">
+        <div class="cam-placeholder" id="cam-placeholder">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+          Feed Document
+        </div>
+        <video id="video" autoplay playsinline></video>
+        <img id="preview-img" alt="Captured comic" />
+        <div class="cam-viewfinder"><span class="vf-tl"></span><span class="vf-tr"></span><span class="vf-bl"></span><span class="vf-br"></span></div>
+      </div>
+      <div class="btn-row">
+        <button id="start-cam-btn" onclick="startCamera()">▶ Activate</button>
+        <button id="capture-btn" onclick="capturePhoto()" disabled>⊙ Capture</button>
+        <button id="retake-btn" onclick="retakePhoto()" style="display:none">↺ Retake</button>
+        <label style="margin:0;display:inline-flex;align-items:center;gap:6px;font-family:'Space Mono',monospace;font-size:10px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;padding:8px 13px;border:1px solid var(--border2);background:var(--sfc2);color:var(--cream2);cursor:pointer">
+          ⬆ Upload
+          <input type="file" id="file-input" accept="image/*" multiple onchange="handleFileUpload(event)" style="display:none" />
+        </label>
+      </div>
+    </div>
+
+    <div class="panel" style="flex:1;overflow-y:auto">
+      <div class="panel-title">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="m18.5 2.5 2 2L11 14H9v-2z"/></svg>
+        Classification
+      </div>
+
+      <label>Override title</label>
+      <input type="text" id="override-title" placeholder="e.g. Amazing Spider-Man #300 VF" />
+
+      <div class="field-row" style="margin-top:10px">
+        <div>
+          <label>Condition <button onclick="showGradeModal()" style="font-family:'Space Mono',monospace;font-size:8px;padding:2px 5px;background:none;border:1px solid var(--border2);color:var(--muted);min-height:auto;cursor:pointer;font-weight:700;letter-spacing:0.1em;text-transform:uppercase" title="CGC grade reference">? Guide</button></label>
+          <select id="condition">
+            <option value="Auto">Auto AI Grade</option>
+            <option value="Near Mint">Near Mint (NM)</option>
+            <option value="Very Fine">Very Fine (VF)</option>
+            <option value="Fine">Fine (F)</option>
+            <option value="Very Good">Very Good (VG)</option>
+            <option value="Good">Good (G)</option>
+            <option value="Fair">Fair</option>
+            <option value="Poor">Poor</option>
+          </select>
+        </div>
+        <div>
+          <label>Qty</label>
+          <input type="number" id="qty" value="1" min="1" />
+        </div>
+      </div>
+
+      <div class="field-row" style="margin-top:0">
+        <div>
+          <label>Custom price (£)</label>
+          <input type="number" id="start-price" placeholder="Auto from eBay" min="0" step="0.01" />
+        </div>
+        <div>
+          <label>Paid (£) <small style="font-weight:400;opacity:0.65">profit calc</small></label>
+          <input type="number" id="cost-price" placeholder="e.g. 5.00" min="0" step="0.01" />
+        </div>
+      </div>
+
+      <div style="margin-top:0">
+        <label>Listing type</label>
+        <select id="listing-type">
+          <option value="Buy it Now">Buy it Now</option>
+          <option value="Auction">Auction</option>
+        </select>
+      </div>
+
+      <div class="btn-row" style="margin-top:14px">
+        <button class="btn-primary" id="scan-btn" onclick="scanAndAdd()" disabled style="flex:1;justify-content:center">
+          ⊕ Identify &amp; Archive All
+        </button>
+      </div>
+      <div id="scan-status" class="status"></div>
+      <div class="progress-wrap" id="progress-wrap">
+        <div class="progress-track">
+          <div class="progress-fill" id="progress-fill"></div>
+        </div>
+        <div class="progress-label">
+          <span id="progress-text">0 / 0 scanned</span>
+          <span id="progress-pct">0%</span>
+        </div>
+      </div>
+      <div class="pending-caption" id="pending-caption">No documents queued.</div>
+      <div class="pending-grid" id="pending-grid"></div>
+    </div>
+
+  </div>
+
+  <!-- RIGHT: Inventory + Export -->
+  <div class="main">
+
+    <div class="list-header">
+      <h2>Archive</h2>
+      <div class="list-header-btns">
+        <button id="btn-refetch" onclick="refetchAllPrices()" title="Refresh all eBay prices">↻ Prices</button>
+        <button id="btn-select" onclick="toggleSelectMode()" title="Select comics to bundle">☐ Select</button>
+        <button class="btn-danger" onclick="clearAll()">✕ Purge</button>
+      </div>
+    </div>
+
+    <div class="filter-bar">
+      <select id="sort-mode" onchange="applySort()">
+        <option value="newest">Newest first</option>
+        <option value="price-desc">Price: High → Low</option>
+        <option value="price-asc">Price: Low → High</option>
+        <option value="title">Title A–Z</option>
+        <option value="year-desc">Year: New → Old</option>
+        <option value="year-asc">Year: Old → New</option>
+      </select>
+      <select id="publisher-filter" onchange="applyPublisherFilter()" title="Filter by publisher">
+        <option value="">All Publishers</option>
+      </select>
+      <div class="chip-row">
+        <button class="chip active" id="chip-all" onclick="applyFilter('all')">All</button>
+        <button class="chip" id="chip-key" onclick="applyFilter('key')">⭐ Key</button>
+        <button class="chip" id="chip-news" onclick="applyFilter('news')">📰 News</button>
+        <button class="chip" id="chip-slab" onclick="applyFilter('slab')">🔵 Slab</button>
+        <button class="chip" id="chip-noprice" onclick="applyFilter('noprice')">⚠ No Price</button>
+      </div>
+    </div>
+
+    <div class="mob-search-bar">
+      <input type="search" id="mob-search" placeholder="Search archive..." oninput="applyMobileSearch()" autocomplete="off" />
+      <button class="mob-search-clear" onclick="clearMobileSearch()">✕</button>
+    </div>
+
+    <div class="bundle-bar" id="bundle-bar">
+      <span><strong id="bundle-count">0</strong> files selected</span>
+      <button class="btn-primary" onclick="bundleSelected()">⊞ Bundle Lot</button>
+      <button onclick="toggleSelectMode()">✕ Cancel</button>
+    </div>
+
+    <div class="stats-row">
+      <div class="stat">
+        <div class="stat-val" id="stat-count">0</div>
+        <div class="stat-label">Comics</div>
+      </div>
+      <div class="stat">
+        <div class="stat-val" id="stat-total">£0</div>
+        <div class="stat-label">Total Value</div>
+      </div>
+      <div class="stat">
+        <div class="stat-val" id="stat-avg">£0</div>
+        <div class="stat-label" id="stat-avg-label">Avg Price</div>
+      </div>
+      <div class="stat stat-keys" onclick="applyFilter('key')" style="cursor:pointer" title="Show key issues">
+        <div class="stat-val" id="stat-keys" style="color:#f5a623">0</div>
+        <div class="stat-label">Key Issues</div>
+      </div>
+      <div class="stat">
+        <div class="stat-val" id="stat-top">—</div>
+        <div class="stat-label">Top Comic</div>
+      </div>
+    </div>
+
+    <div class="comic-list" id="comic-list">
+      <div class="empty-state">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>
+        Archive Empty<br/>Feed First Document →
+      </div>
+    </div>
+
+    <div class="export-panel">
+      <div class="export-title">Export — Whatnot CSV</div>
+      <div class="export-options">
+        <div>
+          <label style="margin-top:0">Category</label>
+          <select id="wn-category">
+            <option value="Comics &amp; Manga">Comics &amp; Manga</option>
+          </select>
+        </div>
+        <div>
+          <label style="margin-top:0">Price to export</label>
+          <select id="price-type">
+            <option value="whatnot">Whatnot price (fees added)</option>
+            <option value="ebay">eBay UK price</option>
+            <option value="custom">Custom price only</option>
+          </select>
+        </div>
+      </div>
+      <div class="export-btns">
+        <button class="btn-primary" onclick="exportCSV()">⬇ Whatnot CSV</button>
+        <button onclick="exportInventoryCSV()">⬇ Inventory CSV</button>
+        <button onclick="togglePreview()">⊞ Preview</button>
+      </div>
+      <div style="margin-top:8px;font-family:'Space Mono',monospace;font-size:9px;color:var(--muted);letter-spacing:0.05em">⚠ Photo links in CSV expire after 24h — download before then. Inventory CSV includes full grading data.</div>
+      <pre id="csv-preview" style="display:none;margin-top:10px;font-size:10px;font-family:'Space Mono',monospace;background:var(--ink);padding:10px;border:1px solid var(--border2);overflow-x:auto;white-space:pre;max-height:120px;overflow-y:auto;color:var(--cream2)"></pre>
+    </div>
+
+  </div>
+</div>
+</div><!-- /pane-export -->
+
+<!-- ── LOOKUP PANE ─────────────────────────────────────────────── -->
+<div id="pane-lookup">
+  <div class="lookup-layout">
+
+    <div class="lookup-cam-col">
+      <div class="panel">
+        <div class="panel-title">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+          Scanner Unit
+        </div>
+        <div id="lk-video-wrap" style="background:var(--ink);overflow:hidden;aspect-ratio:4/3;position:relative;display:flex;align-items:center;justify-content:center;border:1px solid var(--border2)">
+          <div class="cam-placeholder" id="lk-cam-placeholder">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+            Activate Scanner
+          </div>
+          <video id="lk-video" autoplay playsinline style="width:100%;height:100%;object-fit:cover;display:none"></video>
+          <img id="lk-preview-img" alt="Comic" style="width:100%;height:100%;object-fit:contain;display:none" />
+          <div class="cam-viewfinder"><span class="vf-tl"></span><span class="vf-tr"></span><span class="vf-bl"></span><span class="vf-br"></span></div>
+        </div>
+        <div class="btn-row">
+          <button id="lk-start-btn" onclick="lkStartCamera()">▶ Activate</button>
+          <button id="lk-capture-btn" onclick="lkCapture()" disabled>⊙ Capture</button>
+          <button id="lk-retake-btn" onclick="lkRetake()" style="display:none">↺ Retake</button>
+          <label style="margin:0;display:inline-flex;align-items:center;gap:6px;font-family:'Space Mono',monospace;font-size:10px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;padding:8px 13px;border:1px solid var(--border2);background:var(--sfc2);color:var(--cream2);cursor:pointer">
+            ⬆ Upload
+            <input type="file" id="lk-file-input" accept="image/*" onchange="lkHandleUpload(event)" style="display:none" />
+          </label>
+        </div>
+      </div>
+      <div class="panel" style="flex:1;display:flex;flex-direction:column;gap:10px">
+        <button class="btn-primary" id="lk-scan-btn" onclick="lookupScan()" disabled style="width:100%;justify-content:center">
+          ⊕ Analyse Comic
+        </button>
+        <div id="lk-status" class="status"></div>
+      </div>
+    </div>
+
+    <div class="lookup-result-col" id="lk-result-col">
+      <div class="lk-empty" id="lk-empty">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1">
+          <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
+          <path d="M11 8v6M8 11h6"/>
+        </svg>
+        Scan or upload a cover<br/>to reveal full archive data
+      </div>
+      <div class="lk-result" id="lk-result" style="display:none"></div>
+    </div>
+
+  </div>
+</div><!-- /pane-lookup -->
+
+<!-- ── FEE CALCULATOR ──────────────────────────────────────── -->
+<div id="pane-fees" style="display:none">
+<div class="fees-layout">
+
+  <!-- LEFT: Inputs -->
+  <div class="fees-input-col">
+    <div class="fees-panel">
+      <div class="fees-title">Whatnot Fee Calculator</div>
+
+      <label class="fees-label">Sale Price (£)</label>
+      <input class="fees-input" type="number" id="fc-price" value="20" min="0" step="1" oninput="calcFees()" />
+      <div class="fees-hint">The price you're selling the item for on Whatnot</div>
+
+      <label class="fees-label">Category</label>
+      <select class="fees-select" id="fc-category" onchange="calcFees()">
+        <option value="0">Comics, TCG, Sports Singles, Toys &amp; Hobbies — 6.67%</option>
+        <option value="1">Coins &amp; Money — 4%</option>
+        <option value="2">All other categories — 6.67%</option>
+      </select>
+      <div class="fees-hint">Different categories have different commission rates</div>
+
+      <label class="fees-label">Shipping Cost (£)</label>
+      <input class="fees-input" type="number" id="fc-shipping" value="0" min="0" step="0.50" oninput="calcFees()" />
+      <div class="fees-hint">Shipping charged to buyer — affects the processing fee base</div>
+
+      <label class="fees-label">VAT Rate (%)</label>
+      <input class="fees-input" type="number" id="fc-vat" value="20" min="0" max="30" step="1" oninput="calcFees()" />
+      <div class="fees-hint">Typically 20% in the UK</div>
+    </div>
+
+    <div class="fees-info-box" style="margin:12px 20px;">
+      Comics, TCG &amp; Sports Singles currently enjoy a limited-time 6.67% commission (0% on any portion above £1,500). Processing fee is 2.42% of total order + £0.25 transaction fee, both subject to VAT.
+    </div>
+  </div>
+
+  <!-- RIGHT: Results -->
+  <div class="fees-result-col">
+    <div class="fees-result-panel">
+      <div class="fees-breakdown-card">
+        <div class="fees-breakdown-title">Fee Breakdown</div>
+
+        <div class="fees-row">
+          <span class="fees-row-label">Sale Price</span>
+          <span class="fees-row-value" id="fc-r-sale">£0.00</span>
+        </div>
+        <div class="fees-row">
+          <span class="fees-row-label">Shipping Cost</span>
+          <span class="fees-row-value" id="fc-r-shipping">£0.00</span>
+        </div>
+
+        <div class="fees-divider" style="margin:8px 0"></div>
+
+        <div class="fees-row">
+          <span class="fees-row-label">Commission Fee <small id="fc-r-rate">6.67%</small></span>
+          <span class="fees-row-value deduct" id="fc-r-commission">−£0.00</span>
+        </div>
+        <div class="fees-row">
+          <span class="fees-row-label">VAT on Commission <small id="fc-r-vat-pct">20%</small></span>
+          <span class="fees-row-value deduct" id="fc-r-vat-commission">−£0.00</span>
+        </div>
+        <div class="fees-row">
+          <span class="fees-row-label">Payment Processing Fee <small>2.42% + £0.25</small></span>
+          <span class="fees-row-value deduct" id="fc-r-processing">−£0.00</span>
+        </div>
+        <div class="fees-row">
+          <span class="fees-row-label">VAT on Processing Fee <small id="fc-r-vat-pct2">20%</small></span>
+          <span class="fees-row-value deduct" id="fc-r-vat-processing">−£0.00</span>
+        </div>
+
+        <div class="fees-divider" style="margin:8px 0"></div>
+
+        <div class="fees-total-row">
+          <span class="fees-total-label">Total Fees</span>
+          <span class="fees-total-value" id="fc-r-total-fees">−£0.00</span>
+        </div>
+      </div>
+
+      <div class="fees-receive-block">
+        <div class="fees-receive-label">You Receive</div>
+        <div class="fees-receive-value" id="fc-r-receive">£0.00</div>
+        <div class="fees-receive-pct" id="fc-r-pct"></div>
+      </div>
+    </div>
+  </div>
+
+</div>
+</div><!-- /pane-fees -->
+
+<!-- Mobile bottom nav -->
+<nav class="mobile-nav" id="mobile-nav">
+  <button class="mobile-nav-btn active" id="mnav-scan" onclick="switchMobileTab('scan')">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+      <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/>
+      <circle cx="12" cy="13" r="4"/>
+    </svg>
+    Scan
+  </button>
+  <button class="mobile-nav-btn" id="mnav-inventory" onclick="switchMobileTab('inventory')" style="position:relative">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+      <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/>
+    </svg>
+    <span class="mob-count" id="mob-count">0</span>
+    Archive
+  </button>
+  <button class="mobile-nav-btn" id="mnav-lookup" onclick="switchMobileTab('lookup')">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+      <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
+    </svg>
+    Lookup
+  </button>
+</nav>
+
+<div id="mob-toast"></div>
+
+</div><!-- /main-app -->
+
+<!-- CGC Grade Guide Modal -->
+<div id="grade-modal" class="modal-overlay" onclick="hideGradeModal()" style="display:none">
+  <div class="modal-box" onclick="event.stopPropagation()">
+    <div class="modal-header">
+      <h3>CGC Grading Reference</h3>
+      <button class="modal-close" onclick="hideGradeModal()">×</button>
+    </div>
+    <table class="grade-table">
+      <thead><tr><th>Grade</th><th>Name</th><th>Key criteria</th></tr></thead>
+      <tbody>
+        <tr><td class="grade-num">9.8</td><td class="grade-name">NM/M</td><td>Nearly perfect. Flat, square, gloss fully intact. Minimal imperfections.</td></tr>
+        <tr><td class="grade-num">9.6</td><td class="grade-name">NM+</td><td>Almost perfect. Tiny handling defect or 1 very small corner blunt.</td></tr>
+        <tr><td class="grade-num">9.4</td><td class="grade-name">NM</td><td>Few minor defects. Slight spine stress lines OK. Colour gloss retained.</td></tr>
+        <tr><td class="grade-num">9.2</td><td class="grade-name">NM–</td><td>Slight blunting, 2–3 minor stress lines. Above average in every way.</td></tr>
+        <tr><td class="grade-num">9.0</td><td class="grade-name">VF/NM</td><td>Slight wear. Small corner blunts, 1–2 stress lines, minor staple discolouration.</td></tr>
+        <tr><td class="grade-num">8.5</td><td class="grade-name">VF+</td><td>Minor wear. Small creases, slight handling. Very light soil on cover.</td></tr>
+        <tr><td class="grade-num">8.0</td><td class="grade-name">VF</td><td>Slightly used. Minor staple stress, corner blunting. Still a nice copy.</td></tr>
+        <tr><td class="grade-num">7.5</td><td class="grade-name">VF–</td><td>Some wear. Small spine roll, visible creases. No significant defects.</td></tr>
+        <tr><td class="grade-num">7.0</td><td class="grade-name">FN/VF</td><td>Average used. Spine roll, stress lines, minor soil. Still bright and flat.</td></tr>
+        <tr><td class="grade-num">6.0</td><td class="grade-name">FN</td><td>Well-read. Creases, spine roll, some colour loss. No major defects.</td></tr>
+        <tr><td class="grade-num">5.0</td><td class="grade-name">VG/FN</td><td>Heavy wear. Possible small tears or small water stain. Heavy soil OK.</td></tr>
+        <tr><td class="grade-num">4.0</td><td class="grade-name">VG</td><td>Very heavy wear. Staple rust, tape present, minor missing pieces.</td></tr>
+        <tr><td class="grade-num">2.0</td><td class="grade-name">GD</td><td>Heavy wear, tape repair, major water stain, spine split, soiling.</td></tr>
+        <tr><td class="grade-num">1.0</td><td class="grade-name">FR</td><td>Very heavily worn. Possible page loss, large pieces missing.</td></tr>
+        <tr><td class="grade-num">0.5</td><td class="grade-name">PR</td><td>Major defects throughout. Readable only. Brittle pages, coverless.</td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- ── SETTINGS MODAL ─────────────────────────────────────────────── -->
+<div id="settings-modal" style="display:none" onclick="if(event.target===this)hideSettings()">
+  <div class="settings-box">
+    <div class="settings-header">
+      <h3>Account Settings</h3>
+      <button class="modal-close" onclick="hideSettings()">×</button>
+    </div>
+
+    <!-- Profile -->
+    <div class="settings-section">
+      <div class="settings-section-title">Profile</div>
+      <label>Display name</label>
+      <input type="text" id="st-name" placeholder="Your name" />
+      <label>Email</label>
+      <input type="email" id="st-email" disabled style="opacity:0.45" />
+      <div class="settings-error" id="st-name-error"></div>
+      <div class="settings-success" id="st-name-ok"></div>
+      <div class="btn-row" style="margin-top:12px">
+        <button class="btn-primary" onclick="doSaveName()">✓ Save name</button>
+      </div>
+      <hr class="lk-divider" style="margin:16px 0" />
+      <div class="settings-section-title" style="margin-bottom:10px">Change password</div>
+      <label>Current password</label>
+      <input type="password" id="st-pw-old" placeholder="••••••••" autocomplete="current-password" />
+      <label>New password</label>
+      <input type="password" id="st-pw-new" placeholder="Min 6 characters" autocomplete="new-password" />
+      <label>Confirm new</label>
+      <input type="password" id="st-pw-confirm" placeholder="Repeat" autocomplete="new-password" />
+      <div class="settings-error" id="st-pw-error"></div>
+      <div class="settings-success" id="st-pw-ok"></div>
+      <div class="btn-row" style="margin-top:12px">
+        <button onclick="doChangePassword()">✓ Change password</button>
+      </div>
+    </div>
+
+    <!-- Tools -->
+    <div class="settings-section">
+      <div class="settings-section-title">Tools</div>
+      <div class="settings-feat-grid">
+        <div class="settings-feat-card selected" id="st-feat-export" onclick="stToggleFeat('export')">
+          <span class="feature-check" style="color:var(--amber)">✓</span>
+          <div class="settings-feat-name">Whatnot Export</div>
+          <div class="settings-feat-desc">Scan, price &amp; export CSV</div>
+        </div>
+        <div class="settings-feat-card selected" id="st-feat-lookup" onclick="stToggleFeat('lookup')">
+          <span class="feature-check" style="color:var(--amber)">✓</span>
+          <div class="settings-feat-name">Comic Lookup</div>
+          <div class="settings-feat-desc">Identify &amp; condition check</div>
+        </div>
+      </div>
+      <div class="settings-error" id="st-feat-error"></div>
+      <div class="settings-success" id="st-feat-ok"></div>
+      <button class="btn-primary" onclick="doSaveFeatures()" style="width:100%;justify-content:center">✓ Update tools — requires reload</button>
+    </div>
+
+    <!-- Plan -->
+    <div class="settings-section" id="st-plan-section">
+      <div class="settings-section-title">Plan</div>
+      <div id="st-plan-content"></div>
+    </div>
+
+    <!-- Danger zone -->
+    <div class="settings-section">
+      <div class="settings-section-title">Danger Zone</div>
+      <button class="btn-danger-full" onclick="doDeleteAccount()">✕ Delete account &amp; all data</button>
+    </div>
+  </div>
+</div>
+
+<canvas id="canvas" style="display:none"></canvas>
+<canvas id="lk-canvas" style="display:none"></canvas>
+<input type="file" id="rescan-input" accept="image/*" style="display:none" onchange="handleRescan(event)" />
+
+<script src="/app.js"></script>
+<script>
+(function () {
+  /* Cleo-style phone reveal:
+     - Phone starts scaled so its WIDTH fills the viewport (bezels off-screen)
+     - Sticky container crops the phone top/bottom at that scale
+     - Scrolling shrinks phone to natural size, background visible around it */
+  var outer = document.getElementById('lp-phone-outer');
+  var wrap  = document.getElementById('lp-phone-wrap');
+  if (!outer || !wrap) return;
+
+  var PHONE_W = 300; /* natural phone width */
+
+  function update() {
+    var rect  = outer.getBoundingClientRect();
+    var viewH = window.innerHeight;
+    var viewW = window.innerWidth;
+    var contH = outer.offsetHeight;
+
+    /* progress: 0 when section top hits viewport bottom, 1 when bottom hits viewport top */
+    var prog = (viewH - rect.top) / (viewH + contH);
+    prog = Math.max(0, Math.min(1, prog));
+
+    /* Use only first 60% of scroll for the scale animation — phone then rests */
+    var animProg = Math.min(1, prog / 0.6);
+
+    /* Ease-out cubic — phone decelerates into final position */
+    var eased = 1 - Math.pow(1 - animProg, 3);
+
+    /* Start: phone width = viewport width (bezels just off-screen, like Cleo)
+       End:   natural size (scale = 1) */
+    var scaleStart = viewW / PHONE_W;
+    var scale = scaleStart - (scaleStart - 1) * eased;
+
+    wrap.style.transform = 'scale(' + scale + ')';
+  }
+
+  window.addEventListener('scroll', update, { passive: true });
+  window.addEventListener('resize', update, { passive: true });
+  update();
+}());
+</script>
+</body>
+</html>
