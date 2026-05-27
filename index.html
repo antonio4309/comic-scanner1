@@ -80,6 +80,98 @@
     </div>
   </section>
 
+  <!-- SCROLL APP PREVIEW -->
+  <div class="lp-scroll-preview" id="lp-scroll-preview">
+    <div class="lp-scroll-preview-sticky">
+      <div class="lp-scroll-preview-title" id="lp-scroll-preview-title">
+        <span class="lp-label">See it in action</span>
+        <h2 class="lp-title" style="font-size:clamp(28px,5vw,64px);margin-top:8px">Scan once. Sell smarter.</h2>
+      </div>
+      <div class="lp-scroll-preview-card" id="lp-scroll-preview-card">
+        <div class="lp-scroll-preview-screen">
+          <!-- App UI mockup -->
+          <div class="lp-mock-header">
+            <div class="lp-mock-logo">Longbox<span>Lens</span></div>
+            <div class="lp-mock-tabs">
+              <div class="lp-mock-tab lp-mock-tab-active">📦 Whatnot Export</div>
+              <div class="lp-mock-tab">🔍 Comic Lookup</div>
+            </div>
+            <div class="lp-mock-badge-live"><span></span>3 scanned</div>
+          </div>
+          <div class="lp-mock-body">
+            <div class="lp-mock-cam-col">
+              <div class="lp-mock-cam-area">
+                <div class="lp-mock-cam-frame">
+                  <div class="lp-mock-comic-cover">
+                    <div class="lp-mock-cover-spine" style="background:#e23b3b"></div>
+                    <div class="lp-mock-cover-art">
+                      <div class="lp-mock-cover-title">AMAZING<br>SPIDER-MAN</div>
+                      <div class="lp-mock-cover-issue">#300</div>
+                    </div>
+                  </div>
+                  <div class="lp-mock-cam-corner lp-mock-cam-tl"></div>
+                  <div class="lp-mock-cam-corner lp-mock-cam-tr"></div>
+                  <div class="lp-mock-cam-corner lp-mock-cam-bl"></div>
+                  <div class="lp-mock-cam-corner lp-mock-cam-br"></div>
+                </div>
+                <div class="lp-mock-scan-label">Identifying…</div>
+              </div>
+              <div class="lp-mock-scan-btn">📷 Scan Next</div>
+            </div>
+            <div class="lp-mock-inv-col">
+              <div class="lp-mock-inv-header">
+                <span class="lp-mock-inv-title">Inventory</span>
+                <span class="lp-mock-inv-count">3 items · £112.00</span>
+              </div>
+              <div class="lp-mock-card">
+                <div class="lp-mock-card-thumb" style="background:linear-gradient(135deg,#e23b3b,#a82020)">
+                  <span>ASM</span>
+                </div>
+                <div class="lp-mock-card-info">
+                  <div class="lp-mock-card-name">Amazing Spider-Man #300</div>
+                  <div class="lp-mock-card-meta">1988 · Marvel · VF/NM · Direct</div>
+                  <div class="lp-mock-card-price">£48.00</div>
+                </div>
+                <div class="lp-mock-card-tags">
+                  <span class="lp-mock-tag lp-mock-tag-key">KEY</span>
+                  <span class="lp-mock-tag">1ST VENOM</span>
+                </div>
+              </div>
+              <div class="lp-mock-card">
+                <div class="lp-mock-card-thumb" style="background:linear-gradient(135deg,#3b7de2,#1a4fa8)">
+                  <span>X-M</span>
+                </div>
+                <div class="lp-mock-card-info">
+                  <div class="lp-mock-card-name">X-Men #266</div>
+                  <div class="lp-mock-card-meta">1990 · Marvel · VF · Newsstand</div>
+                  <div class="lp-mock-card-price">£32.00</div>
+                </div>
+                <div class="lp-mock-card-tags">
+                  <span class="lp-mock-tag lp-mock-tag-key">KEY</span>
+                  <span class="lp-mock-tag">1ST GAMBIT</span>
+                </div>
+              </div>
+              <div class="lp-mock-card">
+                <div class="lp-mock-card-thumb" style="background:linear-gradient(135deg,#3bbf6a,#1a8040)">
+                  <span>GL</span>
+                </div>
+                <div class="lp-mock-card-info">
+                  <div class="lp-mock-card-name">Green Lantern #76</div>
+                  <div class="lp-mock-card-meta">1970 · DC · VG/FN · Direct</div>
+                  <div class="lp-mock-card-price">£32.00</div>
+                </div>
+                <div class="lp-mock-card-tags">
+                  <span class="lp-mock-tag">FA</span>
+                  <span class="lp-mock-tag">GREEN ARROW</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <!-- FEATURES -->
   <div class="lp-mid-band" style="border-top:1px solid var(--border)">
     <div class="lp-section">
@@ -831,5 +923,47 @@
 <input type="file" id="rescan-input" accept="image/*" style="display:none" onchange="handleRescan(event)" />
 
 <script src="/app.js"></script>
+<script>
+(function () {
+  var container = document.getElementById('lp-scroll-preview');
+  var card      = document.getElementById('lp-scroll-preview-card');
+  var title     = document.getElementById('lp-scroll-preview-title');
+  if (!container || !card || !title) return;
+
+  function lerp(a, b, t) { return a + (b - a) * t; }
+
+  function update() {
+    var rect    = container.getBoundingClientRect();
+    var viewH   = window.innerHeight;
+    var contH   = container.offsetHeight;
+    /* progress 0 = container top at viewport bottom
+       progress 1 = container bottom at viewport top */
+    var raw  = (viewH - rect.top) / (viewH + contH - viewH);
+    var prog = Math.max(0, Math.min(1, raw));
+
+    var mobile     = window.innerWidth <= 768;
+    var scaleStart = mobile ? 0.72 : 1.05;
+    var scaleEnd   = mobile ? 0.92 : 1.00;
+
+    var rotate = lerp(20, 0, prog);
+    var scale  = lerp(scaleStart, scaleEnd, prog);
+    var transY = lerp(0, -80, prog);
+
+    card.style.transform  = 'rotateX(' + rotate + 'deg) scale(' + scale + ')';
+    title.style.transform = 'translateY(' + transY + 'px)';
+    title.style.opacity   = Math.min(1, prog * 3).toString();
+  }
+
+  /* Only run on the landing screen — skip once user logs in */
+  window.addEventListener('scroll', function () {
+    if (document.getElementById('landing-screen') &&
+        document.getElementById('landing-screen').style.display !== 'none') {
+      update();
+    }
+  }, { passive: true });
+  window.addEventListener('resize', update, { passive: true });
+  update();
+}());
+</script>
 </body>
 </html>
