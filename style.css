@@ -2948,14 +2948,13 @@
 
     /* Outer: provides the scroll distance; background always visible */
     .lp-phone-outer {
-      height: 250vh;
+      height: 350vh;            /* extra room — animation uses first 60%, rest is rest */
       position: relative;
-      background: var(--ink);
-      /* subtle warm radial glow behind phone */
-      background-image: radial-gradient(ellipse 60% 50% at 50% 60%, rgba(255,142,62,0.07) 0%, transparent 70%);
+      background: var(--coal);  /* matches hero background for seamless entry */
+      background-image: radial-gradient(ellipse 70% 50% at 50% 55%, rgba(255,142,62,0.08) 0%, transparent 65%);
     }
 
-    /* Sticky inner — stays in viewport during 250vh scroll */
+    /* Sticky inner — stays in viewport during 350vh scroll */
     .lp-phone-sticky {
       position: sticky;
       top: 0;
@@ -2963,7 +2962,7 @@
       display: flex;
       align-items: center;
       justify-content: center;
-      overflow: hidden;
+      overflow: hidden;         /* clips phone top/bottom when scale is very large */
     }
 
     /* Phone wrapper — JS applies scale() transform here */

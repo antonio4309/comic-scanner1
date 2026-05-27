@@ -902,29 +902,35 @@
 <script src="/app.js"></script>
 <script>
 (function () {
-  /* Cleo-style phone scale-in: phone fills viewport height at scroll=0,
-     shrinks to natural size at scroll=1 — seamless with hero scroll */
+  /* Cleo-style phone reveal:
+     - Phone starts scaled so its WIDTH fills the viewport (bezels off-screen)
+     - Sticky container crops the phone top/bottom at that scale
+     - Scrolling shrinks phone to natural size, background visible around it */
   var outer = document.getElementById('lp-phone-outer');
   var wrap  = document.getElementById('lp-phone-wrap');
   if (!outer || !wrap) return;
 
-  var PHONE_H = 620; /* natural phone height in px */
+  var PHONE_W = 300; /* natural phone width */
 
   function update() {
     var rect  = outer.getBoundingClientRect();
     var viewH = window.innerHeight;
+    var viewW = window.innerWidth;
     var contH = outer.offsetHeight;
 
-    /* progress 0 = outer top at viewport bottom (phone enters)
-       progress 1 = outer bottom at viewport top (phone leaves) */
+    /* progress: 0 when section top hits viewport bottom, 1 when bottom hits viewport top */
     var prog = (viewH - rect.top) / (viewH + contH);
     prog = Math.max(0, Math.min(1, prog));
 
-    /* ease-out feel — slow at end so phone "settles" */
-    var eased = 1 - Math.pow(1 - prog, 2);
+    /* Use only first 60% of scroll for the scale animation — phone then rests */
+    var animProg = Math.min(1, prog / 0.6);
 
-    /* Scale: viewH/PHONE_H fills the viewport height at start → 1 at end */
-    var scaleStart = viewH / PHONE_H;
+    /* Ease-out cubic — phone decelerates into final position */
+    var eased = 1 - Math.pow(1 - animProg, 3);
+
+    /* Start: phone width = viewport width (bezels just off-screen, like Cleo)
+       End:   natural size (scale = 1) */
+    var scaleStart = viewW / PHONE_W;
     var scale = scaleStart - (scaleStart - 1) * eased;
 
     wrap.style.transform = 'scale(' + scale + ')';
