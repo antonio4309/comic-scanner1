@@ -120,7 +120,7 @@ export default function Home() {
       {/* Hero + ContainerScroll — starts from top of page */}
       <ContainerScroll
         titleComponent={
-          <div className="flex flex-col items-center gap-5 pt-20">
+          <div className="flex flex-col items-center gap-5 pt-20 pb-8">
             <div
               className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full border text-sm font-medium"
               style={{
