@@ -80,9 +80,9 @@
     </div>
   </section>
 
-  <!-- SCROLL APP PREVIEW -->
+  <!-- SCROLL APP PREVIEW — Aceternity ContainerScroll pattern -->
   <div class="lp-scroll-preview" id="lp-scroll-preview">
-    <div class="lp-scroll-preview-sticky">
+    <div class="lp-scroll-preview-inner">
       <div class="lp-scroll-preview-title" id="lp-scroll-preview-title">
         <span class="lp-label">See it in action</span>
         <h2 class="lp-title" style="font-size:clamp(28px,5vw,64px);margin-top:8px">Scan once. Sell smarter.</h2>
@@ -930,37 +930,31 @@
   var title     = document.getElementById('lp-scroll-preview-title');
   if (!container || !card || !title) return;
 
-  function lerp(a, b, t) { return a + (b - a) * t; }
-
   function update() {
-    var rect    = container.getBoundingClientRect();
-    var viewH   = window.innerHeight;
-    var contH   = container.offsetHeight;
-    /* progress 0 = container top at viewport bottom
-       progress 1 = container bottom at viewport top */
-    var raw  = (viewH - rect.top) / (viewH + contH - viewH);
-    var prog = Math.max(0, Math.min(1, raw));
+    var rect  = container.getBoundingClientRect();
+    var viewH = window.innerHeight;
+    var contH = container.offsetHeight;
 
-    var mobile     = window.innerWidth <= 768;
-    var scaleStart = mobile ? 0.72 : 1.05;
-    var scaleEnd   = mobile ? 0.92 : 1.00;
+    /* Matches Framer Motion useScroll({ target }) default offset ["start end","end start"]
+       progress 0 = element top  at viewport bottom
+       progress 1 = element bottom at viewport top  */
+    var prog = (viewH - rect.top) / (viewH + contH);
+    prog = Math.max(0, Math.min(1, prog));
 
-    var rotate = lerp(20, 0, prog);
-    var scale  = lerp(scaleStart, scaleEnd, prog);
-    var transY = lerp(0, -80, prog);
+    var mobile = window.innerWidth <= 768;
+    var scaleStart = mobile ? 0.7  : 1.05;
+    var scaleEnd   = mobile ? 0.9  : 1.00;
+
+    /* Mirror the Framer Motion useTransform ranges */
+    var rotate = 20 * (1 - prog);                              /* [20,0] */
+    var scale  = scaleStart + (scaleEnd - scaleStart) * prog;  /* [1.05,1] */
+    var transY = -100 * prog;                                  /* [0,-100] */
 
     card.style.transform  = 'rotateX(' + rotate + 'deg) scale(' + scale + ')';
     title.style.transform = 'translateY(' + transY + 'px)';
-    title.style.opacity   = Math.min(1, prog * 3).toString();
   }
 
-  /* Only run on the landing screen — skip once user logs in */
-  window.addEventListener('scroll', function () {
-    if (document.getElementById('landing-screen') &&
-        document.getElementById('landing-screen').style.display !== 'none') {
-      update();
-    }
-  }, { passive: true });
+  window.addEventListener('scroll', update, { passive: true });
   window.addEventListener('resize', update, { passive: true });
   update();
 }());

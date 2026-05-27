@@ -2946,44 +2946,48 @@
        SCROLL APP PREVIEW — 3D tilt-on-scroll device mockup
        ═══════════════════════════════════════════════════════════════ */
 
+    /* Aceternity ContainerScroll pattern — tall container, perspective inner, no sticky */
     .lp-scroll-preview {
-      height: 160vh;
-      position: relative;
-      background: var(--coal);
-    }
-    .lp-scroll-preview-sticky {
-      position: sticky;
-      top: 0;
-      height: 100vh;
+      height: 80rem;          /* matches h-[80rem] */
       display: flex;
-      flex-direction: column;
       align-items: center;
       justify-content: center;
-      padding: 32px 20px 20px;
-      perspective: 1200px;
-      overflow: hidden;
+      padding: 20px 80px;
+      background: var(--coal);
+      overflow: hidden;       /* clip rotated card edges */
+      position: relative;
+    }
+    .lp-scroll-preview-inner {
+      width: 100%;
+      position: relative;
+      perspective: 1000px;    /* matches style={{ perspective:"1000px" }} */
+      padding: 40px 0 160px;
     }
     .lp-scroll-preview-title {
+      max-width: 64rem;
+      margin: 0 auto;
       text-align: center;
-      margin-bottom: 28px;
       will-change: transform;
+      margin-bottom: 0;
     }
     .lp-scroll-preview-card {
-      max-width: 920px;
+      max-width: 64rem;
+      margin: -48px auto 0;   /* matches -mt-12 */
       width: 100%;
-      height: 500px;
-      border: 3px solid #3a2820;
-      padding: 6px;
+      height: 40rem;          /* matches h-[40rem] */
+      border: 4px solid #3a2820;
+      padding: 8px 24px;
       background: #1a0e0c;
-      border-radius: 24px;
+      border-radius: 30px;    /* matches rounded-[30px] */
       box-shadow:
-        0 0 0 1px rgba(255,142,62,0.06),
-        0 9px 20px rgba(0,0,0,0.6),
-        0 37px 37px rgba(0,0,0,0.45),
-        0 84px 50px rgba(0,0,0,0.25),
-        0 0 80px rgba(255,142,62,0.08);
+        0 0 #0000004d,
+        0 9px 20px #0000004a,
+        0 37px 37px #00000042,
+        0 84px 50px #00000026,
+        0 149px 60px #0000000a,
+        0 233px 65px #00000003;
       will-change: transform;
-      transform-origin: center top;
+      transform-origin: top center;
     }
     .lp-scroll-preview-screen {
       height: 100%;
@@ -3229,13 +3233,18 @@
       color: var(--amber);
     }
 
+    @media (max-width: 1024px) {
+      .lp-scroll-preview { padding: 20px 20px; }
+    }
     @media (max-width: 900px) {
-      .lp-scroll-preview-card { height: 380px; }
+      .lp-scroll-preview-card { height: 26rem; border-radius: 20px; padding: 6px; }
       .lp-mock-body { grid-template-columns: 1fr; }
       .lp-mock-cam-col { display: none; }
     }
-    @media (max-width: 600px) {
-      .lp-scroll-preview { height: 120vh; }
-      .lp-scroll-preview-card { height: 320px; border-radius: 16px; }
+    @media (max-width: 768px) {
+      /* matches h-[60rem] on mobile */
+      .lp-scroll-preview { height: 60rem; padding: 8px; }
+      .lp-scroll-preview-inner { padding: 40px 0; }
+      .lp-scroll-preview-card { height: 24rem; border-radius: 16px; padding: 4px; }
     }
 
