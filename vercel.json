@@ -1,4 +1,6 @@
 {
+  "buildCommand": "next build",
+  "outputDirectory": ".next",
   "crons": [
     {
       "path": "/api/cleanup-blobs",
