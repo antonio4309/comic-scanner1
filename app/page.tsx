@@ -109,7 +109,7 @@ export default function Home() {
           <a href="#about" className="hover:text-white transition-colors">About</a>
         </div>
         <a
-          href="/scan.html"
+          href="/scan.html?app=1"
           className="px-4 py-1.5 rounded-full text-sm font-semibold transition-all hover:opacity-90"
           style={{ background: "linear-gradient(90deg,#ff8e3e,#ffb627)", color: "#0e0807" }}
         >
@@ -153,7 +153,7 @@ export default function Home() {
 
             <div className="flex gap-4 mt-2">
               <a
-                href="/scan.html"
+                href="/scan.html?app=1"
                 className="px-8 py-3.5 rounded-full font-semibold text-base transition-all hover:opacity-90 active:scale-95"
                 style={{
                   background: "linear-gradient(90deg, #ff8e3e 0%, #ffb627 100%)",

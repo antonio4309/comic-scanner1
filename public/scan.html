@@ -901,6 +901,14 @@
 
 <script src="/app.js"></script>
 <script>
+// Skip landing screen if coming from the new landing page
+(function () {
+  if (new URLSearchParams(window.location.search).get('app') === '1') {
+    if (typeof goToAuth === 'function') goToAuth('login');
+  }
+}());
+</script>
+<script>
 (function () {
   /* Cleo-style phone reveal:
      - Phone starts scaled so its WIDTH fills the viewport (bezels off-screen)
