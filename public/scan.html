@@ -1119,21 +1119,30 @@
   overflow: hidden;
 }
 #lk-cam-col {
-  width: 340px;
-  min-width: 300px;
+  width: 320px;
+  min-width: 280px;
   flex-shrink: 0;
   display: flex;
   flex-direction: column;
   border-right: 1px solid var(--cc-border);
   background: var(--cc-bg1);
-  overflow-y: auto;
+  overflow: hidden;
 }
-.lk-section { padding: 14px; border-bottom: 1px solid var(--cc-border); }
+/* First section (camera) fills remaining height */
+#lk-cam-col .lk-section:first-child {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  padding-bottom: 12px;
+}
+.lk-section { padding: 14px; border-bottom: 1px solid var(--cc-border); flex-shrink: 0; }
 #lk-video-wrap {
   position: relative;
-  aspect-ratio: 4/3;
+  flex: 1;
+  min-height: 0;
   background: #040201;
-  border: 1px dashed var(--cc-border2);
+  border: 1px solid var(--cc-border);
   border-radius: 8px;
   display: flex;
   align-items: center;
@@ -1155,14 +1164,28 @@
 }
 #lk-video { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; display: none; }
 #lk-preview-img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: contain; display: none; }
-#lk-result-col { flex: 1; overflow-y: auto; padding: 16px; min-width: 0; }
+
+/* Result column: fills space, grid-pattern background kills the void */
+#lk-result-col {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  padding: 0;
+  min-width: 0;
+  background: var(--cc-bg);
+  background-image:
+    linear-gradient(rgba(255,142,62,0.028) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255,142,62,0.028) 1px, transparent 1px);
+  background-size: 28px 28px;
+}
 .lk-empty {
+  flex: 1;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
   gap: 12px;
-  height: 280px;
   color: var(--cc-text3);
   font-family: 'Space Mono', monospace;
   font-size: 10px;
@@ -1170,7 +1193,19 @@
   letter-spacing: 0.06em;
 }
 .lk-empty svg { width: 40px; height: 40px; opacity: 0.2; }
-#lk-result { width: 100%; }
+/* Result content: scrollable, fills height */
+#lk-result {
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: auto;
+  padding: 16px;
+  min-height: 0;
+}
+#lk-result::-webkit-scrollbar { width: 4px; height: 4px; }
+#lk-result::-webkit-scrollbar-thumb { background: var(--cc-border2); border-radius: 99px; }
+/* Make app.js result cards stretch to fill */
+#lk-result > div { min-height: 100%; }
+#lk-result > table { width: 100%; }
 #lk-scan-btn {
   width: 100%;
   background: var(--cc-amber);
@@ -1837,6 +1872,16 @@
           </div>
           <video id="lk-video" autoplay playsinline></video>
           <img id="lk-preview-img" alt="Comic" />
+          <!-- HUD: top strip -->
+          <div class="cc-hud-top">
+            <div class="cc-hud-fps">SCANNER UNIT ACTIVE<br>MODE: LOOKUP // AI: VISION_PRO</div>
+            <div class="cc-hud-track-chip">ANALYSING</div>
+          </div>
+          <!-- HUD: bottom strip -->
+          <div class="cc-hud-bottom">
+            <div class="cc-hud-telemetry">ISO: 400 // F: 2.8 // S: 1/125</div>
+            <div class="cc-hud-acquired">TARGET ACQUIRED</div>
+          </div>
         </div>
         <div class="lk-btn-row">
           <button class="lk-btn" id="lk-start-btn" onclick="lkStartCamera()">▷ ACTIVATE</button>
