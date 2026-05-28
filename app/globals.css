@@ -34,3 +34,114 @@ body {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
+
+/* ── Auth page animation keyframes ────────────────────────────── */
+@keyframes fadeSlideIn {
+  from {
+    opacity: 0;
+    filter: blur(6px);
+    transform: translateY(14px);
+  }
+  to {
+    opacity: 1;
+    filter: blur(0px);
+    transform: translateY(0px);
+  }
+}
+
+@keyframes slideRightIn {
+  from {
+    opacity: 0;
+    filter: blur(6px);
+    transform: translateX(28px);
+  }
+  to {
+    opacity: 1;
+    filter: blur(0px);
+    transform: translateX(0px);
+  }
+}
+
+@keyframes testimonialIn {
+  from {
+    opacity: 0;
+    filter: blur(4px);
+    transform: translateY(20px) scale(0.95);
+  }
+  to {
+    opacity: 1;
+    filter: blur(0px);
+    transform: translateY(0px) scale(1);
+  }
+}
+
+/* ── Auth animation utility classes ───────────────────────────── */
+@layer utilities {
+  .animate-element {
+    opacity: 0;
+    animation: fadeSlideIn 0.55s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  }
+
+  .animate-slide-right {
+    opacity: 0;
+    animation: slideRightIn 0.7s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  }
+
+  .animate-testimonial {
+    opacity: 0;
+    animation: testimonialIn 0.65s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  }
+
+  .animate-delay-50  { animation-delay: 50ms; }
+  .animate-delay-100 { animation-delay: 100ms; }
+  .animate-delay-150 { animation-delay: 150ms; }
+  .animate-delay-200 { animation-delay: 200ms; }
+  .animate-delay-250 { animation-delay: 250ms; }
+  .animate-delay-300 { animation-delay: 300ms; }
+  .animate-delay-350 { animation-delay: 350ms; }
+  .animate-delay-400 { animation-delay: 400ms; }
+  .animate-delay-450 { animation-delay: 450ms; }
+  .animate-delay-500 { animation-delay: 500ms; }
+  .animate-delay-600 { animation-delay: 600ms; }
+  .animate-delay-700 { animation-delay: 700ms; }
+  .animate-delay-800 { animation-delay: 800ms; }
+  .animate-delay-900 { animation-delay: 900ms; }
+  .animate-delay-1000 { animation-delay: 1000ms; }
+  .animate-delay-1200 { animation-delay: 1200ms; }
+  .animate-delay-1400 { animation-delay: 1400ms; }
+
+  /* Custom checkbox */
+  .custom-checkbox {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 16px;
+    height: 16px;
+    border: 1.5px solid rgba(212, 197, 193, 0.3);
+    border-radius: 4px;
+    background: transparent;
+    cursor: pointer;
+    position: relative;
+    flex-shrink: 0;
+    transition: border-color 0.15s, background 0.15s;
+  }
+  .custom-checkbox:checked {
+    background: #ff8e3e;
+    border-color: #ff8e3e;
+  }
+  .custom-checkbox:checked::after {
+    content: '';
+    position: absolute;
+    left: 4px;
+    top: 1px;
+    width: 5px;
+    height: 9px;
+    border: 2px solid #1a0800;
+    border-top: none;
+    border-left: none;
+    transform: rotate(45deg);
+  }
+  .custom-checkbox:focus-visible {
+    outline: 2px solid #ff8e3e;
+    outline-offset: 2px;
+  }
+}
