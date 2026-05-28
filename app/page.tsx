@@ -200,6 +200,21 @@ export default function Home() {
   return (
     <>
       <style>{`
+        /* Hero image bg */
+        .lbl-hero-img {
+          background-image: url('/hero-bg.jpg');
+          background-size: cover;
+          background-position: center top;
+        }
+        /* Dark overlay over hero image */
+        .lbl-hero-overlay {
+          background: linear-gradient(180deg,
+            rgba(14,8,7,0.55) 0%,
+            rgba(14,8,7,0.45) 40%,
+            rgba(14,8,7,0.85) 80%,
+            rgba(14,8,7,1.00) 100%
+          );
+        }
         /* Grid background */
         .lbl-grid-bg {
           background-image:
@@ -213,7 +228,7 @@ export default function Home() {
         }
         /* Amber glow blob */
         .lbl-glow-blob {
-          background: radial-gradient(ellipse 60% 50% at 50% 50%, rgba(255,142,62,0.18) 0%, transparent 70%);
+          background: radial-gradient(ellipse 60% 50% at 50% 50%, rgba(255,142,62,0.22) 0%, transparent 70%);
           filter: blur(40px);
         }
         /* Scanner line */
@@ -298,13 +313,13 @@ export default function Home() {
         </nav>
 
         {/* ── Hero ────────────────────────────────────────────── */}
-        <div className="relative">
-          {/* Grid */}
-          <div className="lbl-grid-bg absolute inset-0 pointer-events-none" />
-          {/* Radial fade */}
-          <div className="lbl-radial-fade absolute inset-0 pointer-events-none" />
-          {/* Glow blob */}
-          <div className="lbl-glow-blob absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[500px] pointer-events-none" />
+        <div className="lbl-hero-img relative">
+          {/* Dark overlay for readability */}
+          <div className="lbl-hero-overlay absolute inset-0 pointer-events-none" />
+          {/* Grid texture on top */}
+          <div className="lbl-grid-bg absolute inset-0 pointer-events-none opacity-40" />
+          {/* Amber glow blob */}
+          <div className="lbl-glow-blob absolute top-0 left-1/2 -translate-x-1/2 w-[900px] h-[600px] pointer-events-none" />
 
           <ContainerScroll
             titleComponent={
