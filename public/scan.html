@@ -3,1367 +3,1159 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>LongboxLens — Comic Archive Studio</title>
-  <!-- PWA -->
+  <title>LongboxLens — Command Center</title>
   <link rel="manifest" href="/manifest.json">
   <meta name="theme-color" content="#ff8e3e">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="apple-mobile-web-app-title" content="LongboxLens">
   <link rel="apple-touch-icon" href="/icon.svg">
-  <!-- Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700&family=Inter:wght@300;400;500;600&family=Bebas+Neue&family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet" />
-  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet" />
-  <!-- Landing + Auth styles (original) -->
+  <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Outfit:wght@400;500;600;700&family=Inter:wght@300;400;500;600&family=Bebas+Neue&family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+  <!-- style.css handles the landing + auth screens -->
   <link rel="stylesheet" href="/style.css" />
 
-  <style>
-    /* ── MATERIAL SYMBOLS ────────────────────────────────── */
-    .ms { font-family: 'Material Symbols Outlined'; font-style: normal; font-size: 20px; line-height: 1; letter-spacing: normal; text-transform: none; white-space: nowrap; direction: ltr; -webkit-font-smoothing: antialiased; font-variation-settings: 'FILL' 0, 'wght' 300, 'GRAD' 0, 'opsz' 24; }
-    .ms-fill { font-variation-settings: 'FILL' 1, 'wght' 300, 'GRAD' 0, 'opsz' 24; }
-
-    /* ── DESIGN TOKENS ────────────────────────────────────── */
-    :root {
-      --app-bg:       #0b1326;
-      --app-bg-dim:   #060e20;
-      --sfc0:         rgba(255,255,255,0.02);
-      --sfc1:         rgba(255,255,255,0.04);
-      --sfc2:         rgba(255,255,255,0.07);
-      --sfc3:         rgba(255,255,255,0.12);
-      --border0:      rgba(255,255,255,0.06);
-      --border1:      rgba(255,255,255,0.10);
-      --border2:      rgba(255,255,255,0.18);
-      --text:         #dae2fd;
-      --text-dim:     #c2c6d6;
-      --muted:        #8c909f;
-      --amber:        #ff8e3e;
-      --amber-dim:    rgba(255,142,62,0.12);
-      --amber-glow:   rgba(255,142,62,0.28);
-      --amber-border: rgba(255,142,62,0.35);
-      --cyan:         #00dce6;
-      --red:          #ff5370;
-      --green:        #3bcc7a;
-    }
-
-    /* ── MAIN APP SHELL ───────────────────────────────────── */
-    #main-app {
-      position: fixed !important;
-      inset: 0;
-      background: var(--app-bg) !important;
-      font-family: 'Inter', sans-serif;
-      color: var(--text);
-    }
-
-    /* ── SIDEBAR ──────────────────────────────────────────── */
-    #app-sidebar {
-      position: fixed;
-      left: 0; top: 0; bottom: 0;
-      width: 280px;
-      background: rgba(6,14,32,0.95);
-      border-right: 1px solid var(--border1);
-      display: flex;
-      flex-direction: column;
-      z-index: 100;
-      backdrop-filter: blur(20px);
-    }
-
-    .sb-logo {
-      padding: 24px 20px 20px;
-      border-bottom: 1px solid var(--border0);
-      flex-shrink: 0;
-    }
-    .sb-logo-wordmark {
-      font-family: 'Outfit', sans-serif;
-      font-size: 20px;
-      font-weight: 700;
-      color: var(--text);
-      letter-spacing: -0.02em;
-      display: flex;
-      align-items: center;
-      gap: 8px;
-    }
-    .sb-logo-wordmark span { color: var(--amber); }
-    .sb-logo-tag {
-      margin-top: 4px;
-      font-size: 10px;
-      font-weight: 500;
-      letter-spacing: 0.1em;
-      text-transform: uppercase;
-      color: var(--muted);
-    }
-
-    .sb-nav {
-      flex: 1;
-      padding: 16px 12px;
-      display: flex;
-      flex-direction: column;
-      gap: 2px;
-      overflow-y: auto;
-    }
-
-    .sb-section-label {
-      font-size: 10px;
-      font-weight: 600;
-      letter-spacing: 0.08em;
-      text-transform: uppercase;
-      color: var(--muted);
-      padding: 8px 8px 6px;
-      margin-top: 8px;
-    }
-
-    .nav-item {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      padding: 10px 12px;
-      border-radius: 10px;
-      border: none;
-      background: transparent;
-      color: var(--text-dim);
-      font-family: 'Inter', sans-serif;
-      font-size: 14px;
-      font-weight: 500;
-      cursor: pointer;
-      transition: all 0.15s ease;
-      width: 100%;
-      text-align: left;
-      position: relative;
-    }
-    .nav-item:hover {
-      background: var(--sfc1);
-      color: var(--text);
-    }
-    .nav-item.active {
-      background: var(--amber-dim);
-      color: var(--amber);
-    }
-    .nav-item.active::before {
-      content: '';
-      position: absolute;
-      left: -12px;
-      top: 50%;
-      transform: translateY(-50%);
-      width: 3px;
-      height: 20px;
-      background: var(--amber);
-      border-radius: 0 3px 3px 0;
-    }
-    .nav-item .ms { font-size: 18px; opacity: 0.8; }
-    .nav-item.active .ms { opacity: 1; }
-
-    .sb-cta {
-      margin: 0 12px 4px;
-    }
-    .sb-cta-btn {
-      width: 100%;
-      background: var(--amber);
-      color: #1a0800;
-      border: none;
-      border-radius: 10px;
-      padding: 11px 16px;
-      font-family: 'Inter', sans-serif;
-      font-size: 13px;
-      font-weight: 600;
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 8px;
-      transition: all 0.15s ease;
-      box-shadow: 0 0 20px var(--amber-glow);
-    }
-    .sb-cta-btn:hover {
-      background: #ffaa6b;
-      box-shadow: 0 0 28px var(--amber-glow);
-    }
-
-    .sb-footer {
-      padding: 12px;
-      border-top: 1px solid var(--border0);
-      flex-shrink: 0;
-    }
-
-    /* user chip rendered by app.js into #header-user-area */
-    #header-user-area .user-chip-btn {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      width: 100%;
-      padding: 10px 12px;
-      border-radius: 10px;
-      border: 1px solid var(--border1);
-      background: var(--sfc1);
-      color: var(--text-dim);
-      font-family: 'Inter', sans-serif;
-      font-size: 13px;
-      font-weight: 500;
-      cursor: pointer;
-      transition: all 0.15s ease;
-      text-align: left;
-    }
-    #header-user-area .user-chip-btn:hover { background: var(--sfc2); color: var(--text); }
-    #header-user-area .pro-chip {
-      background: var(--amber-dim);
-      color: var(--amber);
-      border: 1px solid var(--amber-border);
-      border-radius: 4px;
-      font-size: 9px;
-      font-weight: 700;
-      letter-spacing: 0.08em;
-      padding: 1px 5px;
-      text-transform: uppercase;
-    }
-
-    .sb-logout-btn {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      width: 100%;
-      padding: 8px 12px;
-      margin-top: 6px;
-      border-radius: 8px;
-      border: none;
-      background: transparent;
-      color: var(--muted);
-      font-family: 'Inter', sans-serif;
-      font-size: 12px;
-      font-weight: 500;
-      cursor: pointer;
-      transition: all 0.15s ease;
-    }
-    .sb-logout-btn:hover { background: rgba(255,83,112,0.08); color: var(--red); }
-
-    /* ── APP CONTENT AREA ─────────────────────────────────── */
-    #app-content {
-
-      flex: 1;
-      display: flex;
-      flex-direction: column;
-      min-height: 0;
-      overflow: hidden;
-      min-width: 0;
-    }
-
-    /* ── TOP HEADER BAR ───────────────────────────────────── */
-    #app-topbar {
-      flex-shrink: 0;
-      height: 56px;
-      background: rgba(6,14,32,0.8);
-      backdrop-filter: blur(20px);
-      border-bottom: 1px solid var(--border0);
-      display: flex;
-      align-items: center;
-      padding: 0 28px;
-      gap: 12px;
-      z-index: 50;
-    }
-    #app-topbar-title {
-      font-family: 'Outfit', sans-serif;
-      font-size: 16px;
-      font-weight: 600;
-      color: var(--text);
-      flex: 1;
-    }
-    .topbar-badge {
-      font-size: 10px;
-      font-weight: 600;
-      letter-spacing: 0.08em;
-      text-transform: uppercase;
-      background: var(--amber-dim);
-      color: var(--amber);
-      border: 1px solid var(--amber-border);
-      border-radius: 6px;
-      padding: 3px 8px;
-    }
-
-    /* ── PANE CONTAINER ───────────────────────────────────── */
-    #pane-export,
-    #pane-lookup,
-    #pane-fees {
-      flex: 1;
-      display: none;
-      overflow: hidden;
-      min-height: 0;
-    }
-    #pane-export { flex-direction: row; }
-    #pane-lookup { flex-direction: row; }
-    #pane-fees   { flex-direction: row; }
-
-    /* ── GLASS PANEL ──────────────────────────────────────── */
-    .glass-panel {
-      background: var(--sfc0);
-      backdrop-filter: blur(16px);
-      border: 1px solid var(--border1);
-      border-radius: 12px;
-    }
-    .glass-panel-elevated {
-      background: var(--sfc1);
-      backdrop-filter: blur(32px);
-      border: 1px solid var(--border2);
-      box-shadow: 0 20px 40px rgba(0,0,0,0.4);
-      border-radius: 12px;
-    }
-
-    /* ── SECTION HEADER ───────────────────────────────────── */
-    .section-head {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      margin-bottom: 16px;
-    }
-    .section-head-title {
-      font-family: 'Outfit', sans-serif;
-      font-size: 15px;
-      font-weight: 600;
-      color: var(--text);
-    }
-    .section-head-sub {
-      font-size: 12px;
-      color: var(--muted);
-      margin-left: auto;
-    }
-
-    /* ════════════════════════════════════════════════════════
-       PANE-EXPORT  —  Intake Studio + Archive
-    ════════════════════════════════════════════════════════ */
-
-    /* Left column: Intake */
-    #intake-col {
-      width: 360px;
-      min-width: 320px;
-      flex-shrink: 0;
-      display: flex;
-      flex-direction: column;
-      gap: 0;
-      border-right: 1px solid var(--border0);
-      overflow-y: auto;
-      background: var(--app-bg-dim);
-    }
-
-    .intake-section {
-      padding: 20px;
-      border-bottom: 1px solid var(--border0);
-    }
-
-    /* Camera / Upload zone */
-    #video-wrap {
-      background: #020a18;
-      border: 1px dashed var(--border2);
-      border-radius: 10px;
-      aspect-ratio: 4/3;
-      position: relative;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      overflow: hidden;
-      margin-bottom: 12px;
-    }
-    #cam-placeholder {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      gap: 12px;
-      color: var(--muted);
-      font-size: 12px;
-      font-weight: 500;
-      letter-spacing: 0.05em;
-      text-transform: uppercase;
-    }
-    #cam-placeholder .ms { font-size: 36px; color: var(--muted); }
-    #cam-placeholder p { margin: 0; text-align: center; line-height: 1.5; }
-
-    #video {
-      position: absolute;
-      inset: 0;
-      width: 100%; height: 100%;
-      object-fit: cover;
-      display: none;
-    }
-    #preview-img {
-      position: absolute;
-      inset: 0;
-      width: 100%; height: 100%;
-      object-fit: contain;
-      display: none;
-    }
-
-    /* scanner line animation */
-    .scanner-line {
-      height: 2px;
-      background: linear-gradient(90deg, transparent, var(--cyan), transparent);
-      box-shadow: 0 0 12px var(--cyan);
-      animation: scanline 2.5s infinite ease-in-out;
-      position: absolute;
-      width: 100%;
-      z-index: 20;
-      pointer-events: none;
-    }
-    @keyframes scanline {
-      0%   { top: 0%; opacity: 0; }
-      10%  { opacity: 1; }
-      90%  { opacity: 1; }
-      100% { top: 100%; opacity: 0; }
-    }
-
-    /* viewfinder corners */
-    .cam-viewfinder { position: absolute; inset: 8px; pointer-events: none; }
-    .vf-tl, .vf-tr, .vf-bl, .vf-br {
-      position: absolute;
-      width: 16px; height: 16px;
-      border-color: var(--amber);
-      border-style: solid;
-      opacity: 0.6;
-    }
-    .vf-tl { top: 0; left: 0; border-width: 2px 0 0 2px; border-radius: 2px 0 0 0; }
-    .vf-tr { top: 0; right: 0; border-width: 2px 2px 0 0; border-radius: 0 2px 0 0; }
-    .vf-bl { bottom: 0; left: 0; border-width: 0 0 2px 2px; border-radius: 0 0 0 2px; }
-    .vf-br { bottom: 0; right: 0; border-width: 0 2px 2px 0; border-radius: 0 0 2px 0; }
-
-    /* Intake camera buttons */
-    .intake-btn-row {
-      display: flex;
-      gap: 8px;
-      flex-wrap: wrap;
-    }
-    .intake-btn-row button,
-    .intake-btn-row label {
-      flex: 1;
-      min-width: 0;
-      padding: 9px 10px;
-      border-radius: 8px;
-      border: 1px solid var(--border1);
-      background: var(--sfc1);
-      color: var(--text-dim);
-      font-family: 'Inter', sans-serif;
-      font-size: 12px;
-      font-weight: 600;
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 6px;
-      transition: all 0.15s ease;
-      white-space: nowrap;
-    }
-    .intake-btn-row button:hover,
-    .intake-btn-row label:hover { background: var(--sfc2); color: var(--text); border-color: var(--border2); }
-    .intake-btn-row button:disabled { opacity: 0.4; cursor: not-allowed; }
-    .intake-btn-row .ms { font-size: 16px; }
-
-    /* Classification fields */
-    .field-label {
-      display: block;
-      font-size: 11px;
-      font-weight: 600;
-      letter-spacing: 0.05em;
-      text-transform: uppercase;
-      color: var(--muted);
-      margin-bottom: 6px;
-    }
-    .field-label-row {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      margin-bottom: 6px;
-    }
-    .field-label-row .field-label { margin-bottom: 0; }
-
-    #main-app input[type="text"],
-    #main-app input[type="number"],
-    #main-app input[type="email"],
-    #main-app input[type="password"],
-    #main-app select,
-    #main-app input[type="search"] {
-      width: 100%;
-      background: rgba(0,0,0,0.3);
-      border: 1px solid var(--border1);
-      border-radius: 8px;
-      padding: 9px 12px;
-      color: var(--text);
-      font-family: 'Inter', sans-serif;
-      font-size: 13px;
-      outline: none;
-      transition: border-color 0.15s ease, box-shadow 0.15s ease;
-      -webkit-appearance: none;
-      appearance: none;
-      box-sizing: border-box;
-    }
-    #main-app input:focus,
-    #main-app select:focus {
-      border-color: var(--amber);
-      box-shadow: 0 0 0 3px var(--amber-dim);
-    }
-    #main-app select option { background: #1a2340; color: var(--text); }
-
-    .field-grid-2 {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 10px;
-    }
-    .field-group { display: flex; flex-direction: column; gap: 0; }
-    .field-group + .field-group { margin-top: 12px; }
-
-    .grade-guide-btn {
-      padding: 2px 7px;
-      border: 1px solid var(--border1);
-      border-radius: 4px;
-      background: transparent;
-      color: var(--muted);
-      font-size: 10px;
-      font-weight: 600;
-      letter-spacing: 0.06em;
-      text-transform: uppercase;
-      cursor: pointer;
-    }
-    .grade-guide-btn:hover { border-color: var(--border2); color: var(--text-dim); }
-
-    /* Scan CTA button */
-    .scan-cta-btn {
-      width: 100%;
-      background: var(--amber);
-      color: #1a0800;
-      border: none;
-      border-radius: 10px;
-      padding: 13px 20px;
-      font-family: 'Inter', sans-serif;
-      font-size: 14px;
-      font-weight: 700;
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 8px;
-      transition: all 0.15s ease;
-      box-shadow: 0 4px 20px var(--amber-glow);
-    }
-    .scan-cta-btn:hover:not(:disabled) { background: #ffaa6b; box-shadow: 0 4px 28px var(--amber-glow); }
-    .scan-cta-btn:disabled { opacity: 0.45; cursor: not-allowed; box-shadow: none; }
-    .scan-cta-btn .ms { font-size: 20px; }
-
-    /* Status + Progress */
-    #scan-status {
-      font-size: 12px;
-      color: var(--muted);
-      text-align: center;
-      margin-top: 8px;
-      min-height: 16px;
-    }
-    #scan-status.loading { color: var(--amber); }
-    #scan-status.error   { color: var(--red); }
-    #scan-status.success { color: var(--green); }
-
-    #progress-wrap { display: none; margin-top: 10px; }
-    .progress-track {
-      height: 3px;
-      background: var(--border1);
-      border-radius: 99px;
-      overflow: hidden;
-    }
-    #progress-fill {
-      height: 100%;
-      background: var(--amber);
-      border-radius: 99px;
-      width: 0%;
-      transition: width 0.3s ease;
-    }
-    .progress-label {
-      display: flex;
-      justify-content: space-between;
-      font-size: 11px;
-      color: var(--muted);
-      margin-top: 4px;
-    }
-
-    /* Batch pending grid */
-    .pending-caption {
-      font-size: 11px;
-      color: var(--muted);
-      margin-top: 10px;
-    }
-    .pending-grid {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 6px;
-      margin-top: 8px;
-    }
-
-    /* ── RIGHT COL: Archive ─────────────────────────────── */
-    #archive-col {
-      flex: 1;
-      display: flex;
-      flex-direction: column;
-      overflow: hidden;
-      min-width: 0;
-    }
-
-    /* Archive top bar */
-    #archive-topbar {
-      flex-shrink: 0;
-      padding: 16px 24px 12px;
-      border-bottom: 1px solid var(--border0);
-      display: flex;
-      flex-direction: column;
-      gap: 10px;
-      background: var(--app-bg);
-    }
-
-    .archive-header-row {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-    }
-    .archive-title {
-      font-family: 'Outfit', sans-serif;
-      font-size: 16px;
-      font-weight: 600;
-      color: var(--text);
-      flex: 1;
-    }
-    .archive-action-btn {
-      padding: 7px 12px;
-      border-radius: 8px;
-      border: 1px solid var(--border1);
-      background: var(--sfc1);
-      color: var(--text-dim);
-      font-family: 'Inter', sans-serif;
-      font-size: 12px;
-      font-weight: 600;
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      gap: 6px;
-      transition: all 0.15s;
-    }
-    .archive-action-btn:hover { background: var(--sfc2); color: var(--text); border-color: var(--border2); }
-    .archive-action-btn.danger { border-color: rgba(255,83,112,0.3); color: var(--red); }
-    .archive-action-btn.danger:hover { background: rgba(255,83,112,0.08); }
-
-    /* Stats row */
-    .stats-strip {
-      display: flex;
-      gap: 0;
-      background: var(--sfc0);
-      border: 1px solid var(--border0);
-      border-radius: 10px;
-      overflow: hidden;
-    }
-    .stat-cell {
-      flex: 1;
-      padding: 10px 14px;
-      border-right: 1px solid var(--border0);
-      display: flex;
-      flex-direction: column;
-      gap: 2px;
-    }
-    .stat-cell:last-child { border-right: none; }
-    .stat-cell.clickable { cursor: pointer; }
-    .stat-cell.clickable:hover { background: var(--sfc1); }
-    .stat-val {
-      font-family: 'Outfit', sans-serif;
-      font-size: 18px;
-      font-weight: 700;
-      color: var(--text);
-      line-height: 1;
-    }
-    .stat-val.amber { color: var(--amber); }
-    .stat-lbl {
-      font-size: 10px;
-      font-weight: 600;
-      letter-spacing: 0.06em;
-      text-transform: uppercase;
-      color: var(--muted);
-    }
-
-    /* Filter bar */
-    .filter-strip {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      flex-wrap: wrap;
-    }
-    .filter-strip select {
-      width: auto;
-      padding: 6px 10px;
-      font-size: 12px;
-    }
-    .chip-row {
-      display: flex;
-      gap: 4px;
-      flex-wrap: wrap;
-    }
-    .chip {
-      padding: 5px 11px;
-      border-radius: 99px;
-      border: 1px solid var(--border1);
-      background: transparent;
-      color: var(--text-dim);
-      font-family: 'Inter', sans-serif;
-      font-size: 12px;
-      font-weight: 500;
-      cursor: pointer;
-      transition: all 0.15s;
-      white-space: nowrap;
-    }
-    .chip:hover { background: var(--sfc1); color: var(--text); }
-    .chip.active { background: var(--amber-dim); color: var(--amber); border-color: var(--amber-border); }
-
-    /* Comic list */
-    #comic-list {
-      flex: 1;
-      overflow-y: auto;
-      padding: 16px 24px;
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
-    }
-
-    .empty-state {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      gap: 16px;
-      height: 300px;
-      color: var(--muted);
-      font-size: 14px;
-      text-align: center;
-    }
-    .empty-state svg { width: 48px; height: 48px; opacity: 0.4; }
-
-    /* Bundle bar */
-    #bundle-bar {
-      display: none;
-      align-items: center;
-      gap: 12px;
-      padding: 10px 24px;
-      background: var(--amber-dim);
-      border-bottom: 1px solid var(--amber-border);
-      font-size: 13px;
-      color: var(--amber);
-    }
-    .btn-primary-amber {
-      background: var(--amber);
-      color: #1a0800;
-      border: none;
-      border-radius: 8px;
-      padding: 7px 14px;
-      font-size: 12px;
-      font-weight: 700;
-      cursor: pointer;
-    }
-
-    /* Mobile search */
-    .mob-search-bar {
-      display: none;
-    }
-    @media (max-width: 768px) {
-      .mob-search-bar { display: flex; align-items: center; gap: 6px; }
-    }
-
-    /* Export panel */
-    .export-panel-wrap {
-      flex-shrink: 0;
-      border-top: 1px solid var(--border0);
-      padding: 16px 24px;
-      background: var(--app-bg-dim);
-    }
-    .export-panel-title {
-      font-family: 'Outfit', sans-serif;
-      font-size: 13px;
-      font-weight: 600;
-      color: var(--text-dim);
-      margin-bottom: 12px;
-      display: flex;
-      align-items: center;
-      gap: 8px;
-    }
-    .export-options-row {
-      display: flex;
-      gap: 12px;
-      flex-wrap: wrap;
-      margin-bottom: 12px;
-    }
-    .export-options-row > div { flex: 1; min-width: 160px; }
-    .export-options-row label {
-      display: block;
-      font-size: 11px;
-      font-weight: 600;
-      letter-spacing: 0.05em;
-      text-transform: uppercase;
-      color: var(--muted);
-      margin-bottom: 5px;
-    }
-    .export-btn-row {
-      display: flex;
-      gap: 8px;
-      flex-wrap: wrap;
-    }
-    .export-btn-row button {
-      padding: 8px 14px;
-      border-radius: 8px;
-      border: 1px solid var(--border1);
-      background: var(--sfc1);
-      color: var(--text-dim);
-      font-family: 'Inter', sans-serif;
-      font-size: 12px;
-      font-weight: 600;
-      cursor: pointer;
-      transition: all 0.15s;
-    }
-    .export-btn-row button:hover { background: var(--sfc2); color: var(--text); }
-    .export-btn-row .primary-export {
-      background: var(--amber);
-      color: #1a0800;
-      border-color: transparent;
-      box-shadow: 0 2px 12px var(--amber-glow);
-    }
-    .export-btn-row .primary-export:hover { background: #ffaa6b; }
-
-    /* ════════════════════════════════════════════════════════
-       PANE-LOOKUP  — Scanner Detail / Lookup
-    ════════════════════════════════════════════════════════ */
-    #pane-lookup {
-      overflow: hidden;
-    }
-
-    #lk-cam-col {
-      width: 340px;
-      min-width: 300px;
-      flex-shrink: 0;
-      display: flex;
-      flex-direction: column;
-      border-right: 1px solid var(--border0);
-      background: var(--app-bg-dim);
-      overflow-y: auto;
-    }
-    .lk-section {
-      padding: 20px;
-      border-bottom: 1px solid var(--border0);
-    }
-
-    #lk-video-wrap {
-      background: #020a18;
-      border: 1px dashed var(--border2);
-      border-radius: 10px;
-      aspect-ratio: 4/3;
-      position: relative;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      overflow: hidden;
-      margin-bottom: 12px;
-    }
-    #lk-cam-placeholder {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      gap: 12px;
-      color: var(--muted);
-      font-size: 12px;
-      font-weight: 500;
-      letter-spacing: 0.05em;
-      text-transform: uppercase;
-    }
-    #lk-cam-placeholder .ms { font-size: 36px; }
-    #lk-video {
-      position: absolute; inset: 0;
-      width: 100%; height: 100%;
-      object-fit: cover; display: none;
-    }
-    #lk-preview-img {
-      position: absolute; inset: 0;
-      width: 100%; height: 100%;
-      object-fit: contain; display: none;
-    }
-
-    #lk-result-col {
-      flex: 1;
-      overflow-y: auto;
-      padding: 24px;
-      min-width: 0;
-    }
-    .lk-empty {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      gap: 16px;
-      height: 300px;
-      color: var(--muted);
-      font-size: 14px;
-      text-align: center;
-    }
-    .lk-empty svg { width: 48px; height: 48px; opacity: 0.35; }
-    #lk-result { width: 100%; }
-
-    #lk-scan-btn {
-      width: 100%;
-      background: var(--amber);
-      color: #1a0800;
-      border: none;
-      border-radius: 10px;
-      padding: 12px 20px;
-      font-family: 'Inter', sans-serif;
-      font-size: 14px;
-      font-weight: 700;
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 8px;
-      transition: all 0.15s ease;
-      box-shadow: 0 4px 20px var(--amber-glow);
-    }
-    #lk-scan-btn:hover:not(:disabled) { background: #ffaa6b; }
-    #lk-scan-btn:disabled { opacity: 0.45; cursor: not-allowed; box-shadow: none; }
-
-    #lk-status {
-      font-size: 12px;
-      color: var(--muted);
-      text-align: center;
-      margin-top: 8px;
-      min-height: 16px;
-    }
-
-    /* ════════════════════════════════════════════════════════
-       PANE-FEES  — Fee Calculator
-    ════════════════════════════════════════════════════════ */
-    #pane-fees {
-      overflow: auto;
-      padding: 28px 32px;
-      gap: 24px;
-      align-items: flex-start;
-      background: var(--app-bg);
-    }
-
-    #fees-input-col {
-      width: 380px;
-      min-width: 300px;
-      flex-shrink: 0;
-      display: flex;
-      flex-direction: column;
-      gap: 16px;
-    }
-    #fees-result-col {
-      flex: 1;
-      min-width: 280px;
-    }
-
-    .fees-card {
-      background: var(--sfc0);
-      border: 1px solid var(--border1);
-      border-radius: 14px;
-      overflow: hidden;
-    }
-    .fees-card-head {
-      padding: 16px 20px;
-      border-bottom: 1px solid var(--border0);
-      font-family: 'Outfit', sans-serif;
-      font-size: 15px;
-      font-weight: 600;
-      color: var(--text);
-      display: flex;
-      align-items: center;
-      gap: 10px;
-    }
-    .fees-card-body { padding: 20px; display: flex; flex-direction: column; gap: 16px; }
-
-    .fees-label {
-      display: block;
-      font-size: 11px;
-      font-weight: 600;
-      letter-spacing: 0.05em;
-      text-transform: uppercase;
-      color: var(--muted);
-      margin-bottom: 6px;
-    }
-    .fees-hint {
-      font-size: 11px;
-      color: var(--muted);
-      margin-top: 5px;
-      line-height: 1.5;
-    }
-
-    /* Fee result card */
-    .fees-breakdown-card {
-      background: var(--sfc0);
-      border: 1px solid var(--border1);
-      border-radius: 14px;
-      overflow: hidden;
-    }
-    .fees-breakdown-head {
-      padding: 16px 20px;
-      border-bottom: 1px solid var(--border0);
-      font-family: 'Outfit', sans-serif;
-      font-size: 15px;
-      font-weight: 600;
-      color: var(--text);
-    }
-    .fees-breakdown-body { padding: 20px; display: flex; flex-direction: column; gap: 0; }
-    .fees-row {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding: 8px 0;
-      border-bottom: 1px solid var(--border0);
-      font-size: 13px;
-    }
-    .fees-row:last-child { border-bottom: none; }
-    .fees-row-label { color: var(--text-dim); }
-    .fees-row-label small { font-size: 11px; color: var(--muted); margin-left: 6px; }
-    .fees-row-value { font-weight: 600; color: var(--text); }
-    .fees-row-value.deduct { color: var(--red); }
-    .fees-divider { height: 1px; background: var(--border1); margin: 4px 0; }
-    .fees-total-row {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding: 12px 0 4px;
-      font-size: 14px;
-      font-weight: 700;
-    }
-    .fees-total-label { color: var(--text); }
-    .fees-total-value { color: var(--red); font-size: 16px; }
-
-    /* You Receive block */
-    .fees-receive-block {
-      margin-top: 16px;
-      background: var(--amber-dim);
-      border: 1px solid var(--amber-border);
-      border-radius: 14px;
-      padding: 28px 24px;
-      text-align: center;
-    }
-    .fees-receive-label {
-      font-size: 11px;
-      font-weight: 600;
-      letter-spacing: 0.1em;
-      text-transform: uppercase;
-      color: var(--amber);
-      margin-bottom: 10px;
-    }
-    .fees-receive-value {
-      font-family: 'Outfit', sans-serif;
-      font-size: 48px;
-      font-weight: 700;
-      color: var(--amber);
-      line-height: 1;
-    }
-    .fees-receive-pct {
-      font-size: 13px;
-      color: var(--text-dim);
-      margin-top: 8px;
-    }
-
-    .fees-info-box {
-      padding: 14px 16px;
-      background: var(--sfc0);
-      border: 1px solid var(--border0);
-      border-radius: 10px;
-      font-size: 12px;
-      color: var(--muted);
-      line-height: 1.6;
-    }
-
-    /* ════════════════════════════════════════════════════════
-       MODALS
-    ════════════════════════════════════════════════════════ */
-    #grade-modal,
-    #settings-modal {
-      position: fixed;
-      inset: 0;
-      background: rgba(6,14,32,0.85);
-      backdrop-filter: blur(8px);
-      z-index: 1000;
-      display: none;
-      align-items: center;
-      justify-content: center;
-    }
-
-    .modal-box {
-      background: #131b2e;
-      border: 1px solid var(--border2);
-      border-radius: 16px;
-      width: 90%;
-      max-width: 640px;
-      max-height: 80vh;
-      overflow-y: auto;
-      box-shadow: 0 24px 60px rgba(0,0,0,0.5);
-    }
-    .modal-header {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding: 20px 24px;
-      border-bottom: 1px solid var(--border1);
-      font-family: 'Outfit', sans-serif;
-      font-size: 18px;
-      font-weight: 600;
-      color: var(--text);
-    }
-    .modal-close {
-      width: 32px; height: 32px;
-      border-radius: 8px;
-      border: 1px solid var(--border1);
-      background: var(--sfc1);
-      color: var(--text-dim);
-      font-size: 18px;
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
-    .modal-close:hover { background: var(--sfc2); color: var(--text); }
-
-    .grade-table {
-      width: 100%;
-      border-collapse: collapse;
-      font-size: 13px;
-    }
-    .grade-table th {
-      padding: 10px 16px;
-      text-align: left;
-      font-size: 10px;
-      font-weight: 600;
-      letter-spacing: 0.07em;
-      text-transform: uppercase;
-      color: var(--muted);
-      border-bottom: 1px solid var(--border1);
-    }
-    .grade-table td { padding: 10px 16px; border-bottom: 1px solid var(--border0); color: var(--text-dim); }
-    .grade-table tr:hover td { background: var(--sfc0); }
-    .grade-num { font-family: 'Outfit', sans-serif; font-weight: 700; color: var(--amber); font-size: 14px; }
-    .grade-name { font-weight: 600; color: var(--text); }
-
-    /* Settings modal */
-    .settings-box {
-      background: #131b2e;
-      border: 1px solid var(--border2);
-      border-radius: 16px;
-      width: 90%;
-      max-width: 520px;
-      max-height: 85vh;
-      overflow-y: auto;
-      box-shadow: 0 24px 60px rgba(0,0,0,0.5);
-    }
-    .settings-header {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding: 20px 24px;
-      border-bottom: 1px solid var(--border1);
-      font-family: 'Outfit', sans-serif;
-      font-size: 18px;
-      font-weight: 600;
-      color: var(--text);
-    }
-    .settings-section {
-      padding: 20px 24px;
-      border-bottom: 1px solid var(--border0);
-    }
-    .settings-section:last-child { border-bottom: none; }
-    .settings-section-title {
-      font-size: 11px;
-      font-weight: 600;
-      letter-spacing: 0.08em;
-      text-transform: uppercase;
-      color: var(--muted);
-      margin-bottom: 14px;
-    }
-    .settings-section label {
-      display: block;
-      font-size: 12px;
-      font-weight: 500;
-      color: var(--text-dim);
-      margin-bottom: 5px;
-      margin-top: 12px;
-    }
-    .settings-section label:first-of-type { margin-top: 0; }
-    .settings-error { color: var(--red); font-size: 12px; margin-top: 6px; }
-    .settings-success { color: var(--green); font-size: 12px; margin-top: 6px; }
-    .settings-feat-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 14px; }
-    .settings-feat-card {
-      padding: 14px;
-      border-radius: 10px;
-      border: 1px solid var(--border1);
-      background: var(--sfc0);
-      cursor: pointer;
-      transition: all 0.15s;
-      position: relative;
-    }
-    .settings-feat-card.selected { border-color: var(--amber-border); background: var(--amber-dim); }
-    .settings-feat-card:hover { border-color: var(--border2); }
-    .settings-feat-name { font-size: 13px; font-weight: 600; color: var(--text); margin-top: 6px; }
-    .settings-feat-desc { font-size: 11px; color: var(--muted); margin-top: 3px; }
-    .feature-check { position: absolute; top: 10px; right: 10px; font-size: 14px; }
-    .btn-danger-full {
-      width: 100%;
-      padding: 11px;
-      border-radius: 8px;
-      border: 1px solid rgba(255,83,112,0.3);
-      background: rgba(255,83,112,0.05);
-      color: var(--red);
-      font-family: 'Inter', sans-serif;
-      font-size: 13px;
-      font-weight: 600;
-      cursor: pointer;
-    }
-    .btn-danger-full:hover { background: rgba(255,83,112,0.12); }
-
-    /* Settings save btn */
-    .settings-save-btn {
-      padding: 9px 18px;
-      border-radius: 8px;
-      border: none;
-      background: var(--amber);
-      color: #1a0800;
-      font-family: 'Inter', sans-serif;
-      font-size: 13px;
-      font-weight: 700;
-      cursor: pointer;
-    }
-    .settings-save-btn.full { width: 100%; justify-content: center; display: flex; }
-
-    /* btn row in settings */
-    .settings-btn-row { display: flex; gap: 8px; margin-top: 12px; }
-
-    /* ── MOBILE NAV ────────────────────────────────────────── */
-    #mobile-nav {
-      display: none;
-      position: fixed;
-      bottom: 0; left: 0; right: 0;
-      background: rgba(6,14,32,0.95);
-      backdrop-filter: blur(20px);
-      border-top: 1px solid var(--border1);
-      padding: 8px 0 max(8px, env(safe-area-inset-bottom));
-      z-index: 200;
-    }
-    @media (max-width: 768px) {
-      #app-sidebar { display: none !important; }
-      #app-content { margin-left: 0 !important; }
-      #mobile-nav { display: flex !important; }
-      #main-app { padding-bottom: 64px; }
-      #pane-fees { flex-direction: column; padding: 16px; }
-      #fees-input-col { width: 100%; }
-    }
-    .mobile-nav-btn {
-      flex: 1;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 3px;
-      padding: 6px 4px;
-      border: none;
-      background: transparent;
-      color: var(--muted);
-      font-family: 'Inter', sans-serif;
-      font-size: 10px;
-      font-weight: 600;
-      letter-spacing: 0.04em;
-      cursor: pointer;
-      transition: color 0.15s;
-      position: relative;
-    }
-    .mobile-nav-btn svg { width: 22px; height: 22px; }
-    .mobile-nav-btn.active { color: var(--amber); }
-    .mob-count {
-      position: absolute;
-      top: 2px; right: 50%;
-      transform: translateX(14px);
-      background: var(--amber);
-      color: #1a0800;
-      font-size: 9px;
-      font-weight: 800;
-      min-width: 16px;
-      height: 16px;
-      border-radius: 99px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      padding: 0 4px;
-    }
-
-    /* Toast */
-    #mob-toast {
-      position: fixed;
-      bottom: 80px; left: 50%;
-      transform: translateX(-50%);
-      background: #1a2640;
-      border: 1px solid var(--border2);
-      border-radius: 8px;
-      padding: 10px 18px;
-      font-size: 13px;
-      color: var(--text);
-      z-index: 300;
-      pointer-events: none;
-      opacity: 0;
-      transition: opacity 0.2s;
-    }
-
-    /* ── SCROLLBAR ─────────────────────────────────────────── */
-    #main-app ::-webkit-scrollbar { width: 5px; height: 5px; }
-    #main-app ::-webkit-scrollbar-track { background: transparent; }
-    #main-app ::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 99px; }
-    #main-app ::-webkit-scrollbar-thumb:hover { background: var(--muted); }
-
-    /* ── COMIC CARDS (rendered by app.js) ──────────────────── */
-    /* app.js renders comic cards — keep minimal baseline styles */
-    .comic-card {
-      background: var(--sfc0);
-      border: 1px solid var(--border1);
-      border-radius: 10px;
-      overflow: hidden;
-      transition: border-color 0.15s, background 0.15s;
-    }
-    .comic-card:hover { border-color: var(--border2); background: var(--sfc1); }
-
-    /* lk-divider used in settings */
-    .lk-divider { border: none; border-top: 1px solid var(--border0); }
-  </style>
+<style>
+/* ════════════════════════════════════════════════════════════════
+   COMMAND CENTER  —  Design Tokens
+════════════════════════════════════════════════════════════════ */
+:root {
+  --cc-bg:       #080403;
+  --cc-bg1:      #0e0a07;
+  --cc-bg2:      #14100c;
+  --cc-bg3:      #1c1611;
+  --cc-bg4:      #231c15;
+  --cc-border:   rgba(255,142,62,0.10);
+  --cc-border2:  rgba(255,142,62,0.20);
+  --cc-border3:  rgba(255,142,62,0.35);
+  --cc-text:     #f0ebe6;
+  --cc-text2:    #b8a89e;
+  --cc-text3:    #6e5e56;
+  --cc-amber:    #ff8e3e;
+  --cc-amber-d:  #c96820;
+  --cc-amber-bg: rgba(255,142,62,0.08);
+  --cc-amber-glow: rgba(255,142,62,0.22);
+  --cc-green:    #05df72;
+  --cc-green-bg: rgba(5,223,114,0.08);
+  --cc-cyan:     #00d3bd;
+  --cc-red:      #ff4757;
+  --sb-width:    200px;
+  --rs-width:    290px;
+}
+
+/* ════════════════════════════════════════════════════════════════
+   MAIN APP SHELL
+════════════════════════════════════════════════════════════════ */
+#main-app {
+  position: fixed !important;
+  inset: 0;
+  background: var(--cc-bg) !important;
+  font-family: 'Inter', sans-serif;
+  color: var(--cc-text);
+}
+#app-shell {
+  display: flex;
+  flex-direction: row;
+  height: 100vh;
+  width: 100vw;
+  overflow: hidden;
+}
+
+/* ════════════════════════════════════════════════════════════════
+   LEFT SIDEBAR  —  Navigation
+════════════════════════════════════════════════════════════════ */
+#cmd-sidebar {
+  width: var(--sb-width);
+  flex-shrink: 0;
+  background: var(--cc-bg1);
+  border-right: 1px solid var(--cc-border);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+/* Logo block */
+.cmd-logo {
+  padding: 18px 16px 14px;
+  border-bottom: 1px solid var(--cc-border);
+  flex-shrink: 0;
+}
+.cmd-logo-name {
+  font-family: 'Space Mono', monospace;
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  color: var(--cc-amber);
+  text-transform: uppercase;
+}
+.cmd-logo-name span { color: var(--cc-text3); font-weight: 400; }
+.cmd-logo-role {
+  margin-top: 3px;
+  font-size: 9px;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--cc-text3);
+}
+
+/* Nav */
+.cmd-nav {
+  flex: 1;
+  padding: 10px 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  overflow-y: auto;
+}
+.cmd-nav-section {
+  font-size: 8px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--cc-text3);
+  padding: 8px 8px 4px;
+  margin-top: 8px;
+}
+.cmd-nav-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 9px 10px;
+  border-radius: 6px;
+  border: none;
+  background: transparent;
+  color: var(--cc-text3);
+  font-family: 'Inter', sans-serif;
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.12s;
+  width: 100%;
+  text-align: left;
+  position: relative;
+}
+.cmd-nav-item:hover { background: var(--cc-amber-bg); color: var(--cc-text2); }
+.cmd-nav-item.active {
+  background: var(--cc-amber-bg);
+  color: var(--cc-amber);
+  border: 1px solid var(--cc-border2);
+}
+.cmd-nav-item.active::before {
+  content: '';
+  position: absolute;
+  left: -8px; top: 50%;
+  transform: translateY(-50%);
+  width: 3px; height: 18px;
+  background: var(--cc-amber);
+  border-radius: 0 3px 3px 0;
+  box-shadow: 2px 0 10px var(--cc-amber-glow);
+}
+.cmd-nav-item .nav-icon {
+  font-family: 'Space Mono', monospace;
+  font-size: 10px;
+  width: 20px;
+  text-align: center;
+  opacity: 0.7;
+  flex-shrink: 0;
+}
+.cmd-nav-item.active .nav-icon { opacity: 1; }
+
+/* User footer */
+.cmd-user {
+  flex-shrink: 0;
+  border-top: 1px solid var(--cc-border);
+  padding: 12px;
+}
+#header-user-area .user-chip-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 8px 10px;
+  border-radius: 8px;
+  border: 1px solid var(--cc-border);
+  background: var(--cc-bg2);
+  color: var(--cc-text2);
+  font-family: 'Inter', sans-serif;
+  font-size: 11px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.12s;
+  text-align: left;
+}
+#header-user-area .user-chip-btn:hover { background: var(--cc-bg3); border-color: var(--cc-border2); color: var(--cc-text); }
+#header-user-area .pro-chip {
+  background: var(--cc-amber-bg);
+  color: var(--cc-amber);
+  border: 1px solid var(--cc-border2);
+  border-radius: 3px;
+  font-size: 8px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  padding: 1px 4px;
+  text-transform: uppercase;
+}
+.cmd-logout {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  width: 100%;
+  margin-top: 4px;
+  padding: 6px 10px;
+  border-radius: 6px;
+  border: none;
+  background: transparent;
+  color: var(--cc-text3);
+  font-family: 'Inter', sans-serif;
+  font-size: 11px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.12s;
+}
+.cmd-logout:hover { background: rgba(255,71,87,0.06); color: var(--cc-red); }
+
+/* ════════════════════════════════════════════════════════════════
+   CENTER COLUMN  —  Main workbench
+════════════════════════════════════════════════════════════════ */
+#cmd-center {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  overflow: hidden;
+  background: var(--cc-bg);
+}
+
+/* Top header bar */
+#cmd-header {
+  flex-shrink: 0;
+  height: 48px;
+  background: var(--cc-bg1);
+  border-bottom: 1px solid var(--cc-border);
+  display: flex;
+  align-items: center;
+  padding: 0 20px;
+  gap: 14px;
+}
+.cmd-breadcrumb {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+.cmd-breadcrumb-icon {
+  font-family: 'Space Mono', monospace;
+  font-size: 11px;
+  color: var(--cc-amber);
+  letter-spacing: 0.1em;
+}
+.cmd-breadcrumb-path {
+  font-family: 'Space Mono', monospace;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--cc-text2);
+}
+.cmd-breadcrumb-path span { color: var(--cc-amber); }
+.cmd-header-search {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--cc-bg2);
+  border: 1px solid var(--cc-border);
+  border-radius: 6px;
+  padding: 0 12px;
+  height: 30px;
+  transition: border-color 0.15s;
+}
+.cmd-header-search:focus-within { border-color: var(--cc-border2); }
+.cmd-header-search input {
+  flex: 1;
+  background: transparent;
+  border: none;
+  outline: none;
+  color: var(--cc-text);
+  font-family: 'Inter', sans-serif;
+  font-size: 11px;
+}
+.cmd-header-search input::placeholder { color: var(--cc-text3); }
+.cmd-header-search-icon { font-size: 12px; color: var(--cc-text3); }
+.cmd-header-actions { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
+.cmd-icon-btn {
+  width: 30px; height: 30px;
+  border-radius: 6px;
+  border: 1px solid var(--cc-border);
+  background: var(--cc-bg2);
+  color: var(--cc-text2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  font-size: 14px;
+  transition: all 0.12s;
+}
+.cmd-icon-btn:hover { border-color: var(--cc-border2); color: var(--cc-amber); background: var(--cc-amber-bg); }
+
+/* Scrollable body */
+#cmd-body {
+  flex: 1;
+  overflow-y: auto;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+#cmd-body::-webkit-scrollbar { width: 4px; }
+#cmd-body::-webkit-scrollbar-track { background: transparent; }
+#cmd-body::-webkit-scrollbar-thumb { background: var(--cc-border2); border-radius: 99px; }
+
+/* ── Camera Section ─────────────────────────────────────────────── */
+.cc-camera-panel {
+  background: var(--cc-bg1);
+  border: 1px solid var(--cc-border);
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+.cc-camera-topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 12px;
+  border-bottom: 1px solid var(--cc-border);
+}
+.cc-live-badge {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(255,71,87,0.1);
+  border: 1px solid rgba(255,71,87,0.25);
+  border-radius: 4px;
+  padding: 3px 8px;
+  font-family: 'Space Mono', monospace;
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  color: var(--cc-red);
+}
+.cc-live-dot {
+  width: 5px; height: 5px;
+  border-radius: 50%;
+  background: var(--cc-red);
+  animation: livepulse 1.4s ease-in-out infinite;
+}
+@keyframes livepulse { 0%,100% { opacity: 1; } 50% { opacity: 0.3; } }
+.cc-camera-meta {
+  font-family: 'Space Mono', monospace;
+  font-size: 9px;
+  color: var(--cc-text3);
+  letter-spacing: 0.08em;
+}
+
+/* Video area */
+#video-wrap {
+  position: relative;
+  aspect-ratio: 16/9;
+  background: #040201;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+#cam-placeholder {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  color: var(--cc-text3);
+  font-family: 'Space Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+#cam-placeholder .cc-cam-icon {
+  width: 52px; height: 52px;
+  border-radius: 50%;
+  border: 2px solid rgba(255,142,62,0.18);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 22px;
+  color: rgba(255,142,62,0.4);
+}
+#video {
+  position: absolute; inset: 0;
+  width: 100%; height: 100%;
+  object-fit: cover; display: none;
+}
+#preview-img {
+  position: absolute; inset: 0;
+  width: 100%; height: 100%;
+  object-fit: contain; display: none;
+}
+
+/* Scanning crosshair overlay */
+.cc-crosshair {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.cc-crosshair-box {
+  width: 45%; height: 55%;
+  border: 1.5px solid rgba(255,142,62,0.5);
+  border-radius: 4px;
+  position: relative;
+}
+/* Corner accents */
+.cc-corner {
+  position: absolute;
+  width: 14px; height: 14px;
+  border-color: var(--cc-amber);
+  border-style: solid;
+}
+.cc-corner.tl { top: -1px; left: -1px; border-width: 2px 0 0 2px; }
+.cc-corner.tr { top: -1px; right: -1px; border-width: 2px 2px 0 0; }
+.cc-corner.bl { bottom: -1px; left: -1px; border-width: 0 0 2px 2px; }
+.cc-corner.br { bottom: -1px; right: -1px; border-width: 0 2px 2px 0; }
+
+/* Scanner line */
+.cc-scan-line {
+  position: absolute;
+  left: 0; right: 0;
+  height: 1.5px;
+  background: linear-gradient(90deg, transparent 0%, var(--cc-cyan) 20%, var(--cc-amber) 50%, var(--cc-cyan) 80%, transparent 100%);
+  box-shadow: 0 0 12px var(--cc-cyan), 0 0 4px var(--cc-amber);
+  animation: scanline 2.8s ease-in-out infinite;
+  pointer-events: none;
+}
+@keyframes scanline {
+  0%   { top: 5%; opacity: 0; }
+  8%   { opacity: 1; }
+  92%  { opacity: 1; }
+  100% { top: 95%; opacity: 0; }
+}
+
+/* Camera controls */
+.cc-cam-controls {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 12px;
+  border-top: 1px solid var(--cc-border);
+  background: var(--cc-bg2);
+}
+.cc-ctrl-btn {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 9px 16px;
+  border-radius: 7px;
+  border: 1px solid var(--cc-border2);
+  background: var(--cc-bg3);
+  color: var(--cc-text2);
+  font-family: 'Space Mono', monospace;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: all 0.14s;
+}
+.cc-ctrl-btn:hover { background: var(--cc-bg4); border-color: var(--cc-border3); color: var(--cc-text); }
+.cc-ctrl-btn:disabled { opacity: 0.35; cursor: not-allowed; }
+.cc-ctrl-btn.primary {
+  background: var(--cc-amber);
+  color: #1a0800;
+  border-color: transparent;
+  box-shadow: 0 2px 16px var(--cc-amber-glow);
+}
+.cc-ctrl-btn.primary:hover:not(:disabled) { background: #ffaa6b; box-shadow: 0 2px 22px var(--cc-amber-glow); }
+.cc-ctrl-btn .ctrl-icon {
+  font-family: 'Space Mono', monospace;
+  font-size: 12px;
+  opacity: 0.85;
+}
+
+/* Upload label button */
+.cc-upload-label {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 9px 16px;
+  border-radius: 7px;
+  border: 1px solid var(--cc-border2);
+  background: var(--cc-bg3);
+  color: var(--cc-text2);
+  font-family: 'Space Mono', monospace;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: all 0.14s;
+}
+.cc-upload-label:hover { background: var(--cc-bg4); border-color: var(--cc-border3); color: var(--cc-text); }
+
+/* ── Classification Section ──────────────────────────────────────── */
+.cc-classify-panel {
+  background: var(--cc-bg1);
+  border: 1px solid var(--cc-border);
+  border-radius: 10px;
+  overflow: hidden;
+}
+.cc-panel-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 14px;
+  border-bottom: 1px solid var(--cc-border);
+}
+.cc-panel-title {
+  font-family: 'Space Mono', monospace;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--cc-text2);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.cc-panel-title-dot {
+  width: 6px; height: 6px;
+  border-radius: 50%;
+  background: var(--cc-amber);
+  box-shadow: 0 0 6px var(--cc-amber-glow);
+}
+.cc-panel-body { padding: 14px; display: flex; flex-direction: column; gap: 10px; }
+
+/* form inputs */
+#main-app input[type="text"],
+#main-app input[type="number"],
+#main-app input[type="email"],
+#main-app input[type="password"],
+#main-app input[type="search"],
+#main-app select {
+  width: 100%;
+  background: var(--cc-bg);
+  border: 1px solid var(--cc-border2);
+  border-radius: 6px;
+  padding: 7px 10px;
+  color: var(--cc-text);
+  font-family: 'Inter', sans-serif;
+  font-size: 12px;
+  outline: none;
+  transition: border-color 0.14s, box-shadow 0.14s;
+  -webkit-appearance: none;
+  appearance: none;
+  box-sizing: border-box;
+}
+#main-app input:focus, #main-app select:focus {
+  border-color: var(--cc-amber);
+  box-shadow: 0 0 0 3px var(--cc-amber-bg);
+}
+#main-app select option { background: #14100c; color: var(--cc-text); }
+.cc-field-label {
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--cc-text3);
+  margin-bottom: 4px;
+  display: block;
+}
+.cc-field { display: flex; flex-direction: column; }
+.cc-grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.cc-grid-3 { display: grid; grid-template-columns: 2fr 1fr 1fr; gap: 8px; }
+
+/* grade guide */
+.cc-grade-btn {
+  padding: 2px 6px;
+  border: 1px solid var(--cc-border2);
+  border-radius: 3px;
+  background: transparent;
+  color: var(--cc-text3);
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.07em;
+  cursor: pointer;
+  margin-left: 6px;
+}
+.cc-grade-btn:hover { border-color: var(--cc-border3); color: var(--cc-amber); }
+
+/* Scan CTA */
+.cc-scan-cta {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.cc-scan-btn {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 11px 20px;
+  border-radius: 7px;
+  border: none;
+  background: var(--cc-amber);
+  color: #1a0800;
+  font-family: 'Space Mono', monospace;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: all 0.14s;
+  box-shadow: 0 3px 18px var(--cc-amber-glow);
+}
+.cc-scan-btn:hover:not(:disabled) { background: #ffaa6b; box-shadow: 0 3px 24px var(--cc-amber-glow); }
+.cc-scan-btn:disabled { opacity: 0.4; cursor: not-allowed; box-shadow: none; }
+.cc-edit-btn {
+  width: 38px; height: 38px;
+  border-radius: 7px;
+  border: 1px solid var(--cc-border2);
+  background: var(--cc-bg2);
+  color: var(--cc-text2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  font-size: 14px;
+  transition: all 0.12s;
+  flex-shrink: 0;
+}
+.cc-edit-btn:hover { border-color: var(--cc-border3); color: var(--cc-amber); }
+
+/* Status + Progress */
+#scan-status { font-size: 11px; color: var(--cc-text3); min-height: 14px; font-family: 'Space Mono', monospace; letter-spacing: 0.05em; }
+#scan-status.loading { color: var(--cc-amber); }
+#scan-status.error { color: var(--cc-red); }
+#scan-status.success { color: var(--cc-green); }
+#progress-wrap { display: none; margin-top: 6px; }
+.progress-track { height: 2px; background: var(--cc-border2); border-radius: 99px; overflow: hidden; }
+#progress-fill { height: 100%; background: var(--cc-amber); width: 0%; transition: width 0.3s; }
+.progress-label { display: flex; justify-content: space-between; font-size: 10px; color: var(--cc-text3); margin-top: 4px; font-family: 'Space Mono', monospace; }
+.pending-caption { font-size: 10px; color: var(--cc-text3); margin-top: 6px; }
+.pending-grid { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 6px; }
+
+/* ════════════════════════════════════════════════════════════════
+   RIGHT SIDEBAR  —  Workspace + Scan Log
+════════════════════════════════════════════════════════════════ */
+#cmd-right {
+  width: var(--rs-width);
+  flex-shrink: 0;
+  background: var(--cc-bg1);
+  border-left: 1px solid var(--cc-border);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+.rs-section {
+  padding: 12px 14px;
+  border-bottom: 1px solid var(--cc-border);
+  flex-shrink: 0;
+}
+.rs-section-title {
+  font-family: 'Space Mono', monospace;
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--cc-text3);
+  margin-bottom: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.rs-badge {
+  background: var(--cc-amber-bg);
+  border: 1px solid var(--cc-border2);
+  border-radius: 3px;
+  padding: 2px 6px;
+  font-size: 8px;
+  font-weight: 700;
+  color: var(--cc-amber);
+  letter-spacing: 0.06em;
+}
+
+/* Box assignment dropdown */
+.rs-select-wrap {
+  background: var(--cc-bg);
+  border: 1px solid var(--cc-border2);
+  border-radius: 6px;
+  overflow: hidden;
+}
+.rs-select-wrap select {
+  font-family: 'Space Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 0.04em;
+  padding: 8px 10px;
+}
+
+/* Action buttons row */
+.rs-actions { display: flex; gap: 6px; margin-top: 8px; }
+.rs-btn {
+  flex: 1;
+  padding: 7px 8px;
+  border-radius: 5px;
+  border: 1px solid var(--cc-border2);
+  background: var(--cc-bg2);
+  color: var(--cc-text2);
+  font-family: 'Space Mono', monospace;
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  transition: all 0.12s;
+  white-space: nowrap;
+}
+.rs-btn:hover { background: var(--cc-bg3); border-color: var(--cc-border3); color: var(--cc-amber); }
+.rs-btn.danger:hover { background: rgba(255,71,87,0.06); border-color: rgba(255,71,87,0.3); color: var(--cc-red); }
+
+/* Filter row */
+.rs-filter-row {
+  display: flex;
+  gap: 4px;
+  flex-wrap: wrap;
+  margin-top: 6px;
+}
+.chip {
+  padding: 4px 8px;
+  border-radius: 4px;
+  border: 1px solid var(--cc-border);
+  background: transparent;
+  color: var(--cc-text3);
+  font-family: 'Space Mono', monospace;
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  cursor: pointer;
+  transition: all 0.12s;
+  white-space: nowrap;
+}
+.chip:hover { background: var(--cc-amber-bg); color: var(--cc-amber); border-color: var(--cc-border2); }
+.chip.active { background: var(--cc-amber-bg); color: var(--cc-amber); border-color: var(--cc-border3); }
+
+/* Stats strip */
+.rs-stats {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 6px;
+  margin-top: 2px;
+}
+.rs-stat {
+  background: var(--cc-bg);
+  border: 1px solid var(--cc-border);
+  border-radius: 6px;
+  padding: 8px 10px;
+}
+.rs-stat-val {
+  font-family: 'Space Mono', monospace;
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--cc-text);
+  line-height: 1;
+}
+.rs-stat-val.amber { color: var(--cc-amber); }
+.rs-stat-val.green { color: var(--cc-green); }
+.rs-stat-lbl {
+  font-size: 8px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--cc-text3);
+  margin-top: 3px;
+}
+
+/* Scan log */
+.rs-scan-log {
+  flex: 1;
+  overflow-y: auto;
+  padding: 8px 14px;
+}
+.rs-scan-log::-webkit-scrollbar { width: 3px; }
+.rs-scan-log::-webkit-scrollbar-thumb { background: var(--cc-border2); border-radius: 99px; }
+
+/* comic-list: app.js renders cards here */
+.comic-list, #comic-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 32px 16px;
+  color: var(--cc-text3);
+  font-size: 11px;
+  text-align: center;
+  font-family: 'Space Mono', monospace;
+  letter-spacing: 0.05em;
+}
+.empty-state svg { width: 36px; height: 36px; opacity: 0.25; }
+
+/* Session footer */
+.rs-session-footer {
+  flex-shrink: 0;
+  border-top: 1px solid var(--cc-border);
+  background: var(--cc-bg2);
+}
+.rs-session-total {
+  padding: 12px 14px 8px;
+}
+.rs-session-label {
+  font-family: 'Space Mono', monospace;
+  font-size: 8px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--cc-text3);
+  margin-bottom: 4px;
+}
+.rs-session-value {
+  font-family: 'Space Mono', monospace;
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--cc-green);
+  letter-spacing: -0.01em;
+}
+.rs-export-btn {
+  width: 100%;
+  padding: 10px 14px;
+  border: none;
+  border-top: 1px solid var(--cc-border);
+  background: var(--cc-bg3);
+  color: var(--cc-text2);
+  font-family: 'Space Mono', monospace;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  transition: all 0.14s;
+}
+.rs-export-btn:hover { background: var(--cc-amber-bg); color: var(--cc-amber); border-color: var(--cc-border2); }
+
+/* Bundle bar */
+#bundle-bar {
+  display: none;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 14px;
+  background: var(--cc-amber-bg);
+  border-bottom: 1px solid var(--cc-border2);
+  font-family: 'Space Mono', monospace;
+  font-size: 10px;
+  color: var(--cc-amber);
+}
+
+/* Export hidden controls */
+#csv-preview { display: none; font-size: 9px; font-family: 'Space Mono', monospace; background: var(--cc-bg); padding: 8px; border: 1px solid var(--cc-border); border-radius: 4px; overflow-x: auto; white-space: pre; max-height: 80px; overflow-y: auto; color: var(--cc-text2); margin-top: 6px; }
+
+/* ════════════════════════════════════════════════════════════════
+   LOOKUP PANE  —  Scanner Detail
+════════════════════════════════════════════════════════════════ */
+#pane-lookup {
+  flex: 1;
+  display: none;
+  flex-direction: row;
+  overflow: hidden;
+}
+#lk-cam-col {
+  width: 340px;
+  min-width: 300px;
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  border-right: 1px solid var(--cc-border);
+  background: var(--cc-bg1);
+  overflow-y: auto;
+}
+.lk-section { padding: 14px; border-bottom: 1px solid var(--cc-border); }
+#lk-video-wrap {
+  position: relative;
+  aspect-ratio: 4/3;
+  background: #040201;
+  border: 1px dashed var(--cc-border2);
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  margin-bottom: 10px;
+}
+#lk-cam-placeholder {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  color: var(--cc-text3);
+  font-family: 'Space Mono', monospace;
+  font-size: 9px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+#lk-video { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; display: none; }
+#lk-preview-img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: contain; display: none; }
+#lk-result-col { flex: 1; overflow-y: auto; padding: 16px; min-width: 0; }
+.lk-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  height: 280px;
+  color: var(--cc-text3);
+  font-family: 'Space Mono', monospace;
+  font-size: 10px;
+  text-align: center;
+  letter-spacing: 0.06em;
+}
+.lk-empty svg { width: 40px; height: 40px; opacity: 0.2; }
+#lk-result { width: 100%; }
+#lk-scan-btn {
+  width: 100%;
+  background: var(--cc-amber);
+  color: #1a0800;
+  border: none;
+  border-radius: 7px;
+  padding: 10px 16px;
+  font-family: 'Space Mono', monospace;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  transition: all 0.14s;
+  box-shadow: 0 2px 14px var(--cc-amber-glow);
+}
+#lk-scan-btn:hover:not(:disabled) { background: #ffaa6b; }
+#lk-scan-btn:disabled { opacity: 0.4; cursor: not-allowed; box-shadow: none; }
+#lk-status { font-size: 10px; color: var(--cc-text3); text-align: center; margin-top: 6px; min-height: 14px; font-family: 'Space Mono', monospace; }
+
+/* Lookup camera buttons */
+.lk-btn-row { display: flex; gap: 6px; flex-wrap: wrap; }
+.lk-btn {
+  flex: 1;
+  min-width: 0;
+  padding: 8px 10px;
+  border-radius: 6px;
+  border: 1px solid var(--cc-border2);
+  background: var(--cc-bg2);
+  color: var(--cc-text2);
+  font-family: 'Space Mono', monospace;
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  transition: all 0.12s;
+}
+.lk-btn:hover { background: var(--cc-bg3); border-color: var(--cc-border3); color: var(--cc-text); }
+.lk-btn:disabled { opacity: 0.35; cursor: not-allowed; }
+
+/* ════════════════════════════════════════════════════════════════
+   FEE CALCULATOR PANE
+════════════════════════════════════════════════════════════════ */
+#pane-fees {
+  display: none;
+  flex-direction: row;
+  overflow: auto;
+  padding: 20px;
+  gap: 16px;
+  align-items: flex-start;
+  background: var(--cc-bg);
+}
+#fees-input-col { width: 360px; min-width: 280px; flex-shrink: 0; display: flex; flex-direction: column; gap: 10px; }
+#fees-result-col { flex: 1; min-width: 240px; }
+.fees-card {
+  background: var(--cc-bg1);
+  border: 1px solid var(--cc-border);
+  border-radius: 8px;
+  overflow: hidden;
+}
+.fees-card-head {
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--cc-border);
+  font-family: 'Space Mono', monospace;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--cc-text2);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.fees-card-head-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--cc-amber); box-shadow: 0 0 6px var(--cc-amber-glow); }
+.fees-card-body { padding: 16px; display: flex; flex-direction: column; gap: 12px; }
+.fees-label { display: block; font-size: 9px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: var(--cc-text3); margin-bottom: 5px; }
+.fees-hint { font-size: 10px; color: var(--cc-text3); margin-top: 4px; line-height: 1.5; }
+.fees-breakdown-card { background: var(--cc-bg1); border: 1px solid var(--cc-border); border-radius: 8px; overflow: hidden; }
+.fees-breakdown-head { padding: 12px 16px; border-bottom: 1px solid var(--cc-border); font-family: 'Space Mono', monospace; font-size: 11px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: var(--cc-text2); }
+.fees-breakdown-body { padding: 16px; display: flex; flex-direction: column; }
+.fees-row { display: flex; align-items: center; justify-content: space-between; padding: 7px 0; border-bottom: 1px solid var(--cc-border); font-size: 12px; }
+.fees-row:last-child { border-bottom: none; }
+.fees-row-label { color: var(--cc-text2); }
+.fees-row-label small { font-size: 10px; color: var(--cc-text3); margin-left: 5px; }
+.fees-row-value { font-weight: 600; color: var(--cc-text); font-family: 'Space Mono', monospace; font-size: 11px; }
+.fees-row-value.deduct { color: var(--cc-red); }
+.fees-divider { height: 1px; background: var(--cc-border); margin: 4px 0; }
+.fees-total-row { display: flex; align-items: center; justify-content: space-between; padding: 10px 0 4px; font-size: 13px; font-weight: 700; }
+.fees-total-label { color: var(--cc-text); font-family: 'Space Mono', monospace; letter-spacing: 0.05em; text-transform: uppercase; font-size: 11px; }
+.fees-total-value { color: var(--cc-red); font-family: 'Space Mono', monospace; font-size: 15px; }
+.fees-receive-block { margin-top: 12px; background: rgba(255,142,62,0.06); border: 1px solid var(--cc-border2); border-radius: 8px; padding: 24px 20px; text-align: center; }
+.fees-receive-label { font-family: 'Space Mono', monospace; font-size: 9px; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; color: var(--cc-amber); margin-bottom: 10px; }
+.fees-receive-value { font-family: 'Space Mono', monospace; font-size: 40px; font-weight: 700; color: var(--cc-amber); line-height: 1; }
+.fees-receive-pct { font-size: 12px; color: var(--cc-text2); margin-top: 8px; }
+.fees-info-box { padding: 12px 14px; background: var(--cc-bg); border: 1px solid var(--cc-border); border-radius: 6px; font-size: 11px; color: var(--cc-text3); line-height: 1.6; }
+
+/* ════════════════════════════════════════════════════════════════
+   MODALS
+════════════════════════════════════════════════════════════════ */
+#grade-modal,
+#settings-modal {
+  position: fixed;
+  inset: 0;
+  background: rgba(4,2,1,0.88);
+  backdrop-filter: blur(6px);
+  z-index: 1000;
+  display: none;
+  align-items: center;
+  justify-content: center;
+}
+.modal-box {
+  background: var(--cc-bg2);
+  border: 1px solid var(--cc-border2);
+  border-radius: 12px;
+  width: 90%; max-width: 600px;
+  max-height: 80vh; overflow-y: auto;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.6);
+}
+.modal-header {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--cc-border);
+  font-family: 'Space Mono', monospace;
+  font-size: 13px; font-weight: 700;
+  letter-spacing: 0.08em; text-transform: uppercase;
+  color: var(--cc-text);
+}
+.modal-close {
+  width: 28px; height: 28px;
+  border-radius: 6px; border: 1px solid var(--cc-border);
+  background: var(--cc-bg3); color: var(--cc-text2);
+  font-size: 16px; cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+}
+.modal-close:hover { background: var(--cc-bg4); color: var(--cc-text); }
+.grade-table { width: 100%; border-collapse: collapse; font-size: 12px; }
+.grade-table th { padding: 8px 16px; text-align: left; font-size: 9px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: var(--cc-text3); border-bottom: 1px solid var(--cc-border); font-family: 'Space Mono', monospace; }
+.grade-table td { padding: 9px 16px; border-bottom: 1px solid rgba(255,142,62,0.05); color: var(--cc-text2); }
+.grade-table tr:hover td { background: var(--cc-amber-bg); }
+.grade-num { font-family: 'Space Mono', monospace; font-weight: 700; color: var(--cc-amber); font-size: 13px; }
+.grade-name { font-weight: 600; color: var(--cc-text); }
+
+.settings-box {
+  background: var(--cc-bg2);
+  border: 1px solid var(--cc-border2);
+  border-radius: 12px;
+  width: 90%; max-width: 480px;
+  max-height: 85vh; overflow-y: auto;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.6);
+}
+.settings-header { display: flex; align-items: center; justify-content: space-between; padding: 16px 20px; border-bottom: 1px solid var(--cc-border); font-family: 'Space Mono', monospace; font-size: 13px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--cc-text); }
+.settings-section { padding: 16px 20px; border-bottom: 1px solid rgba(255,142,62,0.05); }
+.settings-section:last-child { border-bottom: none; }
+.settings-section-title { font-size: 9px; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; color: var(--cc-text3); margin-bottom: 12px; font-family: 'Space Mono', monospace; }
+.settings-section label { display: block; font-size: 11px; font-weight: 500; color: var(--cc-text2); margin-bottom: 4px; margin-top: 10px; }
+.settings-section label:first-of-type { margin-top: 0; }
+.settings-error { color: var(--cc-red); font-size: 11px; margin-top: 4px; }
+.settings-success { color: var(--cc-green); font-size: 11px; margin-top: 4px; }
+.settings-feat-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 10px; }
+.settings-feat-card { padding: 12px; border-radius: 8px; border: 1px solid var(--cc-border); background: var(--cc-bg); cursor: pointer; transition: all 0.12s; position: relative; }
+.settings-feat-card.selected { border-color: var(--cc-border3); background: var(--cc-amber-bg); }
+.settings-feat-card:hover { border-color: var(--cc-border2); }
+.settings-feat-name { font-size: 12px; font-weight: 600; color: var(--cc-text); margin-top: 4px; }
+.settings-feat-desc { font-size: 10px; color: var(--cc-text3); margin-top: 3px; }
+.feature-check { position: absolute; top: 8px; right: 10px; font-size: 13px; }
+.btn-danger-full { width: 100%; padding: 10px; border-radius: 6px; border: 1px solid rgba(255,71,87,0.25); background: rgba(255,71,87,0.04); color: var(--cc-red); font-family: 'Inter', sans-serif; font-size: 12px; font-weight: 600; cursor: pointer; }
+.btn-danger-full:hover { background: rgba(255,71,87,0.1); }
+.settings-save-btn { padding: 8px 16px; border-radius: 6px; border: none; background: var(--cc-amber); color: #1a0800; font-family: 'Inter', sans-serif; font-size: 12px; font-weight: 700; cursor: pointer; }
+.settings-save-btn.full { width: 100%; display: flex; justify-content: center; }
+.settings-btn-row { display: flex; gap: 8px; margin-top: 10px; }
+.lk-divider { border: none; border-top: 1px solid var(--cc-border); }
+
+/* ════════════════════════════════════════════════════════════════
+   MOBILE NAV
+════════════════════════════════════════════════════════════════ */
+#mobile-nav { display: none; position: fixed; bottom: 0; left: 0; right: 0; background: rgba(8,4,3,0.97); backdrop-filter: blur(20px); border-top: 1px solid var(--cc-border); padding: 8px 0 max(8px, env(safe-area-inset-bottom)); z-index: 200; }
+@media (max-width: 768px) {
+  #cmd-sidebar { display: none !important; }
+  #cmd-right { display: none !important; }
+  #mobile-nav { display: flex !important; }
+  #main-app { padding-bottom: 64px; }
+  #pane-fees { flex-direction: column; padding: 12px; }
+  #fees-input-col { width: 100%; }
+}
+.mobile-nav-btn { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 6px 4px; border: none; background: transparent; color: var(--cc-text3); font-family: 'Space Mono', monospace; font-size: 8px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; cursor: pointer; transition: color 0.12s; position: relative; }
+.mobile-nav-btn svg { width: 20px; height: 20px; }
+.mobile-nav-btn.active { color: var(--cc-amber); }
+.mob-count { position: absolute; top: 2px; right: 50%; transform: translateX(12px); background: var(--cc-amber); color: #1a0800; font-size: 8px; font-weight: 800; min-width: 14px; height: 14px; border-radius: 99px; display: flex; align-items: center; justify-content: center; padding: 0 3px; }
+#mob-toast { position: fixed; bottom: 80px; left: 50%; transform: translateX(-50%); background: var(--cc-bg2); border: 1px solid var(--cc-border2); border-radius: 6px; padding: 8px 16px; font-size: 12px; font-family: 'Space Mono', monospace; color: var(--cc-text); z-index: 300; pointer-events: none; opacity: 0; transition: opacity 0.2s; }
+
+/* Scrollbar */
+#main-app ::-webkit-scrollbar { width: 4px; height: 4px; }
+#main-app ::-webkit-scrollbar-track { background: transparent; }
+#main-app ::-webkit-scrollbar-thumb { background: var(--cc-border2); border-radius: 99px; }
+</style>
 </head>
 <body>
 
 <!-- ── LANDING SCREEN ───────────────────────────────────────────── -->
 <div id="landing-screen">
-
-  <!-- HERO -->
   <section class="lp-hero">
     <div class="lp-hero-spines" aria-hidden="true">
-      <div class="lp-spine" style="background:#e23b3b"></div>
-      <div class="lp-spine" style="background:#f5a623"></div>
-      <div class="lp-spine" style="background:#3b7de2"></div>
-      <div class="lp-spine" style="background:#3bbf6a"></div>
-      <div class="lp-spine" style="background:#c8853f"></div>
-      <div class="lp-spine" style="background:#9c6228"></div>
-      <div class="lp-spine" style="background:#e23b3b"></div>
-      <div class="lp-spine" style="background:#f5a623"></div>
-      <div class="lp-spine" style="background:#3b7de2"></div>
+      <div class="lp-spine" style="background:#e23b3b"></div><div class="lp-spine" style="background:#f5a623"></div><div class="lp-spine" style="background:#3b7de2"></div><div class="lp-spine" style="background:#3bbf6a"></div><div class="lp-spine" style="background:#c8853f"></div><div class="lp-spine" style="background:#9c6228"></div><div class="lp-spine" style="background:#e23b3b"></div><div class="lp-spine" style="background:#f5a623"></div><div class="lp-spine" style="background:#3b7de2"></div>
     </div>
     <div class="lp-hero-spines" style="left:auto;right:0" aria-hidden="true">
-      <div class="lp-spine" style="background:#3bbf6a"></div>
-      <div class="lp-spine" style="background:#3b7de2"></div>
-      <div class="lp-spine" style="background:#f5a623"></div>
-      <div class="lp-spine" style="background:#e23b3b"></div>
-      <div class="lp-spine" style="background:#9c6228"></div>
-      <div class="lp-spine" style="background:#c8853f"></div>
-      <div class="lp-spine" style="background:#3bbf6a"></div>
-      <div class="lp-spine" style="background:#3b7de2"></div>
-      <div class="lp-spine" style="background:#f5a623"></div>
+      <div class="lp-spine" style="background:#3bbf6a"></div><div class="lp-spine" style="background:#3b7de2"></div><div class="lp-spine" style="background:#f5a623"></div><div class="lp-spine" style="background:#e23b3b"></div><div class="lp-spine" style="background:#9c6228"></div><div class="lp-spine" style="background:#c8853f"></div><div class="lp-spine" style="background:#3bbf6a"></div><div class="lp-spine" style="background:#3b7de2"></div><div class="lp-spine" style="background:#f5a623"></div>
     </div>
     <div class="lp-logo-wrap">
       <svg xmlns="http://www.w3.org/2000/svg" width="400" height="94" viewBox="0 0 340 80" fill="none">
         <g transform="translate(6,7) scale(1.05)">
-          <path d="M8 24 L54 18 L70 25 L24 31 Z" fill="#c8853f"/>
-          <path d="M8 24 L24 31 L24 54 L8 47 Z" fill="#9c6228"/>
-          <path d="M24 31 L70 25 L70 48 L24 54 Z" fill="#a8702f"/>
-          <path d="M28 24.5 L33 23.9 L33 30 L28 30.6 Z" fill="#e23b3b"/>
-          <path d="M34 23.8 L39 23.2 L39 29.3 L34 29.9 Z" fill="#f5a623"/>
-          <path d="M40 23.1 L45 22.5 L45 28.6 L40 29.2 Z" fill="#3b7de2"/>
-          <path d="M46 22.4 L51 21.8 L51 27.9 L46 28.5 Z" fill="#3bbf6a"/>
+          <path d="M8 24 L54 18 L70 25 L24 31 Z" fill="#c8853f"/><path d="M8 24 L24 31 L24 54 L8 47 Z" fill="#9c6228"/><path d="M24 31 L70 25 L70 48 L24 54 Z" fill="#a8702f"/>
+          <path d="M28 24.5 L33 23.9 L33 30 L28 30.6 Z" fill="#e23b3b"/><path d="M34 23.8 L39 23.2 L39 29.3 L34 29.9 Z" fill="#f5a623"/><path d="M40 23.1 L45 22.5 L45 28.6 L40 29.2 Z" fill="#3b7de2"/><path d="M46 22.4 L51 21.8 L51 27.9 L46 28.5 Z" fill="#3bbf6a"/>
           <text font-family="'Space Mono',monospace" x="47" y="42" font-size="6.5" fill="#e8eaed" text-anchor="middle" transform="rotate(-7 47 42)" letter-spacing="0.5" opacity="0.55">COMICS</text>
           <circle cx="60" cy="40" r="12" fill="none" stroke="#e8eaed" stroke-width="2.5" opacity="0.75"/>
           <circle cx="60" cy="40" r="4" fill="#f5a623"/>
@@ -1381,179 +1173,35 @@
     <div class="lp-scroll-hint"><span>Scroll</span><div class="lp-scroll-line"></div></div>
   </section>
 
-  <div class="lp-phone-outer" id="lp-phone-outer">
-    <div class="lp-phone-sticky">
-      <div class="lp-phone-wrap" id="lp-phone-wrap">
-        <div class="lp-phone-device">
-          <div class="lp-phone-btn-left"></div>
-          <div class="lp-phone-btn-right1"></div>
-          <div class="lp-phone-btn-right2"></div>
-          <div class="lp-phone-screen">
-            <div class="lp-phone-statusbar">
-              <span class="lp-phone-time">9:41</span>
-              <div class="lp-phone-island"></div>
-              <div class="lp-phone-signal">▲ ▲ ▲</div>
-            </div>
-            <div class="lp-phone-app">
-              <div class="lp-phone-app-header">
-                <div class="lp-phone-app-logo">Longbox<span>Lens</span></div>
-                <div class="lp-phone-app-badge"><span></span>3 scanned</div>
-              </div>
-              <div class="lp-phone-app-body">
-                <div class="lp-phone-card">
-                  <div class="lp-phone-card-thumb" style="background:linear-gradient(135deg,#e23b3b,#a82020)">ASM</div>
-                  <div class="lp-phone-card-info">
-                    <div class="lp-phone-card-title">Amazing Spider-Man #300</div>
-                    <div class="lp-phone-card-sub">1988 · Marvel · VF/NM</div>
-                    <div class="lp-phone-card-price">£48.00 <span class="lp-phone-tag">KEY · 1ST VENOM</span></div>
-                  </div>
-                </div>
-                <div class="lp-phone-card">
-                  <div class="lp-phone-card-thumb" style="background:linear-gradient(135deg,#3b7de2,#1a4fa8)">X-M</div>
-                  <div class="lp-phone-card-info">
-                    <div class="lp-phone-card-title">X-Men #266</div>
-                    <div class="lp-phone-card-sub">1990 · Marvel · VF · Newsstand</div>
-                    <div class="lp-phone-card-price">£32.00 <span class="lp-phone-tag">KEY · 1ST GAMBIT</span></div>
-                  </div>
-                </div>
-                <div class="lp-phone-card">
-                  <div class="lp-phone-card-thumb" style="background:linear-gradient(135deg,#c8853f,#8a4f18)">GL</div>
-                  <div class="lp-phone-card-info">
-                    <div class="lp-phone-card-title">Green Lantern #76</div>
-                    <div class="lp-phone-card-sub">1970 · DC · VG/FN</div>
-                    <div class="lp-phone-card-price">£32.00 <span class="lp-phone-tag">FA GREEN ARROW</span></div>
-                  </div>
-                </div>
-              </div>
-              <div class="lp-phone-app-footer">
-                <div class="lp-phone-export-btn">Export CSV — £112.00 total</div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
+  <div class="lp-phone-outer" id="lp-phone-outer"><div class="lp-phone-sticky"><div class="lp-phone-wrap" id="lp-phone-wrap"><div class="lp-phone-device"><div class="lp-phone-btn-left"></div><div class="lp-phone-btn-right1"></div><div class="lp-phone-btn-right2"></div><div class="lp-phone-screen"><div class="lp-phone-statusbar"><span class="lp-phone-time">9:41</span><div class="lp-phone-island"></div><div class="lp-phone-signal">▲ ▲ ▲</div></div><div class="lp-phone-app"><div class="lp-phone-app-header"><div class="lp-phone-app-logo">Longbox<span>Lens</span></div><div class="lp-phone-app-badge"><span></span>3 scanned</div></div><div class="lp-phone-app-body"><div class="lp-phone-card"><div class="lp-phone-card-thumb" style="background:linear-gradient(135deg,#e23b3b,#a82020)">ASM</div><div class="lp-phone-card-info"><div class="lp-phone-card-title">Amazing Spider-Man #300</div><div class="lp-phone-card-sub">1988 · Marvel · VF/NM</div><div class="lp-phone-card-price">£48.00 <span class="lp-phone-tag">KEY · 1ST VENOM</span></div></div></div><div class="lp-phone-card"><div class="lp-phone-card-thumb" style="background:linear-gradient(135deg,#3b7de2,#1a4fa8)">X-M</div><div class="lp-phone-card-info"><div class="lp-phone-card-title">X-Men #266</div><div class="lp-phone-card-sub">1990 · Marvel · VF</div><div class="lp-phone-card-price">£32.00 <span class="lp-phone-tag">KEY · 1ST GAMBIT</span></div></div></div></div><div class="lp-phone-app-footer"><div class="lp-phone-export-btn">Export CSV — £80.00 total</div></div></div></div></div></div></div></div>
 
-  <div class="lp-mid-band" style="border-top:1px solid var(--border)">
-    <div class="lp-section">
-      <span class="lp-label">What LongboxLens does</span>
-      <h2 class="lp-title">Six Tools. One Archive.</h2>
-      <p class="lp-title-sub">Everything a Whatnot seller or serious collector needs, built into one fast, focused system.</p>
-      <div class="lp-features-grid">
-        <div class="lp-feat-card">
-          <svg class="lp-feat-icon" viewBox="0 0 36 36" fill="none"><rect x="4" y="5" width="20" height="27" rx="1" stroke="currentColor" stroke-width="1.5"/><circle cx="28" cy="26" r="6" stroke="currentColor" stroke-width="1.5"/><line x1="32.5" y1="30.5" x2="35" y2="33" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><line x1="8" y1="12" x2="20" y2="12" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><line x1="8" y1="17" x2="17" y2="17" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
-          <div class="lp-feat-name">AI Comic ID</div>
-          <div class="lp-feat-desc">Photograph any comic and get instant identification: title, issue number, publisher, year, and estimated condition grade.</div>
-          <div class="lp-feat-tags"><span class="lp-feat-tag">AI-Powered</span><span class="lp-feat-tag">Photo Scan</span><span class="lp-feat-tag">Instant</span></div>
-        </div>
-        <div class="lp-feat-card">
-          <svg class="lp-feat-icon" viewBox="0 0 36 36" fill="none"><polyline points="3,29 9,20 15,23 22,13 28,16 35,5" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round"/><circle cx="35" cy="5" r="2.5" fill="currentColor"/><line x1="3" y1="33" x2="35" y2="33" stroke="currentColor" stroke-width="1" stroke-linecap="round" opacity="0.35"/></svg>
-          <div class="lp-feat-name">Live UK Prices</div>
-          <div class="lp-feat-desc">Real-time eBay UK sold listings give you accurate market value — not guesswork. Pulled fresh with every search.</div>
-          <div class="lp-feat-tags"><span class="lp-feat-tag">eBay UK</span><span class="lp-feat-tag">Live Data</span><span class="lp-feat-tag">Market Rate</span></div>
-        </div>
-        <div class="lp-feat-card">
-          <svg class="lp-feat-icon" viewBox="0 0 36 36" fill="none"><rect x="3" y="3" width="30" height="30" rx="1" stroke="currentColor" stroke-width="1.5"/><line x1="3" y1="11" x2="33" y2="11" stroke="currentColor" stroke-width="1" opacity="0.45"/><line x1="3" y1="19" x2="33" y2="19" stroke="currentColor" stroke-width="1" opacity="0.45"/><line x1="3" y1="27" x2="33" y2="27" stroke="currentColor" stroke-width="1" opacity="0.45"/><line x1="12" y1="3" x2="12" y2="33" stroke="currentColor" stroke-width="1" opacity="0.45"/><line x1="23" y1="3" x2="23" y2="33" stroke="currentColor" stroke-width="1" opacity="0.45"/></svg>
-          <div class="lp-feat-name">Whatnot Export</div>
-          <div class="lp-feat-desc">One-click CSV export pre-filled with all Whatnot required fields: title, price, category, condition, and photo URL.</div>
-          <div class="lp-feat-tags"><span class="lp-feat-tag">CSV</span><span class="lp-feat-tag">Whatnot</span><span class="lp-feat-tag">One Click</span></div>
-        </div>
-        <div class="lp-feat-card">
-          <svg class="lp-feat-icon" viewBox="0 0 36 36" fill="none"><path d="M18 3 L21.5 13 L32 13 L23.5 19.5 L27 30 L18 23 L9 30 L12.5 19.5 L4 13 L14.5 13 Z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/></svg>
-          <div class="lp-feat-name">Condition Grading</div>
-          <div class="lp-feat-desc">AI assesses cover wear, spine stress, and page quality. Automatically flags key issues, 1st appearances, and variants.</div>
-          <div class="lp-feat-tags"><span class="lp-feat-tag">CGC Grade</span><span class="lp-feat-tag">Key Issues</span><span class="lp-feat-tag">Variants</span></div>
-        </div>
-        <div class="lp-feat-card">
-          <svg class="lp-feat-icon" viewBox="0 0 36 36" fill="none"><path d="M10 24 C6 24 3 21.5 3 18 C3 14.8 5.5 12.2 8.8 12 C9.5 9 12.2 7 15.5 7 C17.8 7 19.9 8.1 21.2 10 C22 9.3 23.2 8.8 24.5 8.8 C27.8 8.8 30.5 11.5 30.5 14.8 C30.5 15 30.48 15.2 30.45 15.4 C32.4 16.1 33.8 17.9 33.8 20.1 C33.8 22.8 31.6 25 28.9 25" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><line x1="18" y1="19" x2="18" y2="31" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><polyline points="14,27 18,31 22,27" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
-          <div class="lp-feat-name">Cloud Archive</div>
-          <div class="lp-feat-desc">Your inventory syncs automatically. Access your full collection from any device — phone, tablet, or desktop.</div>
-          <div class="lp-feat-tags"><span class="lp-feat-tag">Cross-Device</span><span class="lp-feat-tag">Auto-Sync</span><span class="lp-feat-tag">Secure</span></div>
-        </div>
-        <div class="lp-feat-card">
-          <svg class="lp-feat-icon" viewBox="0 0 36 36" fill="none"><rect x="6" y="3" width="24" height="30" rx="1" stroke="currentColor" stroke-width="1.5"/><line x1="10" y1="11" x2="26" y2="11" stroke="currentColor" stroke-width="1" opacity="0.45"/><rect x="10" y="15" width="5" height="4" rx="0.5" stroke="currentColor" stroke-width="1"/><rect x="17" y="15" width="5" height="4" rx="0.5" stroke="currentColor" stroke-width="1"/><rect x="10" y="21" width="5" height="4" rx="0.5" stroke="currentColor" stroke-width="1"/><rect x="17" y="21" width="5" height="4" rx="0.5" fill="currentColor" fill-opacity="0.25" stroke="currentColor" stroke-width="1"/><text font-family="monospace" x="23.5" y="8.5" font-size="7" fill="currentColor" text-anchor="middle">£</text></svg>
-          <div class="lp-feat-name">Fee Calculator</div>
-          <div class="lp-feat-desc">Calculate your exact Whatnot seller fees, PayPal charges, and true profit margin before you set your starting price.</div>
-          <div class="lp-feat-tags"><span class="lp-feat-tag">Whatnot Fees</span><span class="lp-feat-tag">Profit</span><span class="lp-feat-tag">UK Sellers</span></div>
-        </div>
-      </div>
-    </div>
-  </div>
+  <div class="lp-mid-band" style="border-top:1px solid var(--border)"><div class="lp-section"><span class="lp-label">What LongboxLens does</span><h2 class="lp-title">Six Tools. One Archive.</h2><p class="lp-title-sub">Everything a Whatnot seller or serious collector needs, built into one fast, focused system.</p><div class="lp-features-grid"><div class="lp-feat-card"><svg class="lp-feat-icon" viewBox="0 0 36 36" fill="none"><rect x="4" y="5" width="20" height="27" rx="1" stroke="currentColor" stroke-width="1.5"/><circle cx="28" cy="26" r="6" stroke="currentColor" stroke-width="1.5"/><line x1="32.5" y1="30.5" x2="35" y2="33" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><line x1="8" y1="12" x2="20" y2="12" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><line x1="8" y1="17" x2="17" y2="17" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg><div class="lp-feat-name">AI Comic ID</div><div class="lp-feat-desc">Photograph any comic and get instant identification: title, issue, publisher, year, and condition grade.</div><div class="lp-feat-tags"><span class="lp-feat-tag">AI-Powered</span><span class="lp-feat-tag">Instant</span></div></div><div class="lp-feat-card"><svg class="lp-feat-icon" viewBox="0 0 36 36" fill="none"><polyline points="3,29 9,20 15,23 22,13 28,16 35,5" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round"/><circle cx="35" cy="5" r="2.5" fill="currentColor"/></svg><div class="lp-feat-name">Live UK Prices</div><div class="lp-feat-desc">Real-time eBay UK sold listings give you accurate market value, pulled fresh with every search.</div><div class="lp-feat-tags"><span class="lp-feat-tag">eBay UK</span><span class="lp-feat-tag">Live Data</span></div></div><div class="lp-feat-card"><svg class="lp-feat-icon" viewBox="0 0 36 36" fill="none"><rect x="3" y="3" width="30" height="30" rx="1" stroke="currentColor" stroke-width="1.5"/><line x1="3" y1="11" x2="33" y2="11" stroke="currentColor" stroke-width="1" opacity="0.45"/><line x1="3" y1="19" x2="33" y2="19" stroke="currentColor" stroke-width="1" opacity="0.45"/><line x1="12" y1="3" x2="12" y2="33" stroke="currentColor" stroke-width="1" opacity="0.45"/></svg><div class="lp-feat-name">Whatnot Export</div><div class="lp-feat-desc">One-click CSV export pre-filled with all Whatnot required fields: title, price, condition, photo URL.</div><div class="lp-feat-tags"><span class="lp-feat-tag">CSV</span><span class="lp-feat-tag">One Click</span></div></div><div class="lp-feat-card"><svg class="lp-feat-icon" viewBox="0 0 36 36" fill="none"><path d="M18 3 L21.5 13 L32 13 L23.5 19.5 L27 30 L18 23 L9 30 L12.5 19.5 L4 13 L14.5 13 Z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/></svg><div class="lp-feat-name">Condition Grading</div><div class="lp-feat-desc">AI assesses cover wear and spine quality. Flags key issues, 1st appearances, and variants automatically.</div><div class="lp-feat-tags"><span class="lp-feat-tag">CGC Grade</span><span class="lp-feat-tag">Key Issues</span></div></div></div></div></div>
 
-  <div class="lp-dark-band" style="border-top:1px solid var(--border)">
-    <div class="lp-section">
-      <span class="lp-label">Simple workflow</span>
-      <h2 class="lp-title">Three Steps to Your Next Whatnot Show</h2>
-      <div class="lp-steps-flow">
-        <div class="lp-step"><div class="lp-step-num">01</div><div class="lp-step-name">Scan Your Comics</div><div class="lp-step-desc">Photograph each comic with your phone camera. AI instantly identifies the title, issue, publisher, and condition — and flags key issues.</div></div>
-        <div class="lp-step-arrow">→</div>
-        <div class="lp-step"><div class="lp-step-num">02</div><div class="lp-step-name">Get Live Prices</div><div class="lp-step-desc">Live UK eBay sold data loads automatically. Review the market rate, adjust if needed, then save to your cloud archive.</div></div>
-        <div class="lp-step-arrow">→</div>
-        <div class="lp-step"><div class="lp-step-num">03</div><div class="lp-step-name">Export &amp; Sell</div><div class="lp-step-desc">Download your Whatnot-ready CSV in one click. Upload directly to Whatnot — ready to go live in minutes.</div></div>
-      </div>
-    </div>
-  </div>
-
-  <div class="lp-video-outer lp-mid-band">
-    <div class="lp-section lp-video-section">
-      <span class="lp-label">See it in action</span>
-      <h2 class="lp-title">Watch LongboxLens Work</h2>
-      <div class="lp-video-container">
-        <div class="lp-video-placeholder">
-          <div class="lp-play-btn">▶</div>
-          <div class="lp-video-label">Demo Video — Coming Soon</div>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <div class="lp-cta-section">
-    <span class="lp-label">Free to get started</span>
-    <h2 class="lp-cta-headline">Ready to Build<br>Your <em>Archive?</em></h2>
-    <p class="lp-cta-sub">No credit card · Works on any device · Your data syncs automatically</p>
-    <div class="lp-actions">
-      <button class="lp-btn-primary" onclick="goToAuth('register')" style="padding:16px 48px;font-size:11px">→ Create Free Account</button>
-      <button class="lp-btn-secondary" onclick="goToAuth('login')" style="padding:16px 48px;font-size:11px">Sign In</button>
-    </div>
-  </div>
-
-  <div class="lp-footer">
-    <div class="lp-footer-text">© 2025 LongboxLens &nbsp;·&nbsp; Comic Archive &amp; Pricing System &nbsp;·&nbsp; UK Market</div>
-  </div>
-
+  <div class="lp-cta-section"><span class="lp-label">Free to get started</span><h2 class="lp-cta-headline">Ready to Build<br>Your <em>Archive?</em></h2><p class="lp-cta-sub">No credit card · Works on any device · Your data syncs automatically</p><div class="lp-actions"><button class="lp-btn-primary" onclick="goToAuth('register')" style="padding:16px 48px;font-size:11px">→ Create Free Account</button><button class="lp-btn-secondary" onclick="goToAuth('login')" style="padding:16px 48px;font-size:11px">Sign In</button></div></div>
+  <div class="lp-footer"><div class="lp-footer-text">© 2025 LongboxLens · Comic Archive &amp; Pricing System · UK Market</div></div>
 </div><!-- /landing-screen -->
 
 <!-- ── AUTH SCREEN ─────────────────────────────────────────────── -->
 <div id="auth-screen" style="display:none">
   <div class="auth-box">
-    <div class="auth-logo">
-      <div class="auth-wordmark">Longbox<span>Lens</span></div>
-      <div class="auth-tagline">Comic Archive &amp; Pricing System</div>
-    </div>
+    <div class="auth-logo"><div class="auth-wordmark">Longbox<span>Lens</span></div><div class="auth-tagline">Comic Archive &amp; Pricing System</div></div>
     <div class="auth-rule"></div>
     <div class="auth-tabs" id="auth-tabs">
       <button class="auth-tab active" id="auth-tab-login" onclick="switchAuthMode('login')">Login</button>
       <button class="auth-tab" id="auth-tab-register" onclick="switchAuthMode('register')">Register</button>
     </div>
     <div class="auth-form" id="auth-form-login">
-      <label>Email</label>
-      <input type="email" id="login-email" placeholder="your@email.com" autocomplete="email" onkeydown="if(event.key==='Enter')doLogin()" />
-      <label>Password</label>
-      <input type="password" id="login-password" placeholder="••••••••" autocomplete="current-password" onkeydown="if(event.key==='Enter')doLogin()" />
+      <label>Email</label><input type="email" id="login-email" placeholder="your@email.com" autocomplete="email" onkeydown="if(event.key==='Enter')doLogin()" />
+      <label>Password</label><input type="password" id="login-password" placeholder="••••••••" autocomplete="current-password" onkeydown="if(event.key==='Enter')doLogin()" />
       <div class="auth-error" id="login-error"></div>
       <button class="btn-primary auth-submit" onclick="doLogin()">→ Authenticate</button>
       <div class="auth-link">No account? <button onclick="switchAuthMode('register')">Create one</button></div>
     </div>
     <div class="auth-form" id="auth-form-register" style="display:none">
-      <label>Name</label>
-      <input type="text" id="reg-name" placeholder="Your name" autocomplete="name" />
-      <label>Email</label>
-      <input type="email" id="reg-email" placeholder="your@email.com" autocomplete="email" />
-      <label>Password</label>
-      <input type="password" id="reg-password" placeholder="Min 6 characters" autocomplete="new-password" />
-      <label>Confirm password</label>
-      <input type="password" id="reg-confirm" placeholder="Repeat password" autocomplete="new-password" onkeydown="if(event.key==='Enter')doRegister()" />
+      <label>Name</label><input type="text" id="reg-name" placeholder="Your name" autocomplete="name" />
+      <label>Email</label><input type="email" id="reg-email" placeholder="your@email.com" autocomplete="email" />
+      <label>Password</label><input type="password" id="reg-password" placeholder="Min 6 characters" autocomplete="new-password" />
+      <label>Confirm password</label><input type="password" id="reg-confirm" placeholder="Repeat password" autocomplete="new-password" onkeydown="if(event.key==='Enter')doRegister()" />
       <div class="auth-error" id="reg-error"></div>
       <button class="btn-primary auth-submit" onclick="doRegister()">→ Continue</button>
       <div class="auth-link">Already have an account? <button onclick="switchAuthMode('login')">Log in</button></div>
@@ -1562,18 +1210,8 @@
       <div class="feat-heading">Choose Your Tools</div>
       <div class="feat-sub">Select what you need — you can use one or both</div>
       <div class="feature-grid">
-        <div class="feature-card selected" id="feat-export" onclick="toggleFeature('export')">
-          <span class="feature-check">✓</span>
-          <div class="feature-name">Whatnot Export</div>
-          <div class="feature-desc">Scan comics, fetch live UK eBay prices, and export a Whatnot-ready CSV.</div>
-          <div class="feature-tags"><span class="feature-tag">Scan</span><span class="feature-tag">Price</span><span class="feature-tag">CSV</span><span class="feature-tag">Sellers</span></div>
-        </div>
-        <div class="feature-card selected" id="feat-lookup" onclick="toggleFeature('lookup')">
-          <span class="feature-check">✓</span>
-          <div class="feature-name">Comic Lookup</div>
-          <div class="feature-desc">Identify any comic, get condition assessment, key issue info and market data.</div>
-          <div class="feature-tags"><span class="feature-tag">Identify</span><span class="feature-tag">Condition</span><span class="feature-tag">Key Issues</span><span class="feature-tag">Collectors</span></div>
-        </div>
+        <div class="feature-card selected" id="feat-export" onclick="toggleFeature('export')"><span class="feature-check">✓</span><div class="feature-name">Whatnot Export</div><div class="feature-desc">Scan comics, fetch live UK eBay prices, and export a Whatnot-ready CSV.</div><div class="feature-tags"><span class="feature-tag">Scan</span><span class="feature-tag">Price</span><span class="feature-tag">CSV</span></div></div>
+        <div class="feature-card selected" id="feat-lookup" onclick="toggleFeature('lookup')"><span class="feature-check">✓</span><div class="feature-name">Comic Lookup</div><div class="feature-desc">Identify any comic, get condition assessment, key issue info and market data.</div><div class="feature-tags"><span class="feature-tag">Identify</span><span class="feature-tag">Key Issues</span></div></div>
       </div>
       <div class="auth-error" id="feat-error"></div>
       <button class="btn-primary auth-submit" onclick="doSelectFeatures()">→ Enter Archive</button>
@@ -1584,619 +1222,510 @@
 
 <!-- ── MAIN APP ─────────────────────────────────────────────────── -->
 <div id="main-app" style="display:none">
-<!-- app.js sets this to display:flex + flex-direction:column; the inner
-     #app-shell handles the actual row layout so sidebar+content work -->
-<div id="app-shell" style="display:flex;flex-direction:row;flex:1;min-height:0;overflow:hidden;height:100vh">
+<div id="app-shell">
 
-  <!-- ═══ SIDEBAR ════════════════════════════════════════════════ -->
-  <aside id="app-sidebar">
+  <!-- ═══ LEFT SIDEBAR ══════════════════════════════════════════ -->
+  <aside id="cmd-sidebar">
 
-    <div class="sb-logo">
-      <div class="sb-logo-wordmark">
-        <svg width="22" height="22" viewBox="0 0 70 60" fill="none">
-          <path d="M8 24 L54 18 L70 25 L24 31 Z" fill="#c8853f"/>
-          <path d="M8 24 L24 31 L24 54 L8 47 Z" fill="#9c6228"/>
-          <path d="M24 31 L70 25 L70 48 L24 54 Z" fill="#a8702f"/>
-          <path d="M28 24.5 L33 23.9 L33 30 L28 30.6 Z" fill="#e23b3b"/>
-          <path d="M34 23.8 L39 23.2 L39 29.3 L34 29.9 Z" fill="#f5a623"/>
-          <path d="M40 23.1 L45 22.5 L45 28.6 L40 29.2 Z" fill="#3b7de2"/>
-        </svg>
-        Longbox<span>Lens</span>
-      </div>
-      <div class="sb-logo-tag">Comic Archive Studio</div>
+    <div class="cmd-logo">
+      <div class="cmd-logo-name">LBL<span>_OPS</span></div>
+      <div class="cmd-logo-role">Comic Command Center</div>
     </div>
 
-    <nav class="sb-nav">
-      <div class="sb-section-label">Workspace</div>
+    <nav class="cmd-nav">
+      <div class="cmd-nav-section">Workspace</div>
 
-      <button class="nav-item active" id="tab-btn-export" onclick="switchTab('export')">
-        <span class="ms">document_scanner</span>
-        Intake Studio
+      <button class="cmd-nav-item active" id="tab-btn-export" onclick="switchTab('export')">
+        <span class="nav-icon">▣</span>
+        Scanning
+      </button>
+      <button class="cmd-nav-item" id="tab-btn-lookup" onclick="switchTab('lookup')">
+        <span class="nav-icon">◎</span>
+        Lookup
+      </button>
+      <button class="cmd-nav-item" id="tab-btn-fees" onclick="switchTab('fees')">
+        <span class="nav-icon">$</span>
+        Fee Calc
       </button>
 
-      <button class="nav-item" id="tab-btn-lookup" onclick="switchTab('lookup')">
-        <span class="ms">search</span>
-        Scanner Lookup
-      </button>
-
-      <button class="nav-item" id="tab-btn-fees" onclick="switchTab('fees')">
-        <span class="ms">calculate</span>
-        Fee Calculator
-      </button>
-
-      <div class="sb-section-label" style="margin-top:16px">Account</div>
-
-      <button class="nav-item" onclick="showSettings()">
-        <span class="ms">settings</span>
+      <div class="cmd-nav-section">Tools</div>
+      <button class="cmd-nav-item" onclick="showSettings()">
+        <span class="nav-icon">⚙</span>
         Settings
       </button>
     </nav>
 
-    <div class="sb-cta">
-      <button class="sb-cta-btn" onclick="switchTab('export')">
-        <span class="ms" style="font-size:16px">add_a_photo</span>
-        Quick Intake
-      </button>
-    </div>
-
-    <div class="sb-footer">
+    <div class="cmd-user">
       <div id="header-user-area"></div>
-      <button class="sb-logout-btn" onclick="logout()">
-        <span class="ms" style="font-size:16px">logout</span>
-        Sign out
+      <button class="cmd-logout" onclick="logout()">
+        <span style="font-size:11px">⏏</span> Sign out
       </button>
     </div>
 
   </aside>
 
-  <!-- ═══ MAIN CONTENT ═══════════════════════════════════════════ -->
-  <div id="app-content">
+  <!-- ═══ CENTER + RIGHT CONTENT ═══════════════════════════════ -->
+  <div style="flex:1;display:flex;flex-direction:column;min-width:0;overflow:hidden">
 
-    <!-- Top bar -->
-    <div id="app-topbar">
-      <div id="app-topbar-title">Intake Studio</div>
-      <span class="topbar-badge">UK Market</span>
-    </div>
+  <!-- ── PANE: SCANNING COMMAND CENTER ──────────────────────── -->
+  <div id="pane-export" style="display:flex;flex:1;overflow:hidden">
 
-    <!-- ── PANE: INTAKE STUDIO + ARCHIVE ──────────────────────── -->
-    <div id="pane-export" style="display:flex">
+    <!-- CENTER: Camera + Classification -->
+    <div id="cmd-center">
 
-      <!-- Left: Scanner + Classification -->
-      <div id="intake-col">
+      <!-- Header bar -->
+      <div id="cmd-header">
+        <div class="cmd-breadcrumb">
+          <span class="cmd-breadcrumb-icon">▣▣</span>
+          <span class="cmd-breadcrumb-path">COMMAND CENTER / <span>LIVE_SCAN</span></span>
+        </div>
+        <div class="cmd-header-search">
+          <span class="cmd-header-search-icon">⌕</span>
+          <input type="search" id="mob-search" placeholder="Manual SKU or ISBN Search..." oninput="applyMobileSearch()" autocomplete="off" />
+        </div>
+        <div class="cmd-header-actions">
+          <button class="cmd-icon-btn" onclick="refetchAllPrices()" title="Refresh prices">↻</button>
+          <button class="cmd-icon-btn" onclick="showSettings()" title="Settings">⚙</button>
+        </div>
+      </div>
 
-        <!-- Camera / Upload -->
-        <div class="intake-section">
-          <div class="section-head">
-            <span class="ms" style="color:var(--amber);font-size:18px">document_scanner</span>
-            <span class="section-head-title">Document Intake</span>
+      <!-- Body (scrollable) -->
+      <div id="cmd-body">
+
+        <!-- Camera Panel -->
+        <div class="cc-camera-panel">
+          <div class="cc-camera-topbar">
+            <div class="cc-live-badge">
+              <span class="cc-live-dot"></span>
+              LIVE FEED
+            </div>
+            <span class="cc-camera-meta">4K · AI ENHANCED</span>
           </div>
 
           <div id="video-wrap">
             <div id="cam-placeholder">
-              <span class="ms" style="font-size:40px;color:var(--muted)">add_a_photo</span>
-              <p>Activate camera or<br>upload a cover image</p>
+              <div class="cc-cam-icon">◎</div>
+              <span>Activate Camera Feed</span>
             </div>
             <video id="video" autoplay playsinline></video>
             <img id="preview-img" alt="Captured comic" />
-            <div class="scanner-line" id="scanner-line" style="display:none"></div>
-            <div class="cam-viewfinder">
-              <span class="vf-tl"></span><span class="vf-tr"></span>
-              <span class="vf-bl"></span><span class="vf-br"></span>
+            <!-- Crosshair overlay -->
+            <div class="cc-crosshair">
+              <div class="cc-crosshair-box">
+                <span class="cc-corner tl"></span>
+                <span class="cc-corner tr"></span>
+                <span class="cc-corner bl"></span>
+                <span class="cc-corner br"></span>
+              </div>
             </div>
+            <!-- Scan line -->
+            <div class="cc-scan-line"></div>
           </div>
 
-          <div class="intake-btn-row">
-            <button id="start-cam-btn" onclick="startCamera()">
-              <span class="ms" style="font-size:15px">videocam</span> Activate
+          <!-- Controls -->
+          <div class="cc-cam-controls">
+            <button class="cc-ctrl-btn" id="start-cam-btn" onclick="startCamera()">
+              <span class="ctrl-icon">▷</span> ACTIVATE
             </button>
-            <button id="capture-btn" onclick="capturePhoto()" disabled>
-              <span class="ms" style="font-size:15px">camera</span> Capture
+            <button class="cc-ctrl-btn primary" id="capture-btn" onclick="capturePhoto()" disabled>
+              <span class="ctrl-icon">◉</span> MANUAL TRIGGER
             </button>
-            <button id="retake-btn" onclick="retakePhoto()" style="display:none">
-              <span class="ms" style="font-size:15px">replay</span> Retake
+            <button class="cc-ctrl-btn" id="retake-btn" onclick="retakePhoto()" style="display:none">
+              <span class="ctrl-icon">↺</span> RETAKE
             </button>
-            <label style="cursor:pointer">
-              <span class="ms" style="font-size:15px">upload</span> Upload
+            <label class="cc-upload-label">
+              <span class="ctrl-icon">⬆</span> UPLOAD
               <input type="file" id="file-input" accept="image/*" multiple onchange="handleFileUpload(event)" style="display:none" />
             </label>
           </div>
         </div>
 
-        <!-- Classification -->
-        <div class="intake-section">
-          <div class="section-head">
-            <span class="ms" style="color:var(--amber);font-size:18px">edit_note</span>
-            <span class="section-head-title">Classification</span>
+        <!-- Classification Panel -->
+        <div class="cc-classify-panel">
+          <div class="cc-panel-header">
+            <div class="cc-panel-title">
+              <span class="cc-panel-title-dot"></span>
+              Classification Override
+            </div>
+            <button class="cc-grade-btn" onclick="showGradeModal()">? GRADE GUIDE</button>
           </div>
 
-          <div class="field-group">
-            <label class="field-label">Override Title</label>
-            <input type="text" id="override-title" placeholder="e.g. Amazing Spider-Man #300 VF" />
-          </div>
+          <div class="cc-panel-body">
+            <div class="cc-field">
+              <label class="cc-field-label">Override Title / SKU</label>
+              <input type="text" id="override-title" placeholder="e.g. Amazing Spider-Man #300 VF — leave blank for AI auto-detect" />
+            </div>
 
-          <div class="field-grid-2" style="margin-top:12px">
-            <div class="field-group">
-              <div class="field-label-row">
-                <label class="field-label" style="margin-bottom:0">Condition</label>
-                <button class="grade-guide-btn" onclick="showGradeModal()">? Guide</button>
+            <div class="cc-grid-3">
+              <div class="cc-field">
+                <label class="cc-field-label">Condition</label>
+                <select id="condition">
+                  <option value="Auto">Auto AI Grade</option>
+                  <option value="Near Mint">Near Mint (NM)</option>
+                  <option value="Very Fine">Very Fine (VF)</option>
+                  <option value="Fine">Fine (F)</option>
+                  <option value="Very Good">Very Good (VG)</option>
+                  <option value="Good">Good (G)</option>
+                  <option value="Fair">Fair</option>
+                  <option value="Poor">Poor</option>
+                </select>
               </div>
-              <select id="condition">
-                <option value="Auto">Auto AI Grade</option>
-                <option value="Near Mint">Near Mint (NM)</option>
-                <option value="Very Fine">Very Fine (VF)</option>
-                <option value="Fine">Fine (F)</option>
-                <option value="Very Good">Very Good (VG)</option>
-                <option value="Good">Good (G)</option>
-                <option value="Fair">Fair</option>
-                <option value="Poor">Poor</option>
-              </select>
+              <div class="cc-field">
+                <label class="cc-field-label">Qty</label>
+                <input type="number" id="qty" value="1" min="1" />
+              </div>
+              <div class="cc-field">
+                <label class="cc-field-label">Listing Type</label>
+                <select id="listing-type">
+                  <option value="Buy it Now">Buy it Now</option>
+                  <option value="Auction">Auction</option>
+                </select>
+              </div>
             </div>
-            <div class="field-group">
-              <label class="field-label">Qty</label>
-              <input type="number" id="qty" value="1" min="1" />
-            </div>
-          </div>
 
-          <div class="field-grid-2" style="margin-top:12px">
-            <div class="field-group">
-              <label class="field-label">Custom Price (£)</label>
-              <input type="number" id="start-price" placeholder="Auto from eBay" min="0" step="0.01" />
+            <div class="cc-grid-2">
+              <div class="cc-field">
+                <label class="cc-field-label">Custom Price (£)</label>
+                <input type="number" id="start-price" placeholder="Auto from eBay" min="0" step="0.01" />
+              </div>
+              <div class="cc-field">
+                <label class="cc-field-label">Cost Paid (£)</label>
+                <input type="number" id="cost-price" placeholder="e.g. 5.00" min="0" step="0.01" />
+              </div>
             </div>
-            <div class="field-group">
-              <label class="field-label">Cost Paid (£)</label>
-              <input type="number" id="cost-price" placeholder="e.g. 5.00" min="0" step="0.01" />
+
+            <div class="cc-scan-cta">
+              <button class="cc-scan-btn" id="scan-btn" onclick="scanAndAdd()" disabled>
+                <span>⊕</span> CONFIRM &amp; LOG
+              </button>
+              <button class="cc-edit-btn" title="Reset fields" onclick="document.getElementById('override-title').value='';document.getElementById('start-price').value='';document.getElementById('cost-price').value=''">✎</button>
             </div>
-          </div>
 
-          <div class="field-group" style="margin-top:12px">
-            <label class="field-label">Listing Type</label>
-            <select id="listing-type">
-              <option value="Buy it Now">Buy it Now</option>
-              <option value="Auction">Auction</option>
-            </select>
-          </div>
-
-          <div style="margin-top:16px">
-            <button class="scan-cta-btn" id="scan-btn" onclick="scanAndAdd()" disabled>
-              <span class="ms">add_circle</span>
-              Identify &amp; Archive All
-            </button>
             <div id="scan-status" class="status"></div>
             <div id="progress-wrap">
               <div class="progress-track"><div id="progress-fill"></div></div>
-              <div class="progress-label">
-                <span id="progress-text">0 / 0 scanned</span>
-                <span id="progress-pct">0%</span>
-              </div>
+              <div class="progress-label"><span id="progress-text">0 / 0 scanned</span><span id="progress-pct">0%</span></div>
             </div>
-          </div>
-
-          <div class="pending-caption" id="pending-caption" style="display:none">No documents queued.</div>
-          <div class="pending-grid" id="pending-grid"></div>
-        </div>
-
-      </div><!-- /intake-col -->
-
-      <!-- Right: Archive -->
-      <div id="archive-col">
-
-        <div id="archive-topbar">
-          <div class="archive-header-row">
-            <span class="archive-title">Archive</span>
-            <button class="archive-action-btn" id="btn-refetch" onclick="refetchAllPrices()" title="Refresh all eBay prices">
-              <span class="ms" style="font-size:15px">sync</span> Prices
-            </button>
-            <button class="archive-action-btn" id="btn-select" onclick="toggleSelectMode()" title="Select comics to bundle">
-              <span class="ms" style="font-size:15px">check_box</span> Select
-            </button>
-            <button class="archive-action-btn danger" onclick="clearAll()">
-              <span class="ms" style="font-size:15px">delete_forever</span> Purge
-            </button>
-          </div>
-
-          <!-- Stats -->
-          <div class="stats-strip">
-            <div class="stat-cell">
-              <div class="stat-val" id="stat-count">0</div>
-              <div class="stat-lbl">Comics</div>
-            </div>
-            <div class="stat-cell">
-              <div class="stat-val" id="stat-total">£0</div>
-              <div class="stat-lbl">Total Value</div>
-            </div>
-            <div class="stat-cell">
-              <div class="stat-val" id="stat-avg">£0</div>
-              <div class="stat-lbl" id="stat-avg-label">Avg Price</div>
-            </div>
-            <div class="stat-cell clickable" onclick="applyFilter('key')" title="Show key issues">
-              <div class="stat-val amber" id="stat-keys">0</div>
-              <div class="stat-lbl">Key Issues</div>
-            </div>
-            <div class="stat-cell">
-              <div class="stat-val" id="stat-top" style="font-size:12px">—</div>
-              <div class="stat-lbl">Top Comic</div>
-            </div>
-          </div>
-
-          <!-- Filters -->
-          <div class="filter-strip">
-            <select id="sort-mode" onchange="applySort()" style="width:auto;padding:6px 10px;font-size:12px">
-              <option value="newest">Newest first</option>
-              <option value="price-desc">Price: High → Low</option>
-              <option value="price-asc">Price: Low → High</option>
-              <option value="title">Title A–Z</option>
-              <option value="year-desc">Year: New → Old</option>
-              <option value="year-asc">Year: Old → New</option>
-            </select>
-            <select id="publisher-filter" onchange="applyPublisherFilter()" title="Filter by publisher" style="width:auto;padding:6px 10px;font-size:12px">
-              <option value="">All Publishers</option>
-            </select>
-            <div class="chip-row">
-              <button class="chip active" id="chip-all" onclick="applyFilter('all')">All</button>
-              <button class="chip" id="chip-key" onclick="applyFilter('key')">⭐ Key</button>
-              <button class="chip" id="chip-news" onclick="applyFilter('news')">📰 News</button>
-              <button class="chip" id="chip-slab" onclick="applyFilter('slab')">🔵 Slab</button>
-              <button class="chip" id="chip-noprice" onclick="applyFilter('noprice')">⚠ No Price</button>
-            </div>
-          </div>
-
-          <div class="mob-search-bar">
-            <input type="search" id="mob-search" placeholder="Search archive..." oninput="applyMobileSearch()" autocomplete="off" />
-            <button onclick="clearMobileSearch()" style="padding:8px;background:none;border:none;color:var(--muted);cursor:pointer">✕</button>
+            <div class="pending-caption" id="pending-caption" style="display:none"></div>
+            <div class="pending-grid" id="pending-grid"></div>
           </div>
         </div>
 
-        <!-- Bundle bar -->
-        <div id="bundle-bar">
-          <span><strong id="bundle-count">0</strong> files selected</span>
-          <button class="btn-primary-amber" onclick="bundleSelected()">⊞ Bundle Lot</button>
-          <button onclick="toggleSelectMode()" style="background:none;border:none;color:var(--muted);cursor:pointer;font-size:13px">✕ Cancel</button>
-        </div>
+      </div><!-- /cmd-body -->
+    </div><!-- /cmd-center -->
 
-        <!-- Comic list -->
+    <!-- RIGHT: Workspace + Scan Log -->
+    <div id="cmd-right">
+
+      <!-- Workspace header -->
+      <div class="rs-section">
+        <div class="rs-section-title">Active Workspace</div>
+        <div style="font-size:9px;color:var(--cc-text3);font-family:'Space Mono',monospace;letter-spacing:0.08em;margin-bottom:6px;text-transform:uppercase">Target Box Assignment</div>
+        <div class="rs-select-wrap">
+          <select id="wn-category">
+            <option value="Comics &amp; Manga">BOX_LONGBOX_PRIMARY_01</option>
+            <option value="Comics &amp; Manga">Comics &amp; Manga</option>
+          </select>
+        </div>
+        <div class="rs-actions">
+          <button class="rs-btn" id="btn-select" onclick="toggleSelectMode()" title="Select to bundle">☐ SELECT</button>
+          <button class="rs-btn danger" onclick="clearAll()">✕ PURGE</button>
+        </div>
+      </div>
+
+      <!-- Stats -->
+      <div class="rs-section">
+        <div class="rs-stats">
+          <div class="rs-stat">
+            <div class="rs-stat-val amber" id="stat-count">0</div>
+            <div class="rs-stat-lbl">Comics</div>
+          </div>
+          <div class="rs-stat">
+            <div class="rs-stat-val green" id="stat-total">£0</div>
+            <div class="rs-stat-lbl">Total Value</div>
+          </div>
+          <div class="rs-stat">
+            <div class="rs-stat-val" id="stat-avg">£0</div>
+            <div class="rs-stat-lbl" id="stat-avg-label">Avg Price</div>
+          </div>
+          <div class="rs-stat" onclick="applyFilter('key')" style="cursor:pointer">
+            <div class="rs-stat-val amber" id="stat-keys">0</div>
+            <div class="rs-stat-lbl">Key Issues</div>
+          </div>
+        </div>
+        <div style="margin-top:8px;padding:6px 8px;background:var(--cc-bg);border:1px solid var(--cc-border);border-radius:5px;display:flex;justify-content:space-between;align-items:center">
+          <span style="font-size:9px;color:var(--cc-text3);font-family:'Space Mono',monospace;letter-spacing:0.06em;text-transform:uppercase">Top Comic</span>
+          <span style="font-size:10px;color:var(--cc-text2);font-family:'Space Mono',monospace" id="stat-top">—</span>
+        </div>
+      </div>
+
+      <!-- Filter chips -->
+      <div class="rs-section" style="padding-bottom:8px">
+        <div class="rs-section-title" style="margin-bottom:6px">
+          Recent Scan Log
+          <span class="rs-badge" id="scan-log-count">0 ITEMS</span>
+        </div>
+        <!-- Sort + publisher -->
+        <div style="display:flex;gap:6px;margin-bottom:6px">
+          <select id="sort-mode" onchange="applySort()" style="flex:1;font-size:10px;padding:5px 8px;font-family:'Space Mono',monospace;letter-spacing:0.04em">
+            <option value="newest">Newest First</option>
+            <option value="price-desc">Price: High → Low</option>
+            <option value="price-asc">Price: Low → High</option>
+            <option value="title">Title A–Z</option>
+          </select>
+          <select id="publisher-filter" onchange="applyPublisherFilter()" style="width:80px;font-size:10px;padding:5px 8px;font-family:'Space Mono',monospace">
+            <option value="">All</option>
+          </select>
+        </div>
+        <div class="rs-filter-row">
+          <button class="chip active" id="chip-all" onclick="applyFilter('all')">ALL</button>
+          <button class="chip" id="chip-key" onclick="applyFilter('key')">KEY</button>
+          <button class="chip" id="chip-news" onclick="applyFilter('news')">NEWS</button>
+          <button class="chip" id="chip-slab" onclick="applyFilter('slab')">SLAB</button>
+          <button class="chip" id="chip-noprice" onclick="applyFilter('noprice')">NO$</button>
+        </div>
+      </div>
+
+      <!-- Bundle bar -->
+      <div id="bundle-bar">
+        <span><strong id="bundle-count">0</strong> selected</span>
+        <button onclick="bundleSelected()" style="padding:4px 10px;border-radius:4px;border:none;background:var(--cc-amber);color:#1a0800;font-size:9px;font-weight:700;font-family:'Space Mono',monospace;cursor:pointer;letter-spacing:0.06em">BUNDLE</button>
+        <button onclick="toggleSelectMode()" style="background:none;border:none;color:var(--cc-text3);cursor:pointer;font-size:12px">✕</button>
+      </div>
+
+      <!-- Comic list (scrollable) -->
+      <div class="rs-scan-log">
         <div class="comic-list" id="comic-list">
           <div class="empty-state">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>
-            Archive Empty<br/>Scan your first comic →
+            NO ITEMS LOGGED<br/>ACTIVATE SCANNER →
           </div>
-        </div>
-
-        <!-- Export panel -->
-        <div class="export-panel-wrap">
-          <div class="export-panel-title">
-            <span class="ms" style="font-size:16px;color:var(--amber)">ios_share</span>
-            Export — Whatnot CSV
-          </div>
-          <div class="export-options-row">
-            <div>
-              <label>Category</label>
-              <select id="wn-category" style="width:100%;padding:7px 10px;font-size:12px">
-                <option value="Comics &amp; Manga">Comics &amp; Manga</option>
-              </select>
-            </div>
-            <div>
-              <label>Price to export</label>
-              <select id="price-type" style="width:100%;padding:7px 10px;font-size:12px">
-                <option value="whatnot">Whatnot price (fees added)</option>
-                <option value="ebay">eBay UK price</option>
-                <option value="custom">Custom price only</option>
-              </select>
-            </div>
-          </div>
-          <div class="export-btn-row">
-            <button class="primary-export" onclick="exportCSV()">
-              <span class="ms" style="font-size:14px;vertical-align:middle">download</span> Whatnot CSV
-            </button>
-            <button onclick="exportInventoryCSV()">
-              <span class="ms" style="font-size:14px;vertical-align:middle">table_chart</span> Inventory CSV
-            </button>
-            <button onclick="togglePreview()">
-              <span class="ms" style="font-size:14px;vertical-align:middle">preview</span> Preview
-            </button>
-          </div>
-          <div style="margin-top:8px;font-size:10px;color:var(--muted);letter-spacing:0.03em">⚠ Photo links in CSV expire after 24h — download before then.</div>
-          <pre id="csv-preview" style="display:none;margin-top:10px;font-size:10px;font-family:'Space Mono',monospace;background:rgba(0,0,0,0.3);padding:10px;border:1px solid var(--border1);border-radius:8px;overflow-x:auto;white-space:pre;max-height:120px;overflow-y:auto;color:var(--text-dim)"></pre>
-        </div>
-
-      </div><!-- /archive-col -->
-
-    </div><!-- /pane-export -->
-
-    <!-- ── PANE: SCANNER LOOKUP ────────────────────────────────── -->
-    <div id="pane-lookup" style="display:none">
-
-      <div id="lk-cam-col">
-
-        <div class="lk-section">
-          <div class="section-head">
-            <span class="ms" style="color:var(--amber);font-size:18px">document_scanner</span>
-            <span class="section-head-title">Scanner Unit</span>
-          </div>
-
-          <div id="lk-video-wrap">
-            <div id="lk-cam-placeholder">
-              <span class="ms" style="font-size:40px">add_a_photo</span>
-              <p style="margin:0;font-size:12px;text-align:center">Activate Scanner</p>
-            </div>
-            <video id="lk-video" autoplay playsinline></video>
-            <img id="lk-preview-img" alt="Comic" />
-            <div class="cam-viewfinder">
-              <span class="vf-tl"></span><span class="vf-tr"></span>
-              <span class="vf-bl"></span><span class="vf-br"></span>
-            </div>
-          </div>
-
-          <div class="intake-btn-row">
-            <button id="lk-start-btn" onclick="lkStartCamera()">
-              <span class="ms" style="font-size:15px">videocam</span> Activate
-            </button>
-            <button id="lk-capture-btn" onclick="lkCapture()" disabled>
-              <span class="ms" style="font-size:15px">camera</span> Capture
-            </button>
-            <button id="lk-retake-btn" onclick="lkRetake()" style="display:none">
-              <span class="ms" style="font-size:15px">replay</span> Retake
-            </button>
-            <label style="cursor:pointer">
-              <span class="ms" style="font-size:15px">upload</span> Upload
-              <input type="file" id="lk-file-input" accept="image/*" onchange="lkHandleUpload(event)" style="display:none" />
-            </label>
-          </div>
-        </div>
-
-        <div class="lk-section">
-          <button id="lk-scan-btn" onclick="lookupScan()" disabled>
-            <span class="ms" style="font-size:18px">search</span>
-            Analyse Comic
-          </button>
-          <div id="lk-status" class="status"></div>
-        </div>
-
-      </div><!-- /lk-cam-col -->
-
-      <div id="lk-result-col">
-        <div class="lk-empty" id="lk-empty">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1">
-            <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
-            <path d="M11 8v6M8 11h6"/>
-          </svg>
-          Scan or upload a cover<br/>to reveal full archive data
-        </div>
-        <div id="lk-result" style="display:none"></div>
-      </div>
-
-    </div><!-- /pane-lookup -->
-
-    <!-- ── PANE: FEE CALCULATOR ────────────────────────────────── -->
-    <div id="pane-fees" style="display:none">
-
-      <div id="fees-input-col">
-        <div class="fees-card">
-          <div class="fees-card-head">
-            <span class="ms" style="color:var(--amber);font-size:18px">calculate</span>
-            Whatnot Fee Calculator
-          </div>
-          <div class="fees-card-body">
-
-            <div>
-              <label class="fees-label">Sale Price (£)</label>
-              <input type="number" id="fc-price" value="20" min="0" step="1" oninput="calcFees()" />
-              <div class="fees-hint">The price you're selling the item for on Whatnot</div>
-            </div>
-
-            <div>
-              <label class="fees-label">Category</label>
-              <select id="fc-category" onchange="calcFees()">
-                <option value="0">Comics, TCG, Sports Singles, Toys &amp; Hobbies — 6.67%</option>
-                <option value="1">Coins &amp; Money — 4%</option>
-                <option value="2">All other categories — 6.67%</option>
-              </select>
-              <div class="fees-hint">Different categories have different commission rates</div>
-            </div>
-
-            <div>
-              <label class="fees-label">Shipping Cost (£)</label>
-              <input type="number" id="fc-shipping" value="0" min="0" step="0.50" oninput="calcFees()" />
-              <div class="fees-hint">Shipping charged to buyer — affects the processing fee base</div>
-            </div>
-
-            <div>
-              <label class="fees-label">VAT Rate (%)</label>
-              <input type="number" id="fc-vat" value="20" min="0" max="30" step="1" oninput="calcFees()" />
-              <div class="fees-hint">Typically 20% in the UK</div>
-            </div>
-
-          </div>
-        </div>
-
-        <div class="fees-info-box">
-          Comics, TCG &amp; Sports Singles currently enjoy a limited-time 6.67% commission (0% on any portion above £1,500). Processing fee is 2.42% of total order + £0.25 transaction fee, both subject to VAT.
         </div>
       </div>
 
-      <div id="fees-result-col">
-        <div class="fees-breakdown-card">
-          <div class="fees-breakdown-head">Fee Breakdown</div>
-          <div class="fees-breakdown-body">
-            <div class="fees-row">
-              <span class="fees-row-label">Sale Price</span>
-              <span class="fees-row-value" id="fc-r-sale">£0.00</span>
-            </div>
-            <div class="fees-row">
-              <span class="fees-row-label">Shipping Cost</span>
-              <span class="fees-row-value" id="fc-r-shipping">£0.00</span>
-            </div>
-            <div class="fees-divider"></div>
-            <div class="fees-row">
-              <span class="fees-row-label">Commission Fee <small id="fc-r-rate">6.67%</small></span>
-              <span class="fees-row-value deduct" id="fc-r-commission">−£0.00</span>
-            </div>
-            <div class="fees-row">
-              <span class="fees-row-label">VAT on Commission <small id="fc-r-vat-pct">20%</small></span>
-              <span class="fees-row-value deduct" id="fc-r-vat-commission">−£0.00</span>
-            </div>
-            <div class="fees-row">
-              <span class="fees-row-label">Payment Processing Fee <small>2.42% + £0.25</small></span>
-              <span class="fees-row-value deduct" id="fc-r-processing">−£0.00</span>
-            </div>
-            <div class="fees-row">
-              <span class="fees-row-label">VAT on Processing Fee <small id="fc-r-vat-pct2">20%</small></span>
-              <span class="fees-row-value deduct" id="fc-r-vat-processing">−£0.00</span>
-            </div>
-            <div class="fees-divider"></div>
-            <div class="fees-total-row">
-              <span class="fees-total-label">Total Fees</span>
-              <span class="fees-total-value" id="fc-r-total-fees">−£0.00</span>
-            </div>
-          </div>
+      <!-- Session footer -->
+      <div class="rs-session-footer">
+        <div class="rs-session-total">
+          <div class="rs-session-label">Session Total Value</div>
+          <div class="rs-session-value" id="stat-session-val">£0.00</div>
         </div>
-
-        <div class="fees-receive-block">
-          <div class="fees-receive-label">You Receive</div>
-          <div class="fees-receive-value" id="fc-r-receive">£0.00</div>
-          <div class="fees-receive-pct" id="fc-r-pct"></div>
+        <!-- Hidden export controls (kept for app.js) -->
+        <div style="display:none">
+          <select id="price-type">
+            <option value="whatnot">Whatnot price (fees added)</option>
+            <option value="ebay">eBay UK price</option>
+            <option value="custom">Custom price only</option>
+          </select>
+          <pre id="csv-preview"></pre>
         </div>
+        <button class="rs-export-btn" onclick="exportCSV()">
+          ⬇ EXPORT SESSION MANIFEST
+        </button>
+        <button class="rs-export-btn" style="border-top:none;font-size:9px;padding:7px 14px;color:var(--cc-text3)" onclick="exportInventoryCSV()">
+          ⬇ INVENTORY CSV
+        </button>
       </div>
 
-    </div><!-- /pane-fees -->
+    </div><!-- /cmd-right -->
 
-  </div><!-- /app-content -->
+  </div><!-- /pane-export -->
+
+  <!-- ── PANE: SCANNER LOOKUP ────────────────────────────────── -->
+  <div id="pane-lookup" style="display:none;flex:1;overflow:hidden">
+
+    <div id="lk-cam-col">
+      <div class="lk-section">
+        <div style="font-family:'Space Mono',monospace;font-size:10px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:var(--cc-text2);margin-bottom:12px;display:flex;align-items:center;gap:8px"><span style="color:var(--cc-amber)">◎</span> Scanner Unit</div>
+        <div id="lk-video-wrap">
+          <div id="lk-cam-placeholder">
+            <span style="font-size:28px;color:rgba(255,142,62,0.25)">◎</span>
+            <span>Activate Scanner</span>
+          </div>
+          <video id="lk-video" autoplay playsinline></video>
+          <img id="lk-preview-img" alt="Comic" />
+        </div>
+        <div class="lk-btn-row">
+          <button class="lk-btn" id="lk-start-btn" onclick="lkStartCamera()">▷ ACTIVATE</button>
+          <button class="lk-btn" id="lk-capture-btn" onclick="lkCapture()" disabled>◉ CAPTURE</button>
+          <button class="lk-btn" id="lk-retake-btn" onclick="lkRetake()" style="display:none">↺ RETAKE</button>
+          <label class="lk-btn" style="cursor:pointer">
+            ⬆ UPLOAD
+            <input type="file" id="lk-file-input" accept="image/*" onchange="lkHandleUpload(event)" style="display:none" />
+          </label>
+        </div>
+      </div>
+      <div class="lk-section">
+        <button id="lk-scan-btn" onclick="lookupScan()" disabled>◎ ANALYSE COMIC</button>
+        <div id="lk-status" class="status"></div>
+      </div>
+    </div>
+
+    <div id="lk-result-col">
+      <div class="lk-empty" id="lk-empty">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/><path d="M11 8v6M8 11h6"/></svg>
+        SCAN OR UPLOAD A COVER<br/>TO REVEAL ARCHIVE DATA
+      </div>
+      <div id="lk-result" style="display:none"></div>
+    </div>
+
+  </div><!-- /pane-lookup -->
+
+  <!-- ── PANE: FEE CALCULATOR ────────────────────────────────── -->
+  <div id="pane-fees" style="display:none;flex:1">
+
+    <div id="fees-input-col">
+      <div class="fees-card">
+        <div class="fees-card-head"><span class="fees-card-head-dot"></span>Whatnot Fee Calculator</div>
+        <div class="fees-card-body">
+          <div><label class="fees-label">Sale Price (£)</label><input type="number" id="fc-price" value="20" min="0" step="1" oninput="calcFees()" /><div class="fees-hint">The price you're selling on Whatnot</div></div>
+          <div><label class="fees-label">Category</label><select id="fc-category" onchange="calcFees()"><option value="0">Comics, TCG, Sports Singles — 6.67%</option><option value="1">Coins &amp; Money — 4%</option><option value="2">All other categories — 6.67%</option></select><div class="fees-hint">Different categories have different rates</div></div>
+          <div><label class="fees-label">Shipping Cost (£)</label><input type="number" id="fc-shipping" value="0" min="0" step="0.50" oninput="calcFees()" /><div class="fees-hint">Shipping charged to buyer</div></div>
+          <div><label class="fees-label">VAT Rate (%)</label><input type="number" id="fc-vat" value="20" min="0" max="30" step="1" oninput="calcFees()" /><div class="fees-hint">Typically 20% in the UK</div></div>
+        </div>
+      </div>
+      <div class="fees-info-box">Comics, TCG &amp; Sports Singles: 6.67% commission (0% above £1,500). Processing fee: 2.42% + £0.25, both subject to VAT.</div>
+    </div>
+
+    <div id="fees-result-col">
+      <div class="fees-breakdown-card">
+        <div class="fees-breakdown-head">Fee Breakdown</div>
+        <div class="fees-breakdown-body">
+          <div class="fees-row"><span class="fees-row-label">Sale Price</span><span class="fees-row-value" id="fc-r-sale">£0.00</span></div>
+          <div class="fees-row"><span class="fees-row-label">Shipping Cost</span><span class="fees-row-value" id="fc-r-shipping">£0.00</span></div>
+          <div class="fees-divider"></div>
+          <div class="fees-row"><span class="fees-row-label">Commission Fee <small id="fc-r-rate">6.67%</small></span><span class="fees-row-value deduct" id="fc-r-commission">−£0.00</span></div>
+          <div class="fees-row"><span class="fees-row-label">VAT on Commission <small id="fc-r-vat-pct">20%</small></span><span class="fees-row-value deduct" id="fc-r-vat-commission">−£0.00</span></div>
+          <div class="fees-row"><span class="fees-row-label">Processing Fee <small>2.42% + £0.25</small></span><span class="fees-row-value deduct" id="fc-r-processing">−£0.00</span></div>
+          <div class="fees-row"><span class="fees-row-label">VAT on Processing <small id="fc-r-vat-pct2">20%</small></span><span class="fees-row-value deduct" id="fc-r-vat-processing">−£0.00</span></div>
+          <div class="fees-divider"></div>
+          <div class="fees-total-row"><span class="fees-total-label">Total Fees</span><span class="fees-total-value" id="fc-r-total-fees">−£0.00</span></div>
+        </div>
+      </div>
+      <div class="fees-receive-block">
+        <div class="fees-receive-label">You Receive</div>
+        <div class="fees-receive-value" id="fc-r-receive">£0.00</div>
+        <div class="fees-receive-pct" id="fc-r-pct"></div>
+      </div>
+    </div>
+
+  </div><!-- /pane-fees -->
+
+  </div><!-- /flex-1 content wrapper -->
 
 </div><!-- /app-shell -->
 </div><!-- /main-app -->
 
-<!-- ── MOBILE NAV ────────────────────────────────────────────────── -->
+<!-- ── MOBILE NAV ─────────────────────────────────────────────── -->
 <nav id="mobile-nav">
   <button class="mobile-nav-btn active" id="mnav-scan" onclick="switchMobileTab('scan')">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
-    Scan
+    SCAN
   </button>
   <button class="mobile-nav-btn" id="mnav-inventory" onclick="switchMobileTab('inventory')" style="position:relative">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg>
     <span class="mob-count" id="mob-count">0</span>
-    Archive
+    LOG
   </button>
   <button class="mobile-nav-btn" id="mnav-lookup" onclick="switchMobileTab('lookup')">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
-    Lookup
+    LOOKUP
   </button>
 </nav>
 
 <div id="mob-toast"></div>
 
-<!-- ── CGC GRADE MODAL ───────────────────────────────────────────── -->
+<!-- ── CGC GRADE MODAL ─────────────────────────────────────────── -->
 <div id="grade-modal" onclick="hideGradeModal()" style="display:none">
   <div class="modal-box" onclick="event.stopPropagation()">
-    <div class="modal-header">
-      <span>CGC Grading Reference</span>
-      <button class="modal-close" onclick="hideGradeModal()">×</button>
-    </div>
+    <div class="modal-header">CGC Grading Reference <button class="modal-close" onclick="hideGradeModal()">×</button></div>
     <table class="grade-table">
       <thead><tr><th>Grade</th><th>Name</th><th>Key Criteria</th></tr></thead>
       <tbody>
         <tr><td class="grade-num">9.8</td><td class="grade-name">NM/M</td><td>Nearly perfect. Flat, square, gloss fully intact.</td></tr>
-        <tr><td class="grade-num">9.6</td><td class="grade-name">NM+</td><td>Almost perfect. Tiny handling defect or 1 very small corner blunt.</td></tr>
-        <tr><td class="grade-num">9.4</td><td class="grade-name">NM</td><td>Few minor defects. Slight spine stress lines OK.</td></tr>
+        <tr><td class="grade-num">9.6</td><td class="grade-name">NM+</td><td>Almost perfect. Tiny handling defect.</td></tr>
+        <tr><td class="grade-num">9.4</td><td class="grade-name">NM</td><td>Few minor defects. Slight spine stress OK.</td></tr>
         <tr><td class="grade-num">9.2</td><td class="grade-name">NM–</td><td>Slight blunting, 2–3 minor stress lines.</td></tr>
-        <tr><td class="grade-num">9.0</td><td class="grade-name">VF/NM</td><td>Slight wear. Small corner blunts, 1–2 stress lines.</td></tr>
-        <tr><td class="grade-num">8.5</td><td class="grade-name">VF+</td><td>Minor wear. Small creases, slight handling.</td></tr>
-        <tr><td class="grade-num">8.0</td><td class="grade-name">VF</td><td>Slightly used. Minor staple stress, corner blunting.</td></tr>
-        <tr><td class="grade-num">7.5</td><td class="grade-name">VF–</td><td>Some wear. Small spine roll, visible creases.</td></tr>
-        <tr><td class="grade-num">7.0</td><td class="grade-name">FN/VF</td><td>Average used. Spine roll, stress lines, minor soil.</td></tr>
-        <tr><td class="grade-num">6.0</td><td class="grade-name">FN</td><td>Well-read. Creases, spine roll, some colour loss.</td></tr>
-        <tr><td class="grade-num">5.0</td><td class="grade-name">VG/FN</td><td>Heavy wear. Possible small tears or small water stain.</td></tr>
-        <tr><td class="grade-num">4.0</td><td class="grade-name">VG</td><td>Very heavy wear. Staple rust, tape present.</td></tr>
-        <tr><td class="grade-num">2.0</td><td class="grade-name">GD</td><td>Heavy wear, tape repair, major water stain.</td></tr>
+        <tr><td class="grade-num">9.0</td><td class="grade-name">VF/NM</td><td>Slight wear. Small corner blunts.</td></tr>
+        <tr><td class="grade-num">8.0</td><td class="grade-name">VF</td><td>Slightly used. Minor staple stress.</td></tr>
+        <tr><td class="grade-num">7.0</td><td class="grade-name">FN/VF</td><td>Average used. Spine roll, stress lines.</td></tr>
+        <tr><td class="grade-num">6.0</td><td class="grade-name">FN</td><td>Well-read. Creases, spine roll.</td></tr>
+        <tr><td class="grade-num">4.0</td><td class="grade-name">VG</td><td>Very heavy wear. Staple rust, tape.</td></tr>
+        <tr><td class="grade-num">2.0</td><td class="grade-name">GD</td><td>Heavy wear, tape repair, water stain.</td></tr>
         <tr><td class="grade-num">1.0</td><td class="grade-name">FR</td><td>Very heavily worn. Possible page loss.</td></tr>
-        <tr><td class="grade-num">0.5</td><td class="grade-name">PR</td><td>Major defects throughout. Brittle pages.</td></tr>
+        <tr><td class="grade-num">0.5</td><td class="grade-name">PR</td><td>Major defects. Brittle pages.</td></tr>
       </tbody>
     </table>
   </div>
 </div>
 
-<!-- ── SETTINGS MODAL ────────────────────────────────────────────── -->
+<!-- ── SETTINGS MODAL ─────────────────────────────────────────── -->
 <div id="settings-modal" onclick="if(event.target===this)hideSettings()" style="display:none">
   <div class="settings-box">
-    <div class="settings-header">
-      Account Settings
-      <button class="modal-close" onclick="hideSettings()">×</button>
-    </div>
-
+    <div class="settings-header">Account Settings <button class="modal-close" onclick="hideSettings()">×</button></div>
     <div class="settings-section">
       <div class="settings-section-title">Profile</div>
-      <label>Display name</label>
-      <input type="text" id="st-name" placeholder="Your name" />
-      <label>Email</label>
-      <input type="email" id="st-email" disabled style="opacity:0.45" />
+      <label>Display name</label><input type="text" id="st-name" placeholder="Your name" />
+      <label>Email</label><input type="email" id="st-email" disabled style="opacity:0.45" />
       <div class="settings-error" id="st-name-error"></div>
       <div class="settings-success" id="st-name-ok"></div>
-      <div class="settings-btn-row">
-        <button class="settings-save-btn" onclick="doSaveName()">✓ Save name</button>
-      </div>
-      <hr class="lk-divider" style="margin:16px 0" />
-      <div class="settings-section-title" style="margin-bottom:10px">Change password</div>
-      <label>Current password</label>
-      <input type="password" id="st-pw-old" placeholder="••••••••" autocomplete="current-password" />
-      <label>New password</label>
-      <input type="password" id="st-pw-new" placeholder="Min 6 characters" autocomplete="new-password" />
-      <label>Confirm new</label>
-      <input type="password" id="st-pw-confirm" placeholder="Repeat" autocomplete="new-password" />
+      <div class="settings-btn-row"><button class="settings-save-btn" onclick="doSaveName()">✓ Save name</button></div>
+      <hr class="lk-divider" style="margin:14px 0" />
+      <div class="settings-section-title" style="margin-bottom:10px">Change Password</div>
+      <label>Current password</label><input type="password" id="st-pw-old" placeholder="••••••••" autocomplete="current-password" />
+      <label>New password</label><input type="password" id="st-pw-new" placeholder="Min 6 characters" autocomplete="new-password" />
+      <label>Confirm new</label><input type="password" id="st-pw-confirm" placeholder="Repeat" autocomplete="new-password" />
       <div class="settings-error" id="st-pw-error"></div>
       <div class="settings-success" id="st-pw-ok"></div>
-      <div class="settings-btn-row">
-        <button class="settings-save-btn" onclick="doChangePassword()">✓ Change password</button>
-      </div>
+      <div class="settings-btn-row"><button class="settings-save-btn" onclick="doChangePassword()">✓ Change password</button></div>
     </div>
-
     <div class="settings-section">
       <div class="settings-section-title">Tools</div>
       <div class="settings-feat-grid">
-        <div class="settings-feat-card selected" id="st-feat-export" onclick="stToggleFeat('export')">
-          <span class="feature-check" style="color:var(--amber)">✓</span>
-          <div class="settings-feat-name">Whatnot Export</div>
-          <div class="settings-feat-desc">Scan, price &amp; export CSV</div>
-        </div>
-        <div class="settings-feat-card selected" id="st-feat-lookup" onclick="stToggleFeat('lookup')">
-          <span class="feature-check" style="color:var(--amber)">✓</span>
-          <div class="settings-feat-name">Comic Lookup</div>
-          <div class="settings-feat-desc">Identify &amp; condition check</div>
-        </div>
+        <div class="settings-feat-card selected" id="st-feat-export" onclick="stToggleFeat('export')"><span class="feature-check" style="color:var(--cc-amber)">✓</span><div class="settings-feat-name">Whatnot Export</div><div class="settings-feat-desc">Scan, price &amp; export CSV</div></div>
+        <div class="settings-feat-card selected" id="st-feat-lookup" onclick="stToggleFeat('lookup')"><span class="feature-check" style="color:var(--cc-amber)">✓</span><div class="settings-feat-name">Comic Lookup</div><div class="settings-feat-desc">Identify &amp; condition check</div></div>
       </div>
       <div class="settings-error" id="st-feat-error"></div>
       <div class="settings-success" id="st-feat-ok"></div>
       <button class="settings-save-btn full" onclick="doSaveFeatures()">✓ Update tools — requires reload</button>
     </div>
-
-    <div class="settings-section" id="st-plan-section">
-      <div class="settings-section-title">Plan</div>
-      <div id="st-plan-content"></div>
-    </div>
-
-    <div class="settings-section">
-      <div class="settings-section-title">Danger Zone</div>
-      <button class="btn-danger-full" onclick="doDeleteAccount()">✕ Delete account &amp; all data</button>
-    </div>
+    <div class="settings-section" id="st-plan-section"><div class="settings-section-title">Plan</div><div id="st-plan-content"></div></div>
+    <div class="settings-section"><div class="settings-section-title">Danger Zone</div><button class="btn-danger-full" onclick="doDeleteAccount()">✕ Delete account &amp; all data</button></div>
   </div>
 </div>
 
-<!-- Topbar title sync with pane switch -->
+<!-- Update scan log badge count whenever stat-count changes -->
 <script>
 (function() {
-  const titles = { export: 'Intake Studio', lookup: 'Scanner Lookup', fees: 'Fee Calculator' };
-  const origSwitch = window.switchTab;
+  // Mirror stat-count into scan-log-count badge
+  function updateBadge() {
+    var count = document.getElementById('stat-count');
+    var badge = document.getElementById('scan-log-count');
+    if (count && badge) badge.textContent = (count.textContent || '0') + ' ITEMS';
+  }
+  var observer = new MutationObserver(updateBadge);
   document.addEventListener('DOMContentLoaded', function() {
-    // patch switchTab to update topbar title if app.js is loaded
-    const patchSwitch = function() {
-      if (typeof window.switchTab === 'function' && window.switchTab !== window._patchedSwitchTab) {
-        const orig = window.switchTab;
+    var el = document.getElementById('stat-count');
+    if (el) observer.observe(el, { childList: true, subtree: true, characterData: true });
+    // Also mirror session total
+    var total = document.getElementById('stat-total');
+    var sessionVal = document.getElementById('stat-session-val');
+    if (total && sessionVal) {
+      new MutationObserver(function() {
+        sessionVal.textContent = total.textContent;
+      }).observe(total, { childList: true, subtree: true, characterData: true });
+    }
+    // Patch switchTab to update breadcrumb
+    setTimeout(function() {
+      var titles = { export: 'LIVE_SCAN', lookup: 'COMIC_LOOKUP', fees: 'FEE_CALC' };
+      if (typeof window.switchTab === 'function') {
+        var orig = window.switchTab;
         window.switchTab = function(tab) {
           orig(tab);
-          const el = document.getElementById('app-topbar-title');
-          if (el) el.textContent = titles[tab] || 'Studio';
+          var p = document.querySelector('.cmd-breadcrumb-path span');
+          if (p) p.textContent = titles[tab] || tab.toUpperCase();
         };
-        window._patchedSwitchTab = window.switchTab;
       }
-    };
-    setTimeout(patchSwitch, 200);
+    }, 300);
   });
 })();
 </script>
