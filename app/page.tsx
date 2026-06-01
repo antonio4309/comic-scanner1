@@ -1,5 +1,6 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import { ContainerScroll } from "@/components/ui/container-scroll-animation";
 import { Features } from "@/components/blocks/features-8";
 import { AnimatedFeatureCard } from "@/components/ui/feature-card-1";
@@ -114,6 +115,17 @@ function AppMockup() {
 /* ─── Page ──────────────────────────────────────────────────────── */
 
 export default function Home() {
+  // "Last sold" date — computed after mount so it always reads as recent
+  // (avoids SSR/client hydration mismatch).
+  const [lastSold, setLastSold] = useState<string>("");
+  useEffect(() => {
+    const d = new Date();
+    d.setDate(d.getDate() - 3); // 3 days ago
+    setLastSold(
+      d.toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" })
+    );
+  }, []);
+
   return (
     <>
       <style>{`
@@ -351,10 +363,16 @@ export default function Home() {
                 ].map((cls, i) => (
                   <div key={i} className={`absolute w-5 h-5 border-[#ff8e3e]/60 ${cls}`} />
                 ))}
-                {/* Comic silhouette */}
+                {/* Comic cover being scanned */}
                 <div className="absolute inset-0 flex items-center justify-center">
-                  <div className="w-20 h-28 rounded-lg border border-[#ff8e3e]/20 bg-[#ff8e3e]/5 flex items-end justify-center pb-2">
-                    <div className="text-[8px] lbl-mono text-[#ff8e3e]/50">COVER</div>
+                  <div className="relative w-28 h-40 rounded-md overflow-hidden border border-[#ff8e3e]/40 shadow-[0_0_24px_rgba(255,142,62,0.25)]">
+                    <img
+                      src="/asm300.jpg"
+                      alt="Amazing Spider-Man #300 cover"
+                      className="w-full h-full object-cover"
+                    />
+                    {/* subtle scan tint over the cover */}
+                    <div className="absolute inset-0 bg-[#ff8e3e]/5 mix-blend-overlay" />
                   </div>
                 </div>
                 {/* HUD label */}
@@ -396,7 +414,9 @@ export default function Home() {
                 {/* Price */}
                 <div className="flex items-end gap-3 pt-1">
                   <div className="text-3xl font-extrabold text-[#05df72]">£1,980</div>
-                  <div className="text-sm text-[#8c7b78] pb-1">avg. sold price (90 days)</div>
+                  <div className="text-sm text-[#8c7b78] pb-1">
+                    last sold{lastSold ? ` ${lastSold}` : ""}
+                  </div>
                 </div>
 
                 {/* Specs */}
@@ -405,7 +425,7 @@ export default function Home() {
                     ["Publisher", "Marvel Comics"],
                     ["Year", "1988"],
                     ["Key Issue", "Yes — Venom #1"],
-                    ["CGC Pop 9.4", "312"],
+                    ["90-Day Avg", "£1,868"],
                   ].map(([k, v]) => (
                     <div key={k}>
                       <div className="text-[#5c4542] lbl-mono uppercase tracking-wider text-[9px]">{k}</div>
