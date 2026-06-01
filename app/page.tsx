@@ -1,6 +1,7 @@
 "use client";
 
 import { ContainerScroll } from "@/components/ui/container-scroll-animation";
+import { Features } from "@/components/blocks/features-8";
 
 /* ─── Data ─────────────────────────────────────────────────────── */
 
@@ -555,30 +556,10 @@ export default function Home() {
           </div>
         </div>
 
-        {/* ── Features grid ────────────────────────────────────── */}
-        <section id="features" className="max-w-5xl mx-auto px-6 py-20">
-          <div className="mb-12 text-center">
-            <div className="text-xs lbl-mono text-[#ff8e3e] tracking-widest uppercase mb-3">Everything You Need</div>
-            <h2 className="text-3xl md:text-5xl font-extrabold tracking-tight text-[#f8f6f2]">
-              Built for serious collectors.
-            </h2>
-          </div>
-
-          <div className="grid md:grid-cols-3 gap-4">
-            {FEATURES.map((f, i) => (
-              <div key={i}
-                className="group rounded-2xl p-6 border border-white/5 bg-[#100a06] flex flex-col gap-4 hover:border-[#ff8e3e]/20 transition-all hover:bg-[#140d07]">
-                <div className="w-10 h-10 rounded-xl border border-white/8 bg-[#1a1008] flex items-center justify-center text-[#ff8e3e] group-hover:border-[#ff8e3e]/30 transition-colors">
-                  {f.icon}
-                </div>
-                <div>
-                  <h3 className="text-[#f8f6f2] font-bold mb-1.5">{f.title}</h3>
-                  <p className="text-sm text-[#8c7b78] leading-relaxed">{f.body}</p>
-                </div>
-              </div>
-            ))}
-          </div>
-        </section>
+        {/* ── Features bento grid ──────────────────────────────── */}
+        <div id="features">
+          <Features />
+        </div>
 
         {/* ── Testimonials ─────────────────────────────────────── */}
         <section id="testimonials" className="max-w-5xl mx-auto px-6 py-16">
