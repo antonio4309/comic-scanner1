@@ -209,7 +209,32 @@ export default function Home() {
         }
       `}</style>
 
-      <main className="bg-[#0e0807] min-h-screen overflow-x-hidden text-[#f8f6f2]">
+      <main className="relative bg-[#0e0807] min-h-screen overflow-x-hidden text-[#f8f6f2]">
+
+        {/* ── Page-wide comic-collage backdrop ─────────────────── */}
+        <div
+          className="fixed inset-0 z-0 pointer-events-none"
+          style={{
+            backgroundImage: "url('/comics-bg.jpg')",
+            backgroundSize: "cover",
+            backgroundPosition: "center",
+          }}
+        />
+        {/* Heavy dark + amber wash so all content stays readable */}
+        <div
+          className="fixed inset-0 z-0 pointer-events-none"
+          style={{
+            background:
+              "linear-gradient(180deg, rgba(14,8,7,0.93) 0%, rgba(14,8,7,0.9) 50%, rgba(14,8,7,0.93) 100%)",
+          }}
+        />
+        <div
+          className="fixed inset-0 z-0 pointer-events-none"
+          style={{ background: "radial-gradient(ellipse 70% 50% at 50% 35%, rgba(255,142,62,0.06) 0%, transparent 70%)" }}
+        />
+
+        {/* All content sits above the backdrop */}
+        <div className="relative z-10">
 
         {/* ── Nav ─────────────────────────────────────────────── */}
         <nav className="fixed top-4 left-1/2 -translate-x-1/2 z-50 flex items-center gap-6 px-5 py-2.5 rounded-full bg-white/5 backdrop-blur-md border border-white/10 shadow-xl">
@@ -438,32 +463,8 @@ export default function Home() {
           </div>
         </section>
 
-        {/* ── How it works (comic-collage backdrop) ────────────── */}
-        <section id="how" className="relative overflow-hidden">
-          {/* Comic collage background */}
-          <div
-            className="absolute inset-0 pointer-events-none"
-            style={{
-              backgroundImage: "url('/comics-bg.jpg')",
-              backgroundSize: "cover",
-              backgroundPosition: "center",
-            }}
-          />
-          {/* Heavy dark + amber tint overlay so content stays readable */}
-          <div
-            className="absolute inset-0 pointer-events-none"
-            style={{
-              background:
-                "linear-gradient(180deg, #0e0807 0%, rgba(14,8,7,0.92) 12%, rgba(14,8,7,0.88) 50%, rgba(14,8,7,0.92) 88%, #0e0807 100%)",
-            }}
-          />
-          {/* Subtle amber wash for brand cohesion */}
-          <div
-            className="absolute inset-0 pointer-events-none"
-            style={{ background: "radial-gradient(ellipse 80% 60% at 50% 40%, rgba(255,142,62,0.08) 0%, transparent 70%)" }}
-          />
-
-          <div className="relative z-10 max-w-6xl mx-auto px-6 py-24">
+        {/* ── How it works ─────────────────────────────────────── */}
+        <section id="how" className="relative max-w-6xl mx-auto px-6 py-24">
           <div className="mb-12 text-center">
             <div className="text-xs lbl-mono text-[#ff8e3e] tracking-widest uppercase mb-3">The Process</div>
             <h2 className="text-3xl md:text-5xl font-extrabold tracking-tight text-[#f8f6f2]">
@@ -487,7 +488,6 @@ export default function Home() {
                 color={card.color}
               />
             ))}
-          </div>
           </div>
         </section>
 
@@ -592,6 +592,7 @@ export default function Home() {
           </div>
         </footer>
 
+        </div>{/* /content wrapper */}
       </main>
     </>
   );
