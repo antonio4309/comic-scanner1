@@ -438,8 +438,32 @@ export default function Home() {
           </div>
         </section>
 
-        {/* ── How it works ─────────────────────────────────────── */}
-        <section id="how" className="max-w-6xl mx-auto px-6 py-16">
+        {/* ── How it works (comic-collage backdrop) ────────────── */}
+        <section id="how" className="relative overflow-hidden">
+          {/* Comic collage background */}
+          <div
+            className="absolute inset-0 pointer-events-none"
+            style={{
+              backgroundImage: "url('/comics-bg.jpg')",
+              backgroundSize: "cover",
+              backgroundPosition: "center",
+            }}
+          />
+          {/* Heavy dark + amber tint overlay so content stays readable */}
+          <div
+            className="absolute inset-0 pointer-events-none"
+            style={{
+              background:
+                "linear-gradient(180deg, #0e0807 0%, rgba(14,8,7,0.92) 12%, rgba(14,8,7,0.88) 50%, rgba(14,8,7,0.92) 88%, #0e0807 100%)",
+            }}
+          />
+          {/* Subtle amber wash for brand cohesion */}
+          <div
+            className="absolute inset-0 pointer-events-none"
+            style={{ background: "radial-gradient(ellipse 80% 60% at 50% 40%, rgba(255,142,62,0.08) 0%, transparent 70%)" }}
+          />
+
+          <div className="relative z-10 max-w-6xl mx-auto px-6 py-24">
           <div className="mb-12 text-center">
             <div className="text-xs lbl-mono text-[#ff8e3e] tracking-widest uppercase mb-3">The Process</div>
             <h2 className="text-3xl md:text-5xl font-extrabold tracking-tight text-[#f8f6f2]">
@@ -463,6 +487,7 @@ export default function Home() {
                 color={card.color}
               />
             ))}
+          </div>
           </div>
         </section>
 
