@@ -413,7 +413,7 @@ export default function Home() {
 
                 {/* Price */}
                 <div className="flex items-end gap-3 pt-1">
-                  <div className="text-3xl font-extrabold text-[#05df72]">£1,980</div>
+                  <div className="text-3xl font-extrabold text-[#05df72]">£370.84</div>
                   <div className="text-sm text-[#8c7b78] pb-1">
                     last sold{lastSold ? ` ${lastSold}` : ""}
                   </div>
@@ -425,7 +425,7 @@ export default function Home() {
                     ["Publisher", "Marvel Comics"],
                     ["Year", "1988"],
                     ["Key Issue", "Yes — Venom #1"],
-                    ["90-Day Avg", "£1,868"],
+                    ["90-Day Avg", "£358.50"],
                   ].map(([k, v]) => (
                     <div key={k}>
                       <div className="text-[#5c4542] lbl-mono uppercase tracking-wider text-[9px]">{k}</div>
