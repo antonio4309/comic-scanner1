@@ -2,6 +2,7 @@
 
 import { ContainerScroll } from "@/components/ui/container-scroll-animation";
 import { Features } from "@/components/blocks/features-8";
+import { AnimatedFeatureCard } from "@/components/ui/feature-card-1";
 
 /* ─── Data ─────────────────────────────────────────────────────── */
 
@@ -27,33 +28,6 @@ const TICKER_ITEMS = [
   "Thor #337 → £290",
 ];
 
-const STEPS = [
-  {
-    num: "01",
-    label: "POINT & SCAN",
-    title: "Aim your camera at any comic",
-    body: "Hold up any comic — raw, slabbed, bagged. LongboxLens detects the cover in under a second using Gemini Vision AI.",
-  },
-  {
-    num: "02",
-    label: "AI IDENTIFIES",
-    title: "Title, issue, variant, grade — instant",
-    body: "Our model cross-references the Grand Comics Database and CGC census to pinpoint the exact printing and estimate condition.",
-  },
-  {
-    num: "03",
-    label: "LIVE VALUATION",
-    title: "Real eBay UK sold prices",
-    body: "We pull live sold-listing data from eBay UK so the number you see reflects what collectors actually pay today.",
-  },
-  {
-    num: "04",
-    label: "EXPORT & SELL",
-    title: "One tap to a Whatnot CSV",
-    body: "Export your scanned lot as a ready-to-upload Whatnot listing file. Title, condition, price — already filled.",
-  },
-];
-
 const TESTIMONIALS = [
   {
     quote: "I scanned 200 comics from a car boot sale in 20 minutes. Walked away knowing exactly which ones to keep.",
@@ -69,64 +43,6 @@ const TESTIMONIALS = [
     quote: "Sold my first Whatnot lot the same day I discovered LongboxLens. The CSV export is genuinely brilliant.",
     name: "Dan F.",
     tag: "Seller, Birmingham",
-  },
-];
-
-const FEATURES = [
-  {
-    icon: (
-      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-        <path d="M2 13s2-2 5-2 5 2 5 2 2-2 5-2 5 2 5 2"/>
-        <rect x="2" y="6" width="20" height="12" rx="2"/>
-      </svg>
-    ),
-    title: "CGC Slab Detection",
-    body: "Recognises slabbed comics and reads the label grade automatically. No manual input.",
-  },
-  {
-    icon: (
-      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-        <circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/>
-      </svg>
-    ),
-    title: "Under 3 Seconds",
-    body: "From camera frame to valuation. Faster than you can flip to the back cover.",
-  },
-  {
-    icon: (
-      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-        <path d="M3 3h18v18H3z"/><path d="M3 9h18M9 21V9"/>
-      </svg>
-    ),
-    title: "Collection Dashboard",
-    body: "Every scan is logged with grade, value and condition. Your full collection at a glance.",
-  },
-  {
-    icon: (
-      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/>
-      </svg>
-    ),
-    title: "Whatnot CSV Export",
-    body: "One tap produces a Whatnot-ready CSV. Titles, conditions, prices — done.",
-  },
-  {
-    icon: (
-      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-        <line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>
-      </svg>
-    ),
-    title: "eBay UK Live Prices",
-    body: "Pulls from real sold listings, not guesses. Always current, always UK market.",
-  },
-  {
-    icon: (
-      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-        <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
-      </svg>
-    ),
-    title: "Works Offline",
-    body: "Scan first, sync later. Your data stays on device until you choose to export.",
   },
 ];
 
@@ -503,7 +419,7 @@ export default function Home() {
         </section>
 
         {/* ── How it works ─────────────────────────────────────── */}
-        <section id="how" className="max-w-5xl mx-auto px-6 py-16">
+        <section id="how" className="max-w-6xl mx-auto px-6 py-16">
           <div className="mb-12 text-center">
             <div className="text-xs lbl-mono text-[#ff8e3e] tracking-widest uppercase mb-3">The Process</div>
             <h2 className="text-3xl md:text-5xl font-extrabold tracking-tight text-[#f8f6f2]">
@@ -511,23 +427,21 @@ export default function Home() {
             </h2>
           </div>
 
-          <div className="grid md:grid-cols-2 gap-px bg-white/5 rounded-2xl overflow-hidden border border-white/5">
-            {STEPS.map((step, i) => (
-              <div key={i}
-                className="bg-[#0e0807] p-8 flex flex-col gap-4 hover:bg-[#130d08] transition-colors">
-                <div className="flex items-start justify-between">
-                  <div className="text-5xl font-extrabold lbl-step-num lbl-mono text-[#ff8e3e]/20">
-                    {step.num}
-                  </div>
-                  <span className="text-[10px] lbl-mono text-[#ff8e3e] bg-[#ff8e3e]/10 border border-[#ff8e3e]/20 px-2.5 py-1 rounded-full tracking-widest">
-                    {step.label}
-                  </span>
-                </div>
-                <div>
-                  <h3 className="text-lg font-bold text-[#f8f6f2] leading-snug mb-2">{step.title}</h3>
-                  <p className="text-sm text-[#8c7b78] leading-relaxed">{step.body}</p>
-                </div>
-              </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+            {[
+              { index: "001", tag: "Point & Scan",   glyph: "📷", color: "amber" as const, title: "Aim your camera at any comic — raw, slabbed or bagged." },
+              { index: "002", tag: "AI Identifies",  glyph: "🔍", color: "cyan"  as const, title: "Title, issue, variant and grade pinpointed instantly." },
+              { index: "003", tag: "Live Valuation", glyph: "💷", color: "green" as const, title: "Real eBay UK sold prices, not guesses." },
+              { index: "004", tag: "Export & Sell",  glyph: "📦", color: "amber" as const, title: "One tap to a ready-to-upload Whatnot CSV." },
+            ].map((card) => (
+              <AnimatedFeatureCard
+                key={card.index}
+                index={card.index}
+                tag={card.tag}
+                title={card.title}
+                glyph={card.glyph}
+                color={card.color}
+              />
             ))}
           </div>
         </section>
