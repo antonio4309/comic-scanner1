@@ -257,9 +257,11 @@ async function activateApp(session) {
   app.style.flex = '1';
   app.style.minHeight = '0';
   loadInventory(); // local cache first (instant)
+  loadBoxes();     // storage boxes (long/short)
   applyFeatureRestrictions(session.features);
   renderHeaderUser(session);
   renderList();
+  renderBoxSelector();
   updateStats();
   if (isMobile()) { switchMobileTab('scan'); initMobileSwipe(); initHaptic(); }
 
@@ -588,7 +590,13 @@ async function scanAndAdd() {
         thumb: photo.thumb,
         imageUrl,
         searchQuery: identified.searchQuery || `${newTitle} ${newIssue} ${identified.publisher || ''} ${identified.year || ''}`.trim(),
-        possibleDuplicate: checkDuplicate(newTitle, newIssue)
+        possibleDuplicate: checkDuplicate(newTitle, newIssue),
+        // ── Stock Room fields ──
+        boxId: (typeof activeBoxId !== 'undefined' ? activeBoxId : null),
+        sold: false,
+        soldPrice: null,
+        soldDate: null,
+        soldVia: null
       };
 
       comics.unshift(comic);
@@ -2106,4 +2114,298 @@ function calcFees() {
   document.getElementById('fc-r-total-fees').textContent    = d(totalFees);
   document.getElementById('fc-r-receive').textContent       = f(youReceive);
   document.getElementById('fc-r-pct').textContent           = feePct + '% of sale price taken in fees';
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   STOCK ROOM  —  storage boxes (long/short), assignment, sold tracking
+═══════════════════════════════════════════════════════════════════ */
+const BOX_CAP = { long: 300, short: 175 };
+let boxes = [];
+let activeBoxId = null;
+let openBoxId = null;          // box currently opened in Stock Room detail
+let soldModalComicId = null;   // comic being marked sold
+let newBoxReturnTab = 'stock';
+
+function getBoxesKey(uid)   { return 'lbl_boxes_' + uid; }
+function getActiveBoxKey(uid){ return 'lbl_activebox_' + uid; }
+
+function loadBoxes() {
+  if (!currentUserId) return;
+  try { boxes = JSON.parse(localStorage.getItem(getBoxesKey(currentUserId)) || '[]'); } catch { boxes = []; }
+  if (!Array.isArray(boxes)) boxes = [];
+  try { activeBoxId = localStorage.getItem(getActiveBoxKey(currentUserId)) || null; } catch { activeBoxId = null; }
+  if (!boxes.some(b => b.id === activeBoxId)) activeBoxId = boxes[0] ? boxes[0].id : null;
+}
+function saveBoxes() {
+  if (!currentUserId) return;
+  try { localStorage.setItem(getBoxesKey(currentUserId), JSON.stringify(boxes)); } catch {}
+}
+function saveActiveBox() {
+  if (!currentUserId) return;
+  try { localStorage.setItem(getActiveBoxKey(currentUserId), activeBoxId || ''); } catch {}
+}
+function setActiveBox(id) { activeBoxId = id || null; saveActiveBox(); renderBoxSelector(); }
+
+function createBox(name, type) {
+  const box = {
+    id: 'box_' + Date.now() + '_' + Math.floor(Math.random() * 999),
+    name: (name || '').trim() || ('Box ' + (boxes.length + 1)),
+    type: (type === 'short' ? 'short' : 'long'),
+    createdAt: Date.now()
+  };
+  boxes.push(box);
+  saveBoxes();
+  activeBoxId = box.id; saveActiveBox();
+  return box;
+}
+function renameBox(id, name) {
+  const b = boxes.find(x => x.id === id);
+  if (b) { b.name = (name || '').trim() || b.name; saveBoxes(); }
+}
+function deleteBox(id) {
+  boxes = boxes.filter(b => b.id !== id);
+  comics.forEach(c => { if (c.boxId === id) c.boxId = null; });
+  saveBoxes(); saveInventory();
+  if (activeBoxId === id) { activeBoxId = boxes[0] ? boxes[0].id : null; saveActiveBox(); }
+  if (openBoxId === id) openBoxId = null;
+}
+
+function boxComics(id) { return comics.filter(c => c.boxId === id); }
+function boxCap(box)   { return BOX_CAP[box.type] || BOX_CAP.long; }
+function bnum(v) { const n = parseFloat(v); return isNaN(n) ? 0 : n; }
+function comicValue(c) { return bnum(c.customPrice) || bnum(c.ebayPrice) || bnum(c.soldPrice) || 0; }
+function gbp(n) { return '£' + (Math.round(bnum(n) * 100) / 100).toLocaleString('en-GB', { minimumFractionDigits: 2, maximumFractionDigits: 2 }); }
+
+function boxStats(id) {
+  const list = boxComics(id);
+  const inStock = list.filter(c => !c.sold);
+  const sold    = list.filter(c => c.sold);
+  return {
+    count: list.length,
+    inStock: inStock.length,
+    soldCount: sold.length,
+    value: inStock.reduce((s, c) => s + comicValue(c) * (c.qty || 1), 0),
+    cost: list.reduce((s, c) => s + bnum(c.costPrice) * (c.qty || 1), 0),
+    revenue: sold.reduce((s, c) => s + bnum(c.soldPrice) * (c.qty || 1), 0),
+  };
+}
+
+// ── Scanning tab: active-box selector ──────────────────────────────
+function renderBoxSelector() {
+  const sel = document.getElementById('active-box-select');
+  if (!sel) return;
+  if (!boxes.length) {
+    sel.innerHTML = '<option value="">No boxes yet — create one</option><option value="__new__">＋ New box…</option>';
+    sel.value = '';
+    return;
+  }
+  sel.innerHTML = boxes.map(b => {
+    const st = boxStats(b.id);
+    return '<option value="' + b.id + '">' + escapeHtml(b.name) + ' · ' + (b.type === 'long' ? 'Long' : 'Short') + ' (' + st.count + '/' + boxCap(b) + ')</option>';
+  }).join('') + '<option value="__new__">＋ New box…</option>';
+  sel.value = activeBoxId || boxes[0].id;
+}
+function onActiveBoxChange() {
+  const sel = document.getElementById('active-box-select');
+  if (!sel) return;
+  if (sel.value === '__new__') { openNewBoxModal('export'); renderBoxSelector(); return; }
+  setActiveBox(sel.value);
+}
+
+// ── New Box modal ──────────────────────────────────────────────────
+function openNewBoxModal(returnTab) {
+  newBoxReturnTab = returnTab || 'stock';
+  const m = document.getElementById('newbox-modal');
+  if (!m) return;
+  document.getElementById('nb-name').value = '';
+  document.querySelectorAll('input[name="nb-type"]').forEach((r, i) => r.checked = i === 0);
+  m.style.display = 'flex';
+  setTimeout(() => document.getElementById('nb-name').focus(), 50);
+}
+function closeNewBoxModal() {
+  const m = document.getElementById('newbox-modal');
+  if (m) m.style.display = 'none';
+}
+function confirmNewBox() {
+  const name = document.getElementById('nb-name').value;
+  const typeEl = document.querySelector('input[name="nb-type"]:checked');
+  createBox(name, typeEl ? typeEl.value : 'long');
+  closeNewBoxModal();
+  renderBoxSelector();
+  if (newBoxReturnTab === 'stock') renderStockRoom();
+}
+
+// ── Sold modal ─────────────────────────────────────────────────────
+function openSoldModal(comicId) {
+  soldModalComicId = comicId;
+  const c = comics.find(x => x.id == comicId);
+  const m = document.getElementById('sold-modal');
+  if (!m || !c) return;
+  document.getElementById('sm-price').value = c.soldPrice != null ? c.soldPrice : (bnum(c.customPrice) || bnum(c.ebayPrice) || '');
+  document.getElementById('sm-date').value  = c.soldDate || new Date().toISOString().slice(0, 10);
+  document.getElementById('sm-via').value   = c.soldVia || 'eBay';
+  m.style.display = 'flex';
+  setTimeout(() => document.getElementById('sm-price').focus(), 50);
+}
+function closeSoldModal() {
+  const m = document.getElementById('sold-modal');
+  if (m) m.style.display = 'none';
+  soldModalComicId = null;
+}
+function confirmSold() {
+  const c = comics.find(x => x.id == soldModalComicId);
+  if (!c) { closeSoldModal(); return; }
+  c.sold = true;
+  c.soldPrice = bnum(document.getElementById('sm-price').value) || null;
+  c.soldDate  = document.getElementById('sm-date').value || null;
+  c.soldVia   = document.getElementById('sm-via').value || null;
+  saveInventory();
+  closeSoldModal();
+  renderStockRoom();
+}
+function markUnsold(comicId) {
+  const c = comics.find(x => x.id == comicId);
+  if (!c) return;
+  c.sold = false; c.soldPrice = null; c.soldDate = null; c.soldVia = null;
+  saveInventory();
+  renderStockRoom();
+}
+function moveComicToBox(comicId, boxId) {
+  const c = comics.find(x => x.id == comicId);
+  if (!c) return;
+  c.boxId = boxId || null;
+  saveInventory();
+  renderStockRoom();
+}
+
+// ── Stock Room rendering ───────────────────────────────────────────
+function openBox(id) { openBoxId = id; renderStockRoom(); }
+function closeBox()  { openBoxId = null; renderStockRoom(); }
+
+function renderStockRoom() {
+  const root = document.getElementById('stockroom-root');
+  if (!root) return;
+  if (openBoxId && (openBoxId === '__unassigned__' || boxes.some(b => b.id === openBoxId))) {
+    root.innerHTML = renderBoxDetail(openBoxId);
+  } else {
+    openBoxId = null;
+    root.innerHTML = renderBoxGrid();
+  }
+}
+
+function renderBoxGrid() {
+  const inStockAll = comics.filter(c => !c.sold);
+  const soldAll    = comics.filter(c => c.sold);
+  const value = inStockAll.reduce((s, c) => s + comicValue(c) * (c.qty || 1), 0);
+
+  const stats =
+    '<div class="sr-stat-grid">' +
+      '<div class="sr-stat"><div class="sr-stat-lbl">Boxes</div><div class="sr-stat-val">' + boxes.length + '</div></div>' +
+      '<div class="sr-stat"><div class="sr-stat-lbl">In Stock</div><div class="sr-stat-val">' + inStockAll.length + '</div></div>' +
+      '<div class="sr-stat"><div class="sr-stat-lbl">Sold</div><div class="sr-stat-val sr-green">' + soldAll.length + '</div></div>' +
+      '<div class="sr-stat"><div class="sr-stat-lbl">Collection Value</div><div class="sr-stat-val sr-amber">' + gbp(value) + '</div></div>' +
+    '</div>';
+
+  const unassigned = comics.filter(c => !c.boxId);
+  const unassignedCard = unassigned.length ?
+    '<button class="sr-box-card sr-box-unassigned" onclick="openBox(\'__unassigned__\')">' +
+      '<div class="sr-box-head"><span class="sr-box-name">Unsorted</span><span class="sr-box-chip">INBOX</span></div>' +
+      '<div class="sr-box-count">' + unassigned.length + '<span> comics</span></div>' +
+      '<div class="sr-box-foot"><span>Not filed into a box yet</span></div>' +
+    '</button>' : '';
+
+  const cards = boxes.map(b => {
+    const st = boxStats(b.id);
+    const cap = boxCap(b);
+    const pct = Math.min(100, Math.round((st.count / cap) * 100));
+    const over = st.count > cap;
+    return '<button class="sr-box-card" onclick="openBox(\'' + b.id + '\')">' +
+      '<div class="sr-box-head"><span class="sr-box-name">' + escapeHtml(b.name) + '</span>' +
+      '<span class="sr-box-chip ' + b.type + '">' + (b.type === 'long' ? 'LONG' : 'SHORT') + '</span></div>' +
+      '<div class="sr-box-count ' + (over ? 'over' : '') + '">' + st.count + '<span> / ' + cap + '</span></div>' +
+      '<div class="sr-fill"><div class="sr-fill-bar ' + (over ? 'over' : '') + '" style="width:' + pct + '%"></div></div>' +
+      '<div class="sr-box-foot"><span>' + st.inStock + ' in stock</span><span class="sr-green">' + st.soldCount + ' sold</span><span class="sr-amber">' + gbp(st.value) + '</span></div>' +
+      (over ? '<div class="sr-box-warn">⚠ Over capacity</div>' : '') +
+    '</button>';
+  }).join('');
+
+  return stats +
+    '<div class="sr-section-row"><div class="sr-section-label">Your Boxes</div>' +
+    '<button class="sr-newbox-btn" onclick="openNewBoxModal(\'stock\')">＋ New Box</button></div>' +
+    '<div class="sr-box-grid">' + cards + unassignedCard +
+      '<button class="sr-box-card sr-box-add" onclick="openNewBoxModal(\'stock\')">' +
+        '<div class="sr-add-plus">＋</div><div class="sr-add-label">Create a box</div>' +
+        '<div class="sr-add-hint">Long (300) or Short (175)</div></button>' +
+    '</div>';
+}
+
+function renderBoxDetail(id) {
+  const isInbox = id === '__unassigned__';
+  const box = isInbox ? null : boxes.find(b => b.id === id);
+  if (!isInbox && !box) { openBoxId = null; return renderBoxGrid(); }
+  const list = isInbox ? comics.filter(c => !c.boxId) : boxComics(id);
+  const name = isInbox ? 'Unsorted' : box.name;
+  const cap = isInbox ? null : boxCap(box);
+  const inStock = list.filter(c => !c.sold);
+  const sold = list.filter(c => c.sold);
+  const st = {
+    count: list.length, inStock: inStock.length, soldCount: sold.length,
+    value: inStock.reduce((s, c) => s + comicValue(c) * (c.qty || 1), 0),
+    revenue: sold.reduce((s, c) => s + bnum(c.soldPrice) * (c.qty || 1), 0)
+  };
+  const over = cap && st.count > cap;
+  const pct = cap ? Math.min(100, Math.round((st.count / cap) * 100)) : 0;
+  const profit = st.revenue - sold.reduce((s, c) => s + bnum(c.costPrice) * (c.qty || 1), 0);
+
+  const moveOpts = (cur) => boxes.map(b =>
+    '<option value="' + b.id + '"' + (b.id === cur ? ' selected' : '') + '>' + escapeHtml(b.name) + '</option>').join('')
+    + '<option value=""' + (!cur ? ' selected' : '') + '>— Unsorted —</option>';
+
+  const rows = list.length ? list.map(c => {
+    const title = escapeHtml(c.title) + (c.issue && c.issue !== 'Unknown' ? ' #' + escapeHtml(c.issue) : '');
+    const meta = [c.publisher, c.year, c.condition].filter(x => x && x !== 'Unknown').map(escapeHtml).join(' · ');
+    const price = c.sold ? gbp(c.soldPrice) : (comicValue(c) ? gbp(comicValue(c)) : '—');
+    const soldNote = c.sold ? ' · <span class="sr-green">SOLD ' + (c.soldDate || '') + (c.soldVia ? ' · ' + escapeHtml(c.soldVia) : '') + '</span>' : '';
+    return '<div class="sr-row ' + (c.sold ? 'is-sold' : '') + '">' +
+      '<img class="sr-row-thumb" src="' + (c.thumb || '') + '" alt="" />' +
+      '<div class="sr-row-info"><div class="sr-row-title">' + title + (c.isKeyIssue ? ' <span class="sr-key">★</span>' : '') + '</div>' +
+      '<div class="sr-row-meta">' + (meta || '—') + soldNote + '</div></div>' +
+      '<select class="sr-row-move" onchange="moveComicToBox(' + c.id + ', this.value)" title="Move to box">' + moveOpts(isInbox ? '' : id) + '</select>' +
+      '<div class="sr-row-price ' + (c.sold ? 'sr-green' : '') + '">' + price + '</div>' +
+      (c.sold
+        ? '<button class="sr-sold-btn done" onclick="markUnsold(' + c.id + ')" title="Mark back in stock">✓ Sold</button>'
+        : '<button class="sr-sold-btn" onclick="openSoldModal(' + c.id + ')">Mark Sold</button>') +
+    '</div>';
+  }).join('') : '<div class="sr-empty">This box is empty. Set it active on the Scanning tab, or move comics in from another box.</div>';
+
+  return '<div class="sr-detail-head"><button class="sr-back" onclick="closeBox()">← All Boxes</button>' +
+    (isInbox ? '' : '<button class="sr-mini-btn" onclick="promptRenameBox(\'' + id + '\')">✎ Rename</button>' +
+      '<button class="sr-mini-btn danger" onclick="confirmDeleteBox(\'' + id + '\')">🗑 Delete</button>') +
+    '</div>' +
+    '<div class="sr-detail-title-row"><h1 class="sr-detail-title">' + escapeHtml(name) + '</h1>' +
+    (isInbox ? '<span class="sr-box-chip">INBOX</span>' : '<span class="sr-box-chip ' + box.type + '">' + (box.type === 'long' ? 'LONG · 300' : 'SHORT · 175') + '</span>') + '</div>' +
+    (cap ? '<div class="sr-detail-fill"><div class="sr-fill"><div class="sr-fill-bar ' + (over ? 'over' : '') + '" style="width:' + pct + '%"></div></div><span class="sr-fill-txt ' + (over ? 'over' : '') + '">' + st.count + ' / ' + cap + (over ? ' · over capacity' : '') + '</span></div>' : '') +
+    '<div class="sr-detail-stats">' +
+      '<div class="sr-dstat"><span>' + st.inStock + '</span>In stock</div>' +
+      '<div class="sr-dstat"><span class="sr-green">' + st.soldCount + '</span>Sold</div>' +
+      '<div class="sr-dstat"><span class="sr-amber">' + gbp(st.value) + '</span>Stock value</div>' +
+      '<div class="sr-dstat"><span class="sr-green">' + gbp(st.revenue) + '</span>Revenue</div>' +
+      '<div class="sr-dstat"><span class="' + (profit >= 0 ? 'sr-green' : 'sr-red') + '">' + gbp(profit) + '</span>Profit</div>' +
+    '</div>' +
+    '<div class="sr-rows">' + rows + '</div>';
+}
+
+function promptRenameBox(id) {
+  const b = boxes.find(x => x.id === id);
+  if (!b) return;
+  const name = prompt('Rename box:', b.name);
+  if (name !== null) { renameBox(id, name); renderStockRoom(); renderBoxSelector(); }
+}
+function confirmDeleteBox(id) {
+  const b = boxes.find(x => x.id === id);
+  if (!b) return;
+  const n = boxComics(id).length;
+  if (confirm('Delete "' + b.name + '"?' + (n ? ' Its ' + n + ' comic(s) move to Unsorted (not deleted).' : ''))) {
+    deleteBox(id); renderStockRoom(); renderBoxSelector();
+  }
 }
