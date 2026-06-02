@@ -81,10 +81,24 @@ COMMON MISTAKE TO AVOID: A Spider-Man face/head logo in the bottom-left = DIRECT
 - hasSig: true if you can see handwritten signatures, autographs, or ink marks that appear to be signatures.
 - sigDetails: identify whose signature if possible, e.g. "Appears signed, possibly Stan Lee" or "Unidentified signature in black marker on cover".
 
-=== VARIANT COVER DETECTION ===
-- isVariant: true if non-standard cover printing.
-- variantDetails: describe — e.g. "1:25 retailer incentive variant", "Cover B", "Foil cover", "Lenticular cover", "Second print", "Convention exclusive", "Sketch cover", "Virgin cover".
-- Look for: variant text on cover, ratio notation (1:10, 1:25, 1:50), letter suffixes (A/B/C), foil/holographic finish.
+=== VARIANT COVER DETECTION — READ CAREFULLY ===
+A "variant" is ANY cover other than the standard main "Cover A". Variants are often worth far more, so detect them carefully.
+
+- isVariant: true if the cover is not the standard/main cover for that issue.
+- variant: short label if known (e.g. "B", "1:25", "Virgin", "Foil"). variantDetails: full description.
+- In variantDetails, capture as many of these as you can SEE:
+  • Designation / ratio: "Cover B", "Cover C", "1:10", "1:25", "1:50", "1:100 incentive". Look near the logo, in the trade dress, or printed small in a corner.
+  • COVER ARTIST — variants are catalogued by artist, so this is the single most useful clue. Read any signature on the artwork and name them, e.g. "Artgerm (Stanley Lau) variant", "InHyuk Lee variant", "Tedesco variant", "Skan variant".
+  • Finish / material: "Foil", "Holo-foil / holographic", "Lenticular (3D motion)", "Chromium", "Metal", "Glow-in-the-dark", "Embossed".
+  • Treatment: "Virgin (artwork only, no logo/trade dress)", "Sketch / line-art cover", "Blank sketch variant", "Black-and-white", "Negative space", "Connecting / interlocking cover".
+  • Exclusive: "Convention exclusive (SDCC, NYCC, etc.)", "Retailer exclusive (Walmart, Target, Frankie's, Comics Elite, etc.)".
+  • Printing: "2nd printing", "3rd printing" — look for a "2nd print" note near the price box or altered cover colour/trade dress.
+- HOW TO TELL a variant from the standard cover:
+  • Standard covers carry full trade dress (logo + issue + price + direct logo/barcode). Virgin, sketch and art variants strip some of this away.
+  • A ratio number, an artist callout, or a special finish (foil/lenticular/metal) almost always means variant → set isVariant true.
+  • If the cover art clearly differs from the well-known main cover for that issue, it is a variant.
+- If you can't pin down the exact catalogued variant, STILL set isVariant and describe the art + artist so it can be matched later, e.g. "Variant — woman in red against a city skyline, signed 'Artgerm'".
+- Include the variant designation and/or artist in searchQuery so price lookups match the correct variant (a variant can be worth many times the standard cover).
 
 === KEY ISSUE & FIRST APPEARANCE ===
 - isKeyIssue: true if notable key issue.
