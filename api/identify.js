@@ -213,7 +213,9 @@ export default async function handler(req, res) {
   if (!base64) return res.status(400).json({ error: 'No image provided' });
 
   try {
-    const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent?key=${GEMINI_KEY}`;
+    // Model can be overridden in Vercel env (GEMINI_MODEL) without a code change.
+    const GEMINI_MODEL = process.env.GEMINI_MODEL || 'gemini-3.5-flash';
+    const url = `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${GEMINI_KEY}`;
 
     const response = await fetch(url, {
       method: 'POST',
