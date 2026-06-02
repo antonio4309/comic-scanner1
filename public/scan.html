@@ -1765,6 +1765,192 @@
 @media (max-width: 900px) {
   .pg-stat-grid, .pg-quick-grid { grid-template-columns: repeat(2, 1fr); }
 }
+
+/* ════════════════════════════════════════════════════════════════
+   SCANNING PAGE  —  dashboard layout
+   (top toolbar · camera tool left · archive center · export bar)
+════════════════════════════════════════════════════════════════ */
+/* ── Top toolbar ── */
+#scan-topbar {
+  flex-shrink: 0;
+  display: flex;
+  align-items: stretch;
+  background: var(--cc-bg1);
+  border-bottom: 1px solid var(--cc-border);
+  overflow-x: auto;
+}
+#scan-topbar .st-divider { width: 1px; background: var(--cc-border); flex-shrink: 0; }
+.st-group {
+  padding: 12px 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  justify-content: center;
+}
+.st-group-label {
+  font-family: 'Space Mono', monospace;
+  font-size: 9px; font-weight: 700; letter-spacing: 0.12em;
+  text-transform: uppercase; color: var(--cc-text3);
+  display: flex; align-items: center; gap: 8px;
+}
+.st-workspace { min-width: 232px; }
+.st-workspace .rs-select-wrap { margin: 0; }
+.st-ws-actions { display: flex; gap: 6px; }
+
+.st-stats { flex-direction: row; align-items: stretch; gap: 10px; flex: 1; padding-top: 10px; padding-bottom: 10px; }
+.st-stat {
+  background: var(--cc-bg2);
+  border: 1px solid var(--cc-border);
+  border-radius: 12px;
+  padding: 8px 16px;
+  min-width: 82px;
+  display: flex; flex-direction: column; justify-content: center; gap: 3px;
+}
+.st-stat-val { font-family: 'Outfit', sans-serif; font-size: 21px; font-weight: 700; color: var(--cc-text); line-height: 1; }
+.st-stat-val.amber { color: var(--cc-amber); }
+.st-stat-val.green { color: var(--cc-green); }
+.st-stat-lbl {
+  font-family: 'Space Mono', monospace; font-size: 8px; font-weight: 700;
+  letter-spacing: 0.08em; text-transform: uppercase; color: var(--cc-text3);
+}
+.st-stat.st-top { min-width: 128px; justify-content: center; gap: 5px; }
+.st-top-val { font-family: 'Space Mono', monospace; font-size: 11px; color: var(--cc-text2); }
+
+.st-log { min-width: 270px; }
+.st-log-controls { display: flex; gap: 6px; }
+.st-log-controls select {
+  flex: 1; font-size: 10px; padding: 6px 8px;
+  font-family: 'Space Mono', monospace; letter-spacing: 0.04em;
+}
+.st-log .rs-filter-row { display: flex; gap: 4px; flex-wrap: wrap; }
+
+/* ── Main row ── */
+#scan-main { flex: 1; display: flex; flex-direction: row; min-height: 0; overflow: hidden; }
+
+/* Left tool column: camera + classification */
+#scan-tool {
+  width: 366px;
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  border-right: 1px solid var(--cc-border);
+  overflow-y: auto;
+  background: var(--cc-bg1);
+}
+#scan-tool .cc-camera-panel {
+  flex: none;
+  border-right: none;
+  border-radius: 0;
+}
+#scan-tool #video-wrap {
+  aspect-ratio: 4 / 5;
+  flex: none;
+  min-height: 0;
+  height: auto;
+}
+#scan-tool .cc-classify-panel {
+  width: auto;
+  flex: none;
+  border-top: 1px solid var(--cc-border);
+}
+#scan-tool .cc-panel-body { overflow: visible; }
+
+/* Center archive */
+#scan-archive {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  background: var(--cc-bg);
+}
+.scan-archive-head {
+  flex-shrink: 0;
+  height: 48px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 0 18px;
+  background: var(--cc-bg1);
+  border-bottom: 1px solid var(--cc-border);
+}
+.scan-archive-body { flex: 1; overflow-y: auto; padding: 18px; }
+.scan-archive-body #comic-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 14px;
+  align-content: start;
+}
+/* Empty / no-match states span the whole grid and centre */
+.scan-archive-body #comic-list .empty-state,
+.scan-archive-body #comic-list .empty-state-onboard { grid-column: 1 / -1; }
+
+/* ── Bottom bar ── */
+#scan-bottombar {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 10px 18px;
+  background: var(--cc-bg1);
+  border-top: 1px solid var(--cc-border);
+}
+.sb-session { display: flex; flex-direction: column; gap: 2px; }
+.sb-session-label {
+  font-family: 'Space Mono', monospace; font-size: 8px; font-weight: 700;
+  letter-spacing: 0.1em; text-transform: uppercase; color: var(--cc-text3);
+}
+.sb-session-value { font-family: 'Outfit', sans-serif; font-size: 20px; font-weight: 700; color: var(--cc-green); line-height: 1; }
+.sb-export-actions { margin-left: auto; display: flex; gap: 8px; }
+.sb-export-btn {
+  padding: 9px 16px;
+  border-radius: 9px;
+  border: 1px solid var(--cc-amber);
+  background: var(--cc-amber);
+  color: #fff;
+  font-family: 'Space Mono', monospace;
+  font-size: 10px; font-weight: 700; letter-spacing: 0.06em;
+  cursor: pointer;
+  transition: all 0.12s;
+}
+.sb-export-btn:hover { background: var(--cc-amber-d); border-color: var(--cc-amber-d); }
+.sb-export-btn.ghost {
+  background: transparent;
+  color: var(--cc-text2);
+  border-color: var(--cc-border2);
+}
+.sb-export-btn.ghost:hover { border-color: var(--cc-amber); color: var(--cc-amber); background: var(--cc-amber-bg); }
+
+@media (max-width: 1100px) {
+  #scan-tool { width: 320px; }
+}
+
+/* ── Light-theme comic cards (archive grid) ── */
+#main-app .comic-card {
+  background: var(--cc-bg1);
+  border: 1px solid var(--cc-border);
+  border-radius: 12px;
+  box-shadow: 0 1px 2px rgba(35,28,20,0.04);
+}
+#main-app .comic-card:hover { border-color: var(--cc-border3); }
+#main-app .comic-card.card-selected { border-color: var(--cc-amber); background: var(--cc-amber-bg); }
+#main-app .comic-title { color: var(--cc-text); }
+#main-app .comic-sub { color: var(--cc-text3); }
+#main-app .comic-range { color: var(--cc-text2); }
+#main-app .comic-price { color: var(--cc-amber); }
+#main-app .comic-thumb { background: var(--cc-bg3); border: 1px solid var(--cc-border); }
+#main-app .listing-toggle button {
+  border-color: var(--cc-border2);
+  color: var(--cc-text3);
+  background: var(--cc-bg2);
+}
+#main-app .listing-toggle button.active { background: var(--cc-amber); color: #fff; border-color: var(--cc-amber); }
+#main-app .listing-toggle button:not(.active):hover { background: var(--cc-bg3); color: var(--cc-text); }
+#main-app .card-actions button { color: var(--cc-text3); background: transparent; }
+#main-app .card-actions button:hover { color: var(--cc-amber); }
+#main-app .card-actions .del-btn:hover { color: var(--cc-red); }
+#main-app .btn-edit-price { color: var(--cc-text3); }
+#main-app .btn-edit-price:hover { color: var(--cc-amber); }
 </style>
 </head>
 <body>
@@ -1945,29 +2131,84 @@
   </div>
 
   <!-- ── PANE: SCANNING COMMAND CENTER ──────────────────────── -->
-  <div id="pane-export" style="display:flex;flex-direction:row;flex:1;overflow:hidden">
+  <div id="pane-export" style="display:flex;flex-direction:column;flex:1;overflow:hidden">
 
-    <!-- CENTER: Camera + Classification -->
-    <div id="cmd-center">
+    <!-- ═══ TOP TOOLBAR: Workspace · Stats · Scan-log controls ═══ -->
+    <div id="scan-topbar">
 
-      <!-- Header bar -->
-      <div id="cmd-header">
-        <div class="cmd-breadcrumb">
-          <span class="cmd-breadcrumb-icon">▣▣</span>
-          <span class="cmd-breadcrumb-path">COMMAND CENTER / <span>LIVE_SCAN</span></span>
+      <div class="st-group st-workspace">
+        <div class="st-group-label">Active Workspace</div>
+        <div class="rs-select-wrap">
+          <select id="wn-category">
+            <option value="Comics &amp; Manga">BOX_LONGBOX_PRIMARY_01</option>
+            <option value="Comics &amp; Manga">Comics &amp; Manga</option>
+          </select>
         </div>
-        <div class="cmd-header-search">
-          <span class="cmd-header-search-icon">⌕</span>
-          <input type="search" id="mob-search" placeholder="Manual SKU or ISBN Search..." oninput="applyMobileSearch()" autocomplete="off" />
-        </div>
-        <div class="cmd-header-actions">
-          <button class="cmd-icon-btn" onclick="refetchAllPrices()" title="Refresh prices">↻</button>
-          <button class="cmd-icon-btn" onclick="showSettings()" title="Settings">⚙</button>
+        <div class="st-ws-actions">
+          <button class="rs-btn" id="btn-select" onclick="toggleSelectMode()" title="Select to bundle">☐ SELECT</button>
+          <button class="rs-btn danger" onclick="clearAll()">✕ PURGE</button>
         </div>
       </div>
 
-      <!-- Body (scrollable) -->
-      <div id="cmd-body">
+      <div class="st-divider"></div>
+
+      <div class="st-group st-stats">
+        <div class="st-stat">
+          <div class="st-stat-val amber" id="stat-count">0</div>
+          <div class="st-stat-lbl">Comics</div>
+        </div>
+        <div class="st-stat">
+          <div class="st-stat-val green" id="stat-total">£0</div>
+          <div class="st-stat-lbl">Total Value</div>
+        </div>
+        <div class="st-stat">
+          <div class="st-stat-val" id="stat-avg">£0</div>
+          <div class="st-stat-lbl" id="stat-avg-label">Avg Price</div>
+        </div>
+        <div class="st-stat" onclick="applyFilter('key')" style="cursor:pointer">
+          <div class="st-stat-val amber" id="stat-keys">0</div>
+          <div class="st-stat-lbl">Key Issues</div>
+        </div>
+        <div class="st-stat st-top">
+          <div class="st-stat-lbl">Top Comic</div>
+          <div class="st-top-val" id="stat-top">—</div>
+        </div>
+      </div>
+
+      <div class="st-divider"></div>
+
+      <div class="st-group st-log">
+        <div class="st-group-label">
+          Recent Scan Log
+          <span class="rs-badge" id="scan-log-count">0 ITEMS</span>
+        </div>
+        <div class="st-log-controls">
+          <select id="sort-mode" onchange="applySort()">
+            <option value="newest">Newest First</option>
+            <option value="price-desc">Price: High → Low</option>
+            <option value="price-asc">Price: Low → High</option>
+            <option value="title">Title A–Z</option>
+          </select>
+          <select id="publisher-filter" onchange="applyPublisherFilter()">
+            <option value="">All</option>
+          </select>
+        </div>
+        <div class="rs-filter-row">
+          <button class="chip active" id="chip-all" onclick="applyFilter('all')">ALL</button>
+          <button class="chip" id="chip-key" onclick="applyFilter('key')">KEY</button>
+          <button class="chip" id="chip-news" onclick="applyFilter('news')">NEWS</button>
+          <button class="chip" id="chip-slab" onclick="applyFilter('slab')">SLAB</button>
+          <button class="chip" id="chip-noprice" onclick="applyFilter('noprice')">NO$</button>
+        </div>
+      </div>
+
+    </div><!-- /scan-topbar -->
+
+    <!-- ═══ MAIN ROW: Camera tool (left) · Archive (center) ═══ -->
+    <div id="scan-main">
+
+      <!-- LEFT TOOL COLUMN: Camera + Classification -->
+      <div id="scan-tool">
 
         <!-- Camera Panel -->
         <div class="cc-camera-panel">
@@ -2116,152 +2357,57 @@
           </div>
         </div>
 
-      </div><!-- /cmd-body -->
-    </div><!-- /cmd-center -->
+      </div><!-- /scan-tool -->
 
-    <!-- RIGHT: Workspace + Scan Log -->
-    <div id="cmd-right">
-
-      <!-- Workspace header -->
-      <div class="rs-section">
-        <div class="rs-section-title">Active Workspace</div>
-        <div style="font-size:9px;color:var(--cc-text3);font-family:'Space Mono',monospace;letter-spacing:0.08em;margin-bottom:6px;text-transform:uppercase">Target Box Assignment</div>
-        <div class="rs-select-wrap">
-          <select id="wn-category">
-            <option value="Comics &amp; Manga">BOX_LONGBOX_PRIMARY_01</option>
-            <option value="Comics &amp; Manga">Comics &amp; Manga</option>
-          </select>
-        </div>
-        <div class="rs-actions">
-          <button class="rs-btn" id="btn-select" onclick="toggleSelectMode()" title="Select to bundle">☐ SELECT</button>
-          <button class="rs-btn danger" onclick="clearAll()">✕ PURGE</button>
-        </div>
-      </div>
-
-      <!-- Stats -->
-      <div class="rs-section">
-        <div class="rs-stats">
-          <div class="rs-stat">
-            <div class="rs-stat-val amber" id="stat-count">0</div>
-            <div class="rs-stat-lbl">Comics</div>
+      <!-- CENTER: Archive (scanned comics) -->
+      <div id="scan-archive">
+        <div class="scan-archive-head">
+          <span class="cmd-breadcrumb-icon">▣▣</span>
+          <span class="cmd-breadcrumb-path">COMMAND CENTER / <span>LIVE_SCAN</span></span>
+          <div class="cmd-header-search" style="margin-left:auto;max-width:320px">
+            <span class="cmd-header-search-icon">⌕</span>
+            <input type="search" id="mob-search" placeholder="Search archive..." oninput="applyMobileSearch()" autocomplete="off" />
           </div>
-          <div class="rs-stat">
-            <div class="rs-stat-val green" id="stat-total">£0</div>
-            <div class="rs-stat-lbl">Total Value</div>
-          </div>
-          <div class="rs-stat">
-            <div class="rs-stat-val" id="stat-avg">£0</div>
-            <div class="rs-stat-lbl" id="stat-avg-label">Avg Price</div>
-          </div>
-          <div class="rs-stat" onclick="applyFilter('key')" style="cursor:pointer">
-            <div class="rs-stat-val amber" id="stat-keys">0</div>
-            <div class="rs-stat-lbl">Key Issues</div>
-          </div>
+          <button class="cmd-icon-btn" onclick="refetchAllPrices()" title="Refresh prices">↻</button>
+          <button class="cmd-icon-btn" onclick="showSettings()" title="Settings">⚙</button>
         </div>
-        <div style="margin-top:8px;padding:6px 8px;background:var(--cc-bg);border:1px solid var(--cc-border);border-radius:5px;display:flex;justify-content:space-between;align-items:center">
-          <span style="font-size:9px;color:var(--cc-text3);font-family:'Space Mono',monospace;letter-spacing:0.06em;text-transform:uppercase">Top Comic</span>
-          <span style="font-size:10px;color:var(--cc-text2);font-family:'Space Mono',monospace" id="stat-top">—</span>
-        </div>
-      </div>
 
-      <!-- Filter chips -->
-      <div class="rs-section" style="padding-bottom:8px">
-        <div class="rs-section-title" style="margin-bottom:6px">
-          Recent Scan Log
-          <span class="rs-badge" id="scan-log-count">0 ITEMS</span>
+        <!-- Bundle bar (select mode) -->
+        <div id="bundle-bar">
+          <span><strong id="bundle-count">0</strong> selected</span>
+          <button onclick="bundleSelected()" style="padding:4px 10px;border-radius:4px;border:none;background:var(--cc-amber);color:#fff;font-size:9px;font-weight:700;font-family:'Space Mono',monospace;cursor:pointer;letter-spacing:0.06em">BUNDLE</button>
+          <button onclick="toggleSelectMode()" style="background:none;border:none;color:var(--cc-text3);cursor:pointer;font-size:12px">✕</button>
         </div>
-        <!-- Sort + publisher -->
-        <div style="display:flex;gap:6px;margin-bottom:6px">
-          <select id="sort-mode" onchange="applySort()" style="flex:1;font-size:10px;padding:5px 8px;font-family:'Space Mono',monospace;letter-spacing:0.04em">
-            <option value="newest">Newest First</option>
-            <option value="price-desc">Price: High → Low</option>
-            <option value="price-asc">Price: Low → High</option>
-            <option value="title">Title A–Z</option>
-          </select>
-          <select id="publisher-filter" onchange="applyPublisherFilter()" style="width:80px;font-size:10px;padding:5px 8px;font-family:'Space Mono',monospace">
-            <option value="">All</option>
-          </select>
-        </div>
-        <div class="rs-filter-row">
-          <button class="chip active" id="chip-all" onclick="applyFilter('all')">ALL</button>
-          <button class="chip" id="chip-key" onclick="applyFilter('key')">KEY</button>
-          <button class="chip" id="chip-news" onclick="applyFilter('news')">NEWS</button>
-          <button class="chip" id="chip-slab" onclick="applyFilter('slab')">SLAB</button>
-          <button class="chip" id="chip-noprice" onclick="applyFilter('noprice')">NO$</button>
-        </div>
-      </div>
 
-      <!-- Bundle bar -->
-      <div id="bundle-bar">
-        <span><strong id="bundle-count">0</strong> selected</span>
-        <button onclick="bundleSelected()" style="padding:4px 10px;border-radius:4px;border:none;background:var(--cc-amber);color:#1a0800;font-size:9px;font-weight:700;font-family:'Space Mono',monospace;cursor:pointer;letter-spacing:0.06em">BUNDLE</button>
-        <button onclick="toggleSelectMode()" style="background:none;border:none;color:var(--cc-text3);cursor:pointer;font-size:12px">✕</button>
-      </div>
-
-      <!-- Comic list (scrollable) -->
-      <div class="rs-scan-log">
-        <div class="comic-list" id="comic-list">
-          <!-- Intel standby panel (hidden once comics added via CSS :has) -->
-          <div class="rs-intel-standby">
-            <div class="rs-intel-header">
-              <span class="rs-intel-dot"></span>
-              LAST DETECTED OBJECT
-            </div>
-            <div class="rs-intel-title" id="rs-intel-title">AWAITING TARGET</div>
-            <div class="rs-intel-issue" id="rs-intel-issue">—</div>
-            <div class="rs-intel-mkt">
-              <div class="rs-intel-mkt-label">EST. MARKET VALUE</div>
-              <div class="rs-intel-mkt-val" id="rs-intel-val">—</div>
-            </div>
-            <div class="rs-intel-specs">
-              <div class="rs-intel-spec-row">
-                <span class="rs-intel-spec-key">Publisher</span>
-                <span class="rs-intel-spec-val" id="rs-intel-pub">—</span>
-              </div>
-              <div class="rs-intel-spec-row">
-                <span class="rs-intel-spec-key">Condition</span>
-                <span class="rs-intel-spec-val" id="rs-intel-cond">—</span>
-              </div>
-              <div class="rs-intel-spec-row">
-                <span class="rs-intel-spec-key">Key Issue</span>
-                <span class="rs-intel-spec-val" id="rs-intel-key">—</span>
-              </div>
-              <div class="rs-intel-spec-row">
-                <span class="rs-intel-spec-key">eBay UK</span>
-                <span class="rs-intel-spec-val" id="rs-intel-ebay">—</span>
-              </div>
-            </div>
-            <div class="rs-intel-standby-hint">
-              SCANNER UNIT READY<br>ACTIVATE FEED TO BEGIN
-            </div>
-          </div>
+        <!-- Archive grid (scanned comics) -->
+        <div class="scan-archive-body">
+          <div class="comic-list" id="comic-list"></div>
         </div>
-      </div>
 
-      <!-- Session footer -->
-      <div class="rs-session-footer">
-        <div class="rs-session-total">
-          <div class="rs-session-label">Session Total Value</div>
-          <div class="rs-session-value" id="stat-session-val">£0.00</div>
-        </div>
-        <!-- Hidden export controls (kept for app.js) -->
-        <div style="display:none">
-          <select id="price-type">
-            <option value="whatnot">Whatnot price (fees added)</option>
-            <option value="ebay">eBay UK price</option>
-            <option value="custom">Custom price only</option>
-          </select>
-          <pre id="csv-preview"></pre>
-        </div>
-        <button class="rs-export-btn" onclick="exportCSV()">
-          ⬇ EXPORT SESSION MANIFEST
-        </button>
-        <button class="rs-export-btn" style="border-top:none;font-size:9px;padding:7px 14px;color:var(--cc-text3)" onclick="exportInventoryCSV()">
-          ⬇ INVENTORY CSV
-        </button>
-      </div>
+      </div><!-- /scan-archive -->
 
-    </div><!-- /cmd-right -->
+    </div><!-- /scan-main -->
+
+    <!-- ═══ BOTTOM BAR: Session total + export ═══ -->
+    <div id="scan-bottombar">
+      <div class="sb-session">
+        <span class="sb-session-label">Session Total Value</span>
+        <span class="sb-session-value" id="stat-session-val">£0.00</span>
+      </div>
+      <!-- Hidden export controls (kept for app.js) -->
+      <div style="display:none">
+        <select id="price-type">
+          <option value="whatnot">Whatnot price (fees added)</option>
+          <option value="ebay">eBay UK price</option>
+          <option value="custom">Custom price only</option>
+        </select>
+        <pre id="csv-preview"></pre>
+      </div>
+      <div class="sb-export-actions">
+        <button class="sb-export-btn ghost" onclick="exportInventoryCSV()">⬇ INVENTORY CSV</button>
+        <button class="sb-export-btn" onclick="exportCSV()">⬇ EXPORT SESSION MANIFEST</button>
+      </div>
+    </div><!-- /scan-bottombar -->
 
   </div><!-- /pane-export -->
 
