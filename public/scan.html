@@ -21,27 +21,37 @@
    COMMAND CENTER  —  Design Tokens
 ════════════════════════════════════════════════════════════════ */
 :root {
-  --cc-bg:       #080403;
-  --cc-bg1:      #0e0a07;
-  --cc-bg2:      #14100c;
-  --cc-bg3:      #1c1611;
-  --cc-bg4:      #231c15;
-  --cc-border:   rgba(255,142,62,0.10);
-  --cc-border2:  rgba(255,142,62,0.20);
-  --cc-border3:  rgba(255,142,62,0.35);
-  --cc-text:     #f0ebe6;
-  --cc-text2:    #b8a89e;
-  --cc-text3:    #6e5e56;
-  --cc-amber:    #ff8e3e;
-  --cc-amber-d:  #c96820;
-  --cc-amber-bg: rgba(255,142,62,0.08);
-  --cc-amber-glow: rgba(255,142,62,0.22);
-  --cc-green:    #05df72;
-  --cc-green-bg: rgba(5,223,114,0.08);
-  --cc-cyan:     #00d3bd;
-  --cc-red:      #ff4757;
-  --sb-width:    200px;
-  --rs-width:    290px;
+  /* ── LIGHT THEME (amber accent) ──────────────────────────────
+     The whole command center is driven by these tokens, so the
+     light look comes mostly from here. The sidebar keeps a dark
+     treatment of its own (see LIGHT THEME OVERRIDES at the end). */
+  --cc-bg:       #e9ebe8;   /* app canvas */
+  --cc-bg1:      #ffffff;   /* white surfaces: header, cards */
+  --cc-bg2:      #f5f3ef;   /* subtle warm light surface */
+  --cc-bg3:      #ece9e3;   /* slightly deeper light */
+  --cc-bg4:      #e0dbd3;   /* deepest light surface */
+  --cc-border:   rgba(35,28,20,0.10);
+  --cc-border2:  rgba(35,28,20,0.16);
+  --cc-border3:  rgba(232,115,29,0.45);
+  --cc-text:     #2a241f;   /* near-black warm text */
+  --cc-text2:    #6a5e54;   /* secondary */
+  --cc-text3:    #9a8d82;   /* muted / labels */
+  --cc-amber:    #e8731d;   /* amber accent (deepened for light bg) */
+  --cc-amber-d:  #c25c12;
+  --cc-amber-bg: rgba(232,115,29,0.10);
+  --cc-amber-glow: rgba(232,115,29,0.18);
+  --cc-green:    #12a150;
+  --cc-green-bg: rgba(18,161,80,0.10);
+  --cc-cyan:     #0098a8;
+  --cc-red:      #e0344b;
+  /* Dark sidebar palette (image-1 style) */
+  --cc-side:      #2b2118;   /* dark coffee sidebar */
+  --cc-side2:     #352a1f;   /* sidebar raised surface */
+  --cc-side-bd:   rgba(255,255,255,0.08);
+  --cc-side-tx:   rgba(255,247,240,0.72);
+  --cc-side-tx2:  rgba(255,247,240,0.42);
+  --sb-width:    216px;
+  --rs-width:    300px;
 }
 
 /* ════════════════════════════════════════════════════════════════
@@ -1633,6 +1643,128 @@
 #main-app ::-webkit-scrollbar { width: 4px; height: 4px; }
 #main-app ::-webkit-scrollbar-track { background: transparent; }
 #main-app ::-webkit-scrollbar-thumb { background: var(--cc-border2); border-radius: 99px; }
+
+/* ════════════════════════════════════════════════════════════════
+   LIGHT THEME OVERRIDES  —  dark sidebar (image-1 style)
+════════════════════════════════════════════════════════════════ */
+#main-app { background: var(--cc-bg) !important; }
+
+#cmd-sidebar {
+  background: var(--cc-side);
+  border-right: 1px solid var(--cc-side-bd);
+}
+.cmd-logo { border-bottom-color: var(--cc-side-bd); }
+.cmd-logo-name span { color: var(--cc-side-tx2); }
+.cmd-logo-role { color: var(--cc-side-tx2); }
+.cmd-nav-section { color: var(--cc-side-tx2); }
+.cmd-nav-item { color: var(--cc-side-tx); }
+.cmd-nav-item:hover { background: rgba(255,255,255,0.06); color: #fff; }
+.cmd-nav-item.active {
+  background: var(--cc-amber-bg);
+  color: var(--cc-amber);
+  border: 1px solid rgba(232,115,29,0.35);
+}
+.cmd-user { border-top-color: var(--cc-side-bd); }
+#header-user-area .user-chip-btn {
+  background: var(--cc-side2);
+  border-color: var(--cc-side-bd);
+  color: var(--cc-side-tx);
+}
+#header-user-area .user-chip-btn:hover { background: #3f3324; border-color: rgba(255,255,255,0.16); color: #fff; }
+.cmd-logout { color: var(--cc-side-tx2); }
+.cmd-logout:hover { background: rgba(224,52,75,0.12); color: #ff8a98; }
+
+/* Header bars stay white/light */
+#cmd-header { background: var(--cc-bg1); }
+
+/* ════════════════════════════════════════════════════════════════
+   SKELETON PAGES  —  Home / Stock Room / Settings
+════════════════════════════════════════════════════════════════ */
+/* Reusable light header bar for the new panes */
+.cmd-header2 {
+  flex-shrink: 0;
+  min-height: 48px;
+  background: var(--cc-bg1);
+  border-bottom: 1px solid var(--cc-border);
+  display: flex;
+  align-items: center;
+  padding: 0 20px;
+  gap: 14px;
+}
+.cmd-header2 .cmd-header-search { flex: 1; max-width: 420px; }
+
+.pg-scroll { flex: 1; overflow-y: auto; background: var(--cc-bg); }
+.pg-wrap { max-width: 1100px; margin: 0 auto; padding: 28px 28px 48px; }
+
+.pg-title-row { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; margin-bottom: 22px; }
+.pg-h1 {
+  font-family: 'Outfit', sans-serif;
+  font-size: 26px; font-weight: 700; letter-spacing: -0.01em;
+  color: var(--cc-text); margin: 0;
+}
+.pg-sub { margin-top: 6px; font-size: 13px; color: var(--cc-text2); max-width: 560px; line-height: 1.5; }
+
+.pg-section-label {
+  font-family: 'Space Mono', monospace;
+  font-size: 10px; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase;
+  color: var(--cc-text3); margin: 26px 0 12px;
+}
+
+/* Stat cards */
+.pg-stat-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; }
+.pg-stat {
+  background: var(--cc-bg1);
+  border: 1px solid var(--cc-border);
+  border-radius: 14px;
+  padding: 16px 18px;
+  box-shadow: 0 1px 2px rgba(35,28,20,0.04);
+}
+.pg-stat-label {
+  font-family: 'Space Mono', monospace;
+  font-size: 9px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase;
+  color: var(--cc-text3); margin-bottom: 8px;
+}
+.pg-stat-val { font-family: 'Outfit', sans-serif; font-size: 24px; font-weight: 700; color: var(--cc-text); }
+.pg-stat-val.pg-green { color: var(--cc-green); }
+.pg-stat-val.pg-amber { color: var(--cc-amber); }
+
+/* Quick-action cards */
+.pg-quick-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; }
+.pg-quick {
+  display: flex; align-items: center; gap: 12px; text-align: left;
+  background: var(--cc-bg1);
+  border: 1px solid var(--cc-border);
+  border-radius: 14px;
+  padding: 16px;
+  cursor: pointer;
+  transition: all 0.14s;
+  box-shadow: 0 1px 2px rgba(35,28,20,0.04);
+}
+.pg-quick:hover { border-color: var(--cc-border3); box-shadow: 0 6px 18px rgba(35,28,20,0.08); transform: translateY(-2px); }
+.pg-quick-ic {
+  flex-shrink: 0;
+  width: 40px; height: 40px; border-radius: 10px;
+  display: flex; align-items: center; justify-content: center;
+  background: var(--cc-amber-bg); color: var(--cc-amber);
+  font-family: 'Space Mono', monospace; font-size: 16px; font-weight: 700;
+}
+.pg-quick-t { font-size: 13px; font-weight: 600; color: var(--cc-text); }
+.pg-quick-d { font-size: 11px; color: var(--cc-text3); margin-top: 2px; }
+
+.pg-placeholder {
+  margin-top: 28px;
+  border: 1px dashed var(--cc-border2);
+  border-radius: 14px;
+  padding: 40px;
+  text-align: center;
+  color: var(--cc-text3);
+  font-size: 13px;
+  background: var(--cc-bg2);
+}
+
+@media (max-width: 900px) {
+  .pg-stat-grid, .pg-quick-grid { grid-template-columns: repeat(2, 1fr); }
+}
 </style>
 </head>
 <body>
@@ -1730,6 +1862,10 @@
     <nav class="cmd-nav">
       <div class="cmd-nav-section">Workspace</div>
 
+      <button class="cmd-nav-item" id="tab-btn-home" onclick="switchTab('home')">
+        <span class="nav-icon">⌂</span>
+        Home
+      </button>
       <button class="cmd-nav-item active" id="tab-btn-export" onclick="switchTab('export')">
         <span class="nav-icon">▣</span>
         Scanning
@@ -1740,11 +1876,15 @@
       </button>
       <button class="cmd-nav-item" id="tab-btn-fees" onclick="switchTab('fees')">
         <span class="nav-icon">$</span>
-        Fee Calc
+        Fee / Profit
+      </button>
+      <button class="cmd-nav-item" id="tab-btn-stock" onclick="switchTab('stock')">
+        <span class="nav-icon">▦</span>
+        Stock Room
       </button>
 
       <div class="cmd-nav-section">Tools</div>
-      <button class="cmd-nav-item" onclick="showSettings()">
+      <button class="cmd-nav-item" id="tab-btn-settings" onclick="switchTab('settings')">
         <span class="nav-icon">⚙</span>
         Settings
       </button>
@@ -1761,6 +1901,48 @@
 
   <!-- ═══ CENTER + RIGHT CONTENT ═══════════════════════════════ -->
   <div style="flex:1;display:flex;flex-direction:column;min-width:0;overflow:hidden">
+
+  <!-- ── PANE: HOME (skeleton) ──────────────────────────────── -->
+  <div id="pane-home" style="display:none;flex:1;flex-direction:column;overflow:hidden">
+    <div class="cmd-header2">
+      <div class="cmd-breadcrumb">
+        <span class="cmd-breadcrumb-icon">⌂</span>
+        <span class="cmd-breadcrumb-path">COMMAND CENTER / <span>HOME</span></span>
+      </div>
+      <div class="cmd-header-actions">
+        <button class="cc-ctrl-btn primary" onclick="switchTab('export')">▣ Start Scanning</button>
+      </div>
+    </div>
+    <div class="pg-scroll">
+      <div class="pg-wrap">
+        <div class="pg-title-row">
+          <div>
+            <h1 class="pg-h1">Welcome back, operator.</h1>
+            <p class="pg-sub">Here's your collection at a glance. Pick a workspace to get started.</p>
+          </div>
+        </div>
+
+        <!-- Stat cards -->
+        <div class="pg-stat-grid">
+          <div class="pg-stat"><div class="pg-stat-label">Total Comics</div><div class="pg-stat-val">—</div></div>
+          <div class="pg-stat"><div class="pg-stat-label">Collection Value</div><div class="pg-stat-val pg-green">—</div></div>
+          <div class="pg-stat"><div class="pg-stat-label">Key Issues</div><div class="pg-stat-val pg-amber">—</div></div>
+          <div class="pg-stat"><div class="pg-stat-label">Avg. Price</div><div class="pg-stat-val">—</div></div>
+        </div>
+
+        <!-- Quick actions -->
+        <div class="pg-section-label">Quick Actions</div>
+        <div class="pg-quick-grid">
+          <button class="pg-quick" onclick="switchTab('export')"><span class="pg-quick-ic">▣</span><div><div class="pg-quick-t">Scan Comics</div><div class="pg-quick-d">Camera capture + AI grading</div></div></button>
+          <button class="pg-quick" onclick="switchTab('lookup')"><span class="pg-quick-ic">◎</span><div><div class="pg-quick-t">Lookup</div><div class="pg-quick-d">Identify a single comic</div></div></button>
+          <button class="pg-quick" onclick="switchTab('fees')"><span class="pg-quick-ic">$</span><div><div class="pg-quick-t">Fee / Profit</div><div class="pg-quick-d">Calculate selling margins</div></div></button>
+          <button class="pg-quick" onclick="switchTab('stock')"><span class="pg-quick-ic">▦</span><div><div class="pg-quick-t">Stock Room</div><div class="pg-quick-d">Browse your inventory</div></div></button>
+        </div>
+
+        <div class="pg-placeholder">Home dashboard content — we'll design this together next.</div>
+      </div>
+    </div>
+  </div>
 
   <!-- ── PANE: SCANNING COMMAND CENTER ──────────────────────── -->
   <div id="pane-export" style="display:flex;flex:1;overflow:hidden">
@@ -2264,6 +2446,71 @@
 
   </div><!-- /pane-fees -->
 
+  <!-- ── PANE: STOCK ROOM (skeleton) ─────────────────────────── -->
+  <div id="pane-stock" style="display:none;flex:1;flex-direction:column;overflow:hidden">
+    <div class="cmd-header2">
+      <div class="cmd-breadcrumb">
+        <span class="cmd-breadcrumb-icon">▦</span>
+        <span class="cmd-breadcrumb-path">COMMAND CENTER / <span>STOCK_ROOM</span></span>
+      </div>
+      <div class="cmd-header-search">
+        <span class="cmd-header-search-icon">⌕</span>
+        <input type="search" placeholder="Search inventory..." autocomplete="off" />
+      </div>
+      <div class="cmd-header-actions">
+        <button class="cmd-icon-btn" title="Filter">⚲</button>
+      </div>
+    </div>
+    <div class="pg-scroll">
+      <div class="pg-wrap">
+        <div class="pg-title-row">
+          <div>
+            <h1 class="pg-h1">Stock Room</h1>
+            <p class="pg-sub">Every comic you've logged, in one place. Filter, sort and manage your inventory.</p>
+          </div>
+        </div>
+        <div class="pg-stat-grid">
+          <div class="pg-stat"><div class="pg-stat-label">In Stock</div><div class="pg-stat-val">—</div></div>
+          <div class="pg-stat"><div class="pg-stat-label">Listed</div><div class="pg-stat-val pg-amber">—</div></div>
+          <div class="pg-stat"><div class="pg-stat-label">Sold</div><div class="pg-stat-val pg-green">—</div></div>
+          <div class="pg-stat"><div class="pg-stat-label">Total Cost</div><div class="pg-stat-val">—</div></div>
+        </div>
+        <div class="pg-placeholder">Inventory table / grid — we'll design this together next.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── PANE: SETTINGS (skeleton) ───────────────────────────── -->
+  <div id="pane-settings" style="display:none;flex:1;flex-direction:column;overflow:hidden">
+    <div class="cmd-header2">
+      <div class="cmd-breadcrumb">
+        <span class="cmd-breadcrumb-icon">⚙</span>
+        <span class="cmd-breadcrumb-path">COMMAND CENTER / <span>SETTINGS</span></span>
+      </div>
+      <div class="cmd-header-actions">
+        <button class="cc-ctrl-btn" onclick="showSettings()">Account Settings…</button>
+      </div>
+    </div>
+    <div class="pg-scroll">
+      <div class="pg-wrap">
+        <div class="pg-title-row">
+          <div>
+            <h1 class="pg-h1">Settings</h1>
+            <p class="pg-sub">Manage your profile, preferences and selling defaults.</p>
+          </div>
+        </div>
+        <div class="pg-section-label">Sections</div>
+        <div class="pg-quick-grid">
+          <button class="pg-quick" onclick="showSettings()"><span class="pg-quick-ic">◔</span><div><div class="pg-quick-t">Profile &amp; Account</div><div class="pg-quick-d">Name, email, plan</div></div></button>
+          <button class="pg-quick"><span class="pg-quick-ic">£</span><div><div class="pg-quick-t">Selling Defaults</div><div class="pg-quick-d">Fees, currency, marketplace</div></div></button>
+          <button class="pg-quick"><span class="pg-quick-ic">◎</span><div><div class="pg-quick-t">Scanning</div><div class="pg-quick-d">Camera + AI preferences</div></div></button>
+          <button class="pg-quick"><span class="pg-quick-ic">▤</span><div><div class="pg-quick-t">Data &amp; Export</div><div class="pg-quick-d">Backups, CSV, integrations</div></div></button>
+        </div>
+        <div class="pg-placeholder">Settings page content — we'll design this together next.</div>
+      </div>
+    </div>
+  </div>
+
   </div><!-- /flex-1 content wrapper -->
 
 </div><!-- /app-shell -->
@@ -2446,17 +2693,55 @@
         .observe(scanStatus, { attributes: true, attributeFilter: ['class'] });
     }
 
-    // Patch switchTab to update breadcrumb
+    // Patch switchTab to support the new panes (home / stock / settings)
+    // and keep the original scanning/lookup/fees logic intact.
     setTimeout(function() {
-      var titles = { export: 'LIVE_SCAN', lookup: 'COMIC_LOOKUP', fees: 'FEE_CALC' };
-      if (typeof window.switchTab === 'function') {
-        var orig = window.switchTab;
-        window.switchTab = function(tab) {
+      var titles = {
+        home: 'HOME', export: 'LIVE_SCAN', lookup: 'COMIC_LOOKUP',
+        fees: 'FEE_CALC', stock: 'STOCK_ROOM', settings: 'SETTINGS'
+      };
+      // All panes + their nav buttons, keyed by tab name.
+      var PANES = {
+        home:     { pane: 'pane-home',     btn: 'tab-btn-home' },
+        export:   { pane: 'pane-export',   btn: 'tab-btn-export' },
+        lookup:   { pane: 'pane-lookup',   btn: 'tab-btn-lookup' },
+        fees:     { pane: 'pane-fees',     btn: 'tab-btn-fees' },
+        stock:    { pane: 'pane-stock',    btn: 'tab-btn-stock' },
+        settings: { pane: 'pane-settings', btn: 'tab-btn-settings' }
+      };
+      // Tabs the original app.js knows how to handle (camera cleanup etc.)
+      var NATIVE = { export: 1, lookup: 1, fees: 1 };
+      var orig = (typeof window.switchTab === 'function') ? window.switchTab : null;
+
+      window.switchTab = function(tab) {
+        if (!PANES[tab]) tab = 'home';
+
+        // Let the original handle its own side-effects for native tabs;
+        // for new tabs, pass 'export' is wrong — instead just run cleanup-free.
+        if (orig && NATIVE[tab]) {
           orig(tab);
-          var p = document.querySelector('.cmd-breadcrumb-path span');
-          if (p) p.textContent = titles[tab] || tab.toUpperCase();
-        };
-      }
+        } else if (orig) {
+          // Hide the three native panes / deactivate their buttons via orig
+          // by calling it with a no-match value so it sets them all to none.
+          orig('__none__');
+        }
+
+        // Show only the selected pane; toggle only its nav button.
+        Object.keys(PANES).forEach(function(k) {
+          var p = document.getElementById(PANES[k].pane);
+          var b = document.getElementById(PANES[k].btn);
+          var on = (k === tab);
+          if (p) {
+            p.style.display = on ? 'flex' : 'none';
+            if (on) p.style.flex = '1';
+          }
+          if (b) b.classList.toggle('active', on);
+        });
+
+        // Update breadcrumb label (each pane has its own breadcrumb span).
+        var spans = document.querySelectorAll('.cmd-breadcrumb-path span');
+        spans.forEach(function(s) { s.textContent = titles[tab] || tab.toUpperCase(); });
+      };
     }, 300);
   });
 })();
