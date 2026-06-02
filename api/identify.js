@@ -156,6 +156,10 @@ photoAdvice: One short sentence if any issue applies. Empty string "" if photo i
   - Cluttered background: "Place on a plain dark or white surface."
   - Multiple comics: "Scan one comic at a time."
   - Glare: "Move the light source to the side to reduce reflections."
+VARIANT-SPECIFIC photo advice (use when it would change the appraisal):
+  - If the cover looks like it MIGHT have a foil/metallic/holographic finish but you can't be sure from this image: "Possible foil/holo cover — tilt the comic under a light so the shine shows, then rescan to confirm the variant."
+  - If there appears to be a small artist signature on the artwork that you cannot read clearly: "Looks like an artist-signed variant — get a close-up of the signature so the variant artist can be identified."
+  - If a corner box / price box / ratio text appears present but is too small or blurry to read: "Get a sharper shot of the bottom corners and price box — that's where edition and variant markings live."
 
 === SEARCH QUERY ===
 Build the most effective eBay UK sold-listing search query:
