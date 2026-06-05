@@ -40,6 +40,16 @@ ${SCHEMA}
 - Year: use cover date printed on comic. Do not adjust — collectors use the printed cover date.
 - confidence: "High" if title+issue clearly visible, "Medium" if partially visible or inferred, "Low" if guessing.
 
+=== TEXTLESS / VIRGIN COVERS — IMPORTANT ===
+Some modern variants have NO logo, NO title, NO issue number, NO price box and NO barcode — just full-bleed artwork. These are VIRGIN variants and you must NOT give up just because there is no text to read. Instead:
+- Set isVariant: true and treat it as a virgin variant (see VARIANT section).
+- Identify the book from the ARTWORK itself: recognise the CHARACTER(S) depicted and the ARTIST's style + signature.
+- The cover ARTIST is the strongest clue on a virgin cover. Read any signature (often initials, e.g. "JSC" = J. Scott Campbell, "Artgerm", "InHyuk Lee", "Mayhew", "Parrillo", "Dell'Otto") and identify the artist. Put the artist in coverArtist.
+- Recognise the character(s) (e.g. Black Cat, Spider-Gwen, Harley Quinn, Vampirella) and set importantCharacters.
+- Infer the most likely title and issue from the character + artist + series context (e.g. a J. Scott Campbell Black Cat virgin → "Black Cat" #1). If you cannot be sure of the exact issue, give your best estimate and set confidence "Low" or "Medium" and explain in variantDetails.
+- Modern variant-cover artists to recognise by style/signature: J. Scott Campbell (JSC), Stanley Lau (Artgerm), InHyuk Lee, Mike Mayhew, Lucio Parrillo, Gabriele Dell'Otto, Peach Momoko, Jeehyung Lee, Nathan Szerdy, Derrick Chew, Sabine Rich, Kael Ngu, Tyler Kirkham, Clayton Crain.
+- Still attempt edition detection only if trade dress is present; a true virgin cover has none, so leave edition as "Unknown" and rely on variantDetails.
+
 === EDITION DETECTION — CRITICAL, READ CAREFULLY ===
 Look at the BOTTOM-LEFT corner box of the cover. This is the single most important area.
 
@@ -69,6 +79,7 @@ UK PENCE PRICE VARIANT:
   - KEY RULE: Pence price visible in the price box → note in variantDetails as "UK Pence Price Variant (Xp)".
 
 UNKNOWN: Only use if the bottom-left corner is completely obscured or cut off.
+VIRGIN VARIANT (no trade dress at all): if the cover has NO logo, title, price box or barcode anywhere — just artwork — do NOT classify it as Direct or Newsstand. Leave edition "Unknown" and handle it as a virgin variant (set isVariant true, describe in variantDetails).
 
 COMMON MISTAKE TO AVOID: A Spider-Man face/head logo in the bottom-left = DIRECT EDITION (not newsstand). The Spider-Man logo was used on Marvel direct editions from 1979. Do NOT confuse the logo with a barcode.
 
@@ -93,7 +104,8 @@ A "variant" is ANY cover other than the standard main "Cover A". Variants are of
   • COVER ARTIST — variants are catalogued by artist, so this is the single most useful clue. Read any signature on the artwork and name them, e.g. "Artgerm (Stanley Lau) variant", "InHyuk Lee variant", "Tedesco variant", "Skan variant". ALSO put just the artist's name in the separate "coverArtist" field (e.g. "Artgerm", "InHyuk Lee") whenever you can identify or read it.
   • Finish / material: "Foil", "Holo-foil / holographic", "Lenticular (3D motion)", "Chromium", "Metal", "Glow-in-the-dark", "Embossed".
   • Treatment: "Virgin (artwork only, no logo/trade dress)", "Sketch / line-art cover", "Blank sketch variant", "Black-and-white", "Negative space", "Connecting / interlocking cover".
-  • Exclusive: "Convention exclusive (SDCC, NYCC, etc.)", "Retailer exclusive (Walmart, Target, Frankie's, Comics Elite, etc.)".
+  • Exclusive: "Convention exclusive (SDCC, NYCC, etc.)", "Store / retailer exclusive". Known modern exclusive lines incl. Golden Apple, Frankie's Comics, Comics Elite, ComicXposure, Unknown Comics, BTC (Big Time Collectibles), Scorpion, Mexican/foil exclusives. NOTE: the store name is often NOT printed on the cover — if you recognise the cover as an exclusive variant by its artist + art but cannot read the store, say e.g. "Store-exclusive virgin variant (J. Scott Campbell) — exact exclusive line unconfirmed".
+  • Lettered editions: many exclusives ship as "Ed A / Ed B / Cover A / B" (e.g. trade dress vs virgin). If you can tell trade-dress from virgin, note which (e.g. "Ed B virgin").
   • Printing: "2nd printing", "3rd printing" — look for a "2nd print" note near the price box or altered cover colour/trade dress.
 - HOW TO TELL a variant from the standard cover:
   • Standard covers carry full trade dress (logo + issue + price + direct logo/barcode). Virgin, sketch and art variants strip some of this away.
@@ -177,6 +189,7 @@ Build the most effective eBay UK sold-listing search query:
 - Canadian Price Variant: append "canadian price variant" OR "cpv"
 - VARIANT COVERS — match the variant, not the common cover (variants sell for very different prices):
    • If you identified a cover artist, append the artist name + "variant" — e.g. "Amazing Spider-Man 1 Artgerm variant". This is how collectors search eBay, so it's the most important addition.
+   • VIRGIN covers: append "virgin" too — e.g. "Black Cat 1 Campbell virgin variant". Artist + "virgin" is exactly how collectors search these.
    • If no artist but there is a ratio, append it — e.g. "1:25 variant", "1:50 variant".
    • Otherwise append the finish/treatment — e.g. "foil variant", "virgin variant", "lenticular variant", "sketch variant".
    • For a later printing append e.g. "2nd print".
