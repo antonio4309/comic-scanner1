@@ -351,6 +351,7 @@ let capturedThumb = null;
 let pendingPhotos = [];
 let comics = [];
 let editingPriceId = null;
+let editingMetaId = null;
 
 // Sort / filter
 let sortMode = 'newest';
@@ -1284,7 +1285,19 @@ function renderList() {
       ${selectMode ? `<div class="select-col" onclick="toggleSelect(${c.id})">${selectedIds.has(c.id) ? '☑' : '☐'}</div>` : ''}
       <img class="comic-thumb" src="${c.thumb}" alt="" />
       <div class="comic-info">
-        <div class="comic-title">${escapeHtml(c.title)}${c.issue && c.issue !== 'Unknown' ? ' #' + escapeHtml(c.issue) : ''}</div>
+        ${editingMetaId === c.id ? `
+        <div class="meta-edit">
+          <input class="meta-edit-input" id="meta-title-${c.id}" value="${escapeHtml(c.title)}" placeholder="Title"
+            onkeydown="if(event.key==='Enter')saveComicMeta(${c.id});if(event.key==='Escape')cancelEditMeta()" />
+          <div class="meta-edit-row">
+            <span class="meta-hash">#</span>
+            <input class="meta-edit-issue" id="meta-issue-${c.id}" value="${escapeHtml(c.issue === 'Unknown' ? '' : c.issue)}" placeholder="Issue"
+              onkeydown="if(event.key==='Enter')saveComicMeta(${c.id});if(event.key==='Escape')cancelEditMeta()" />
+            <button class="meta-save" onclick="saveComicMeta(${c.id})">✓ Save</button>
+            <button class="meta-cancel" onclick="cancelEditMeta()">✕</button>
+          </div>
+        </div>` : `
+        <div class="comic-title">${escapeHtml(c.title)}${c.issue && c.issue !== 'Unknown' ? ' #' + escapeHtml(c.issue) : ''}<button class="btn-edit-meta" onclick="editComicMeta(${c.id})" title="Fix title / issue number">✎</button></div>`}
         <div class="comic-sub">${escapeHtml(sub)}</div>
         ${c.keyInfo && c.keyInfo !== 'Unknown' && c.keyInfo ? `<div class="comic-range">${escapeHtml(c.keyInfo)}</div>` : ''}
         ${c.conditionReason ? `<div class="comic-range">Condition${c.conditionGrade ? ' ~' + escapeHtml(c.conditionGrade) : ''}: ${escapeHtml(c.conditionReason)}</div>` : ''}
@@ -1429,6 +1442,33 @@ function savePrice(id) {
 }
 
 function cancelEditPrice() { editingPriceId = null; renderList(); }
+
+// ── Inline edit of title / issue (fix AI misreads without re-scanning) ────────
+function editComicMeta(id) {
+  editingMetaId = id;
+  editingPriceId = null;
+  renderList();
+  setTimeout(() => { const el = document.getElementById('meta-issue-' + id); if (el) { el.focus(); el.select(); } }, 30);
+}
+function cancelEditMeta() { editingMetaId = null; renderList(); }
+function saveComicMeta(id) {
+  const c = comics.find(x => x.id === id);
+  if (!c) { editingMetaId = null; renderList(); return; }
+  const t = (document.getElementById('meta-title-' + id)?.value || '').trim();
+  const iss = (document.getElementById('meta-issue-' + id)?.value || '').trim().replace(/^#/, '');
+  const changed = (t && t !== c.title) || (iss !== (c.issue === 'Unknown' ? '' : c.issue));
+  if (t) c.title = t;
+  c.issue = iss || 'Unknown';
+  // Rebuild the search query so the eBay price matches the corrected book
+  c.searchQuery = [c.title, c.issue !== 'Unknown' ? c.issue : '', c.publisher !== 'Unknown' ? c.publisher : '', c.year !== 'Unknown' ? c.year : '']
+    .filter(Boolean).join(' ').trim();
+  c.possibleDuplicate = checkDuplicate(c.title, c.issue);
+  editingMetaId = null;
+  saveInventory();
+  // Re-fetch the price for the corrected comic (issue number affects value)
+  if (changed && !c.isBundle) { c.ebayStatus = 'loading'; renderList(); fetchEbayPrice(c, true); }
+  else renderList();
+}
 
 function normKey(title, issue) {
   return (String(title) + '||' + String(issue).replace(/^#/, '')).toLowerCase().trim();

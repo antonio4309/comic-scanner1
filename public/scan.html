@@ -1995,6 +1995,19 @@
 #main-app .card-actions .del-btn:hover { color: var(--cc-red); }
 #main-app .btn-edit-price { color: var(--cc-text3); }
 #main-app .btn-edit-price:hover { color: var(--cc-amber); }
+
+/* Inline edit of title / issue (fix AI misreads) */
+#main-app .btn-edit-meta { background: none; border: none; color: var(--cc-text3); cursor: pointer; font-size: 12px; margin-left: 6px; padding: 0 4px; opacity: 0.5; transition: opacity .15s, color .15s; vertical-align: middle; }
+#main-app .comic-card:hover .btn-edit-meta { opacity: 1; }
+#main-app .btn-edit-meta:hover { color: var(--cc-amber); }
+#main-app .meta-edit { display: flex; flex-direction: column; gap: 6px; margin-bottom: 6px; }
+#main-app .meta-edit-input, #main-app .meta-edit-issue { background: var(--cc-bg2) !important; border: 1px solid var(--cc-border2) !important; color: var(--cc-text) !important; border-radius: 8px !important; padding: 7px 10px !important; font-size: 13px; font-family: 'Inter', sans-serif; width: auto; }
+#main-app .meta-edit-row { display: flex; align-items: center; gap: 6px; }
+#main-app .meta-hash { color: var(--cc-text3); font-weight: 700; }
+#main-app .meta-edit-issue { width: 74px !important; }
+#main-app .meta-save { padding: 7px 12px; border-radius: 8px !important; border: 1px solid var(--cc-amber); background: var(--cc-amber); color: #fff; font-family: 'Space Mono', monospace; font-size: 10px; font-weight: 700; cursor: pointer; white-space: nowrap; }
+#main-app .meta-cancel { padding: 7px 10px; border-radius: 8px !important; border: 1px solid var(--cc-border2); background: var(--cc-bg2); color: var(--cc-text3); cursor: pointer; }
+
 /* Bundle cards: show the merged multi-line key info readably */
 #main-app .comic-card .comic-range { white-space: pre-line; }
 
@@ -2250,6 +2263,7 @@ a.lkd-tr:active { background: var(--cc-bg2); }
   #main-app .sr-detail-stats { gap: 14px 18px; }
   #main-app .sr-row-move { display: none !important; }
   #main-app .sr-row-price { width: 64px; }
+  #main-app .btn-edit-meta { opacity: 1; }  /* always visible on touch */
 
   /* Fee / Profit stack */
   #main-app #pane-fees { flex-direction: column; padding: 12px; overflow-y: auto; gap: 12px; }
