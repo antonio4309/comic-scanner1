@@ -6,6 +6,7 @@ const SCHEMA = `{
   "variant": "",
   "isVariant": false,
   "variantDetails": "",
+  "coverArtist": "",
   "edition": "Unknown",
   "isSlabbed": false,
   "slabCompany": "",
@@ -88,7 +89,7 @@ A "variant" is ANY cover other than the standard main "Cover A". Variants are of
 - variant: short label if known (e.g. "B", "1:25", "Virgin", "Foil"). variantDetails: full description.
 - In variantDetails, capture as many of these as you can SEE:
   • Designation / ratio: "Cover B", "Cover C", "1:10", "1:25", "1:50", "1:100 incentive". Look near the logo, in the trade dress, or printed small in a corner.
-  • COVER ARTIST — variants are catalogued by artist, so this is the single most useful clue. Read any signature on the artwork and name them, e.g. "Artgerm (Stanley Lau) variant", "InHyuk Lee variant", "Tedesco variant", "Skan variant".
+  • COVER ARTIST — variants are catalogued by artist, so this is the single most useful clue. Read any signature on the artwork and name them, e.g. "Artgerm (Stanley Lau) variant", "InHyuk Lee variant", "Tedesco variant", "Skan variant". ALSO put just the artist's name in the separate "coverArtist" field (e.g. "Artgerm", "InHyuk Lee") whenever you can identify or read it.
   • Finish / material: "Foil", "Holo-foil / holographic", "Lenticular (3D motion)", "Chromium", "Metal", "Glow-in-the-dark", "Embossed".
   • Treatment: "Virgin (artwork only, no logo/trade dress)", "Sketch / line-art cover", "Blank sketch variant", "Black-and-white", "Negative space", "Connecting / interlocking cover".
   • Exclusive: "Convention exclusive (SDCC, NYCC, etc.)", "Retailer exclusive (Walmart, Target, Frankie's, Comics Elite, etc.)".
@@ -167,7 +168,11 @@ Build the most effective eBay UK sold-listing search query:
 - Use the title exactly as on cover, no "#" symbol, no "comic" suffix.
 - Newsstand edition: append "newsstand"
 - Canadian Price Variant: append "canadian price variant" OR "cpv"
-- Variant cover: append the key variant descriptor (e.g. "foil cover", "1:25 variant")
+- VARIANT COVERS — match the variant, not the common cover (variants sell for very different prices):
+   • If you identified a cover artist, append the artist name + "variant" — e.g. "Amazing Spider-Man 1 Artgerm variant". This is how collectors search eBay, so it's the most important addition.
+   • If no artist but there is a ratio, append it — e.g. "1:25 variant", "1:50 variant".
+   • Otherwise append the finish/treatment — e.g. "foil variant", "virgin variant", "lenticular variant", "sketch variant".
+   • For a later printing append e.g. "2nd print".
 - Slabbed: append slabCompany and slabGrade (e.g. "CGC 9.8")
 - Do NOT append "Direct Edition" — it adds noise to searches.
 `;

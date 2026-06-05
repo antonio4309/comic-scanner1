@@ -564,6 +564,7 @@ async function scanAndAdd() {
         edition:         identified.edition         || 'Unknown',
         isVariant:       !!identified.isVariant,
         variantDetails:  identified.variantDetails  || '',
+        coverArtist:     identified.coverArtist      || '',
         isSlabbed:       !!identified.isSlabbed,
         slabCompany:     identified.slabCompany     || '',
         slabGrade:       identified.slabGrade       || '',
@@ -1205,7 +1206,7 @@ function renderList() {
           ${c.hasSig ? `<span class="cbadge cbadge-sig" title="${escapeHtml(c.sigDetails)}">✍ Signed</span>` : ''}
           ${c.edition === 'Newsstand' ? `<span class="cbadge cbadge-news" title="Newsstand edition">📰 Newsstand</span>` : ''}
           ${c.edition === 'Canadian Price Variant' ? `<span class="cbadge cbadge-news" title="Canadian Price Variant">🍁 CPV</span>` : ''}
-          ${c.isVariant ? `<span class="cbadge cbadge-variant" title="${escapeHtml(c.variantDetails)}">✦ Variant</span>` : ''}
+          ${c.isVariant ? `<span class="cbadge cbadge-variant" title="${escapeHtml(c.variantDetails)}">✦ ${c.coverArtist ? escapeHtml(c.coverArtist) + ' ' : ''}Variant</span>` : ''}
           ${c.lowPrintRun ? `<span class="cbadge cbadge-low" title="${escapeHtml(c.printRunNote)}">🔥 Low Print</span>` : ''}
           ${c.possibleDuplicate ? `<span class="cbadge cbadge-dup">⚠ Duplicate?</span>` : ''}
           ${c.isBundle ? `<span class="cbadge cbadge-bundle">📦 Bundle</span>` : ''}
