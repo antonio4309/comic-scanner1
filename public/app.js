@@ -1570,6 +1570,11 @@ function lkRetake() {
   document.getElementById('lk-retake-btn').style.display = 'none';
   document.getElementById('lk-scan-btn').disabled = true;
   document.getElementById('lk-status').className = 'status';
+  // Restore the empty/intel state
+  document.getElementById('lk-result').style.display = 'none';
+  const emptyEl = document.getElementById('lk-empty'); if (emptyEl) emptyEl.style.display = '';
+  const ipEl = document.getElementById('lk-intel-panel'); if (ipEl) ipEl.style.display = '';
+  const paneEl = document.getElementById('pane-lookup'); if (paneEl) paneEl.classList.remove('lk-has-result');
 }
 
 async function lkHandleUpload(event) {
@@ -1688,89 +1693,97 @@ function renderLookupResult(c, ebay, thumbSrc) {
 
   const cgcInfo = c.conditionGrade ? cgcGradeNote(c.conditionGrade) : null;
 
+  // ── Clean "detail" layout (readable, amber, light/dark aware) ──
+  const issueStr = c.issue && c.issue !== 'Unknown' ? ' #' + escapeHtml(c.issue) : '';
+  const description = c.firstAppearance || c.keyInfo || c.conditionReason || '';
+  const chips = [c.publisher, c.year, editionStr].filter(x => x && x !== 'Unknown')
+    .map(x => `<span class="lkd-chip">${escapeHtml(x)}</span>`).join('');
+
+  // Bento stats from real data
+  const bento = [];
+  if (ebay && ebay.found) {
+    bento.push(`<div class="lkd-stat"><span class="lkd-stat-lbl">${isActiveListing ? 'Est. (Active)' : 'Est. Market Value'}</span><span class="lkd-stat-val amber">£${ebay.median}</span></div>`);
+    bento.push(`<div class="lkd-stat"><span class="lkd-stat-lbl">Sold Range</span><span class="lkd-stat-val sm">£${ebay.min} – £${ebay.max}</span></div>`);
+  } else {
+    bento.push(`<div class="lkd-stat"><span class="lkd-stat-lbl">Est. Market Value</span><span class="lkd-stat-val sm muted">No UK data</span></div>`);
+  }
+  if (c.conditionGrade) bento.push(`<div class="lkd-stat"><span class="lkd-stat-lbl">Est. Grade</span><span class="lkd-stat-val">${escapeHtml(c.conditionGrade)}${cgcInfo ? ` <small>${escapeHtml(cgcInfo.label)}</small>` : ''}</span></div>`);
+  else if (condVal) bento.push(`<div class="lkd-stat"><span class="lkd-stat-lbl">Condition</span><span class="lkd-stat-val sm">${escapeHtml(condVal)}</span></div>`);
+  if (ebay && ebay.found) bento.push(`<div class="lkd-stat"><span class="lkd-stat-lbl">UK ${isActiveListing ? 'Listings' : 'Sales'}</span><span class="lkd-stat-val">${ebay.count}</span></div>`);
+
+  // Technical spec rows from available fields
+  const specRows = [
+    ['Publisher', c.publisher],
+    ['Characters', c.importantCharacters],
+    ['Cover Artist', c.coverArtist],
+    ['Edition', editionStr],
+    ['Condition', condVal],
+    ['Year', c.year],
+  ].filter(([, v]) => v && v !== 'Unknown')
+   .map(([k, v]) => `<div class="lkd-spec"><span class="lkd-spec-k">${k}</span><span class="lkd-spec-v">${escapeHtml(v)}</span></div>`).join('');
+
+  // Note cards (key info, variant, signature, print run)
+  const notes = [
+    c.firstAppearance && !description.includes(c.firstAppearance) ? ['First Appearance', c.firstAppearance] : null,
+    c.keyInfo && c.keyInfo !== c.firstAppearance ? ['Key Issue Info', c.keyInfo] : null,
+    c.variantDetails ? ['Variant Details', c.variantDetails] : null,
+    c.printRunNote ? ['Print Run', c.printRunNote] : null,
+    c.sigDetails ? ['Signature', c.sigDetails] : null,
+    cgcInfo ? ['Grading Guidance', cgcInfo.note] : null,
+  ].filter(Boolean)
+   .map(([k, v]) => `<div class="lkd-note"><div class="lkd-note-k">${k}</div><div class="lkd-note-v">${escapeHtml(v)}</div></div>`).join('');
+
   document.getElementById('lk-result').innerHTML = `
-    ${c.photoAdvice ? `
-    <div style="padding:10px 14px;background:rgba(229,130,26,0.07);border:1px solid rgba(229,130,26,0.2);margin-bottom:2px">
-      <div style="font-family:'Space Mono',monospace;font-size:8px;font-weight:700;letter-spacing:.15em;text-transform:uppercase;color:var(--amber-dim);margin-bottom:4px">// Photo Tip</div>
-      <div style="font-family:'Barlow Condensed',sans-serif;font-size:13px;color:var(--cream2);line-height:1.4">${escapeHtml(c.photoAdvice)}</div>
-    </div>` : ''}
-    <div class="lk-hero">
-      <img class="lk-thumb" src="${escapeHtml(thumbSrc)}" alt="" />
-      <div class="lk-identity">
-        <div class="lk-title">${escapeHtml(c.title)}</div>
-        <div class="lk-issue">${c.issue && c.issue !== 'Unknown' ? '#' + escapeHtml(c.issue) : ''}</div>
-        <div class="lk-meta">${[c.publisher, c.year, editionStr].filter(x=>x&&x!=='Unknown').join(' · ')}</div>
-        ${badges ? `<div class="comic-badges" style="margin-top:8px">${badges}</div>` : ''}
+    <div class="lkd">
+      <button class="lkd-back" onclick="lkRetake()">← New Lookup</button>
+      ${c.photoAdvice ? `<div class="lkd-tip"><span class="lkd-tip-k">Photo tip</span> ${escapeHtml(c.photoAdvice)}</div>` : ''}
+
+      <div class="lkd-cover-wrap">
+        <img class="lkd-cover" src="${escapeHtml(thumbSrc)}" alt="${escapeHtml(c.title)}" />
+        ${c.isSlabbed ? `<span class="lkd-slab-badge">${escapeHtml(c.slabCompany || 'SLAB')}${c.slabGrade ? ' ' + escapeHtml(c.slabGrade) : ''}</span>` : ''}
       </div>
+
+      <div class="lkd-actions">
+        <a class="lkd-btn primary" href="${escapeHtml(soldUrl)}" target="_blank" rel="noopener">eBay Sold</a>
+        <a class="lkd-btn" href="${escapeHtml(censusUrl)}" target="_blank" rel="noopener">CGC Census</a>
+      </div>
+
+      ${chips ? `<div class="lkd-chips">${chips}</div>` : ''}
+      <h1 class="lkd-title">${escapeHtml(c.title)}${issueStr}</h1>
+      ${description ? `<p class="lkd-desc">${escapeHtml(description)}</p>` : ''}
+      ${badges ? `<div class="comic-badges lkd-badges">${badges}</div>` : ''}
+
+      ${bento.length ? `<div class="lkd-bento">${bento.join('')}</div>` : ''}
+
+      ${specRows ? `<section class="lkd-section">
+        <h3 class="lkd-h3">Technical Specifications</h3>
+        <div class="lkd-specs">${specRows}</div>
+      </section>` : ''}
+
+      ${(ebay && ebay.found) ? `<section class="lkd-section">
+        <h3 class="lkd-h3">eBay UK ${isActiveListing ? 'Active Listings' : 'Sold · Last 90 Days'}</h3>
+        ${isActiveListing ? `<div class="lkd-warn">Asking prices, not confirmed sales. Add production eBay keys for true sold data.</div>` : ''}
+        <div class="lkd-pricebar">
+          <div><span class="lkd-pb-lbl">Low</span><span class="lkd-pb-val">£${ebay.min}</span></div>
+          <div class="lkd-pb-mid"><span class="lkd-pb-lbl">Median</span><span class="lkd-pb-val amber">£${ebay.median}</span></div>
+          <div><span class="lkd-pb-lbl">High</span><span class="lkd-pb-val">£${ebay.max}</span></div>
+        </div>
+        <a class="lkd-link" href="${escapeHtml(soldUrl)}" target="_blank" rel="noopener">View ${ebay.count} ${isActiveListing ? 'listings' : 'sold listings'} on eBay →</a>
+      </section>` : ''}
+
+      ${notes ? `<section class="lkd-section">
+        <h3 class="lkd-h3">Collector Notes</h3>
+        <div class="lkd-notes">${notes}</div>
+      </section>` : ''}
     </div>
-
-    <div class="lk-grid">
-      <div class="lk-card">
-        <div class="lk-card-label">Condition</div>
-        <div class="lk-card-val" style="font-size:16px">${escapeHtml(condVal || 'Unknown')}</div>
-        <div class="lk-card-sub">${escapeHtml(c.conditionReason || '')}</div>
-      </div>
-      <div class="lk-card">
-        <div class="lk-card-label">${isActiveListing ? 'eBay UK · Active Listings' : 'eBay UK · Last 90 days'}</div>
-        ${ebayHtml}
-      </div>
-    </div>
-
-    ${cgcInfo ? `
-    <div class="lk-section" style="border-color: ${cgcInfo.color}40">
-      <div class="lk-section-label">CGC Grade Estimate</div>
-      <div style="display:flex;align-items:baseline;gap:12px;margin-bottom:6px">
-        <span style="font-family:'Bebas Neue',Impact,sans-serif;font-size:36px;letter-spacing:0.05em;color:${cgcInfo.color};line-height:1">${escapeHtml(c.conditionGrade)}</span>
-        <span style="font-family:'Space Mono',monospace;font-size:10px;font-weight:700;color:${cgcInfo.color}">${escapeHtml(cgcInfo.label)}</span>
-      </div>
-      <div class="lk-section-text">${escapeHtml(cgcInfo.note)}</div>
-    </div>` : ''}
-
-    ${c.isSlabbed ? `
-    <div class="lk-section">
-      <div class="lk-section-label">🔵 Slab Details</div>
-      <div class="lk-section-text">${escapeHtml(c.slabCompany || 'Slabbed')}${c.slabGrade ? ' — Grade ' + escapeHtml(c.slabGrade) : ''}<br>
-      <a href="${censusUrl}" target="_blank" rel="noopener" class="cgc-link" style="font-size:12px">📊 View CGC Census population report</a></div>
-    </div>` : ''}
-
-    ${c.keyInfo ? `
-    <div class="lk-section">
-      <div class="lk-section-label">⭐ Key Issue Info</div>
-      <div class="lk-section-text">${escapeHtml(c.keyInfo)}</div>
-    </div>` : ''}
-
-    ${c.firstAppearance ? `
-    <div class="lk-section">
-      <div class="lk-section-label">First Appearance</div>
-      <div class="lk-section-text">${escapeHtml(c.firstAppearance)}</div>
-    </div>` : ''}
-
-    ${c.importantCharacters && c.importantCharacters !== 'Unknown' ? `
-    <div class="lk-section">
-      <div class="lk-section-label">Characters</div>
-      <div class="lk-section-text">${escapeHtml(c.importantCharacters)}</div>
-    </div>` : ''}
-
-    ${c.printRunNote ? `
-    <div class="lk-section">
-      <div class="lk-section-label">🔥 Print Run Note</div>
-      <div class="lk-section-text">${escapeHtml(c.printRunNote)}</div>
-    </div>` : ''}
-
-    ${c.variantDetails ? `
-    <div class="lk-section">
-      <div class="lk-section-label">✦ Variant Details</div>
-      <div class="lk-section-text">${escapeHtml(c.variantDetails)}</div>
-    </div>` : ''}
-
-    ${c.sigDetails ? `
-    <div class="lk-section">
-      <div class="lk-section-label">✍ Signature</div>
-      <div class="lk-section-text">${escapeHtml(c.sigDetails)}</div>
-    </div>` : ''}
   `;
 
   document.getElementById('lk-result').style.display = 'flex';
+  // Hide the heavy "Archive Intelligence" reference panel + empty state while a
+  // result is shown — cleaner and lighter (reduces lookup lag on mobile).
+  const ipEl = document.getElementById('lk-intel-panel'); if (ipEl) ipEl.style.display = 'none';
+  const emptyEl = document.getElementById('lk-empty'); if (emptyEl) emptyEl.style.display = 'none';
+  const paneEl = document.getElementById('pane-lookup'); if (paneEl) paneEl.classList.add('lk-has-result');
 }
 
 // ── Mobile navigation ─────────────────────────────────────────────────────────
