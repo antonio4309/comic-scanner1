@@ -1996,10 +1996,18 @@
 #main-app .btn-edit-price { color: var(--cc-text3); }
 #main-app .btn-edit-price:hover { color: var(--cc-amber); }
 
-/* Inline edit of title / issue (fix AI misreads) */
-#main-app .btn-edit-meta { background: none; border: none; color: var(--cc-text3); cursor: pointer; font-size: 12px; margin-left: 6px; padding: 0 4px; opacity: 0.5; transition: opacity .15s, color .15s; vertical-align: middle; }
-#main-app .comic-card:hover .btn-edit-meta { opacity: 1; }
-#main-app .btn-edit-meta:hover { color: var(--cc-amber); }
+/* Readable, full titles (no truncation, no distracting hover animation) */
+#main-app .comic-card .comic-title { white-space: normal !important; overflow: visible !important; text-overflow: clip !important; line-height: 1.18; display: flex; align-items: flex-start; flex-wrap: wrap; gap: 4px 6px; }
+#main-app .comic-card:hover .comic-title { animation: none !important; }
+
+/* Always-visible, clearly-tappable card actions: Edit · Re-scan · Delete */
+#main-app .btn-edit-meta { opacity: 1 !important; background: var(--cc-bg2); border: 1px solid var(--cc-border2); color: var(--cc-amber); cursor: pointer; font-size: 12px; line-height: 1; padding: 3px 6px; border-radius: 6px !important; vertical-align: middle; flex-shrink: 0; }
+#main-app .btn-edit-meta:hover { background: var(--cc-amber); color: #fff; border-color: var(--cc-amber); }
+#main-app .card-actions { gap: 6px; }
+#main-app .btn-rescan { opacity: 1 !important; background: var(--cc-bg2) !important; border: 1px solid var(--cc-border2) !important; color: var(--cc-text2) !important; font-size: 15px !important; line-height: 1 !important; padding: 6px !important; border-radius: 8px !important; min-width: 32px; min-height: 32px; }
+#main-app .btn-rescan:hover { color: var(--cc-amber) !important; border-color: var(--cc-amber) !important; background: var(--cc-amber-bg) !important; }
+#main-app .del-btn { background: var(--cc-bg2) !important; border: 1px solid var(--cc-border2) !important; color: var(--cc-text3) !important; font-size: 16px !important; line-height: 1 !important; padding: 6px !important; border-radius: 8px !important; min-width: 32px; min-height: 32px; }
+#main-app .del-btn:hover { color: var(--cc-red) !important; border-color: var(--cc-red) !important; }
 #main-app .meta-edit { display: flex; flex-direction: column; gap: 6px; margin-bottom: 6px; }
 #main-app .meta-edit-input, #main-app .meta-edit-issue { background: var(--cc-bg2) !important; border: 1px solid var(--cc-border2) !important; color: var(--cc-text) !important; border-radius: 8px !important; padding: 7px 10px !important; font-size: 13px; font-family: 'Inter', sans-serif; width: auto; }
 #main-app .meta-edit-row { display: flex; align-items: center; gap: 6px; }
