@@ -395,7 +395,7 @@ function capturePhoto() {
   canvas.height = video.videoHeight;
   canvas.getContext('2d').drawImage(video, 0, 0);
 
-  const compressed = compressCanvasToDataUrl(canvas, 1200, 0.75);
+  const compressed = compressCanvasToDataUrl(canvas, 1600, 0.85);
   const thumb = document.createElement('canvas');
   thumb.width = 88; thumb.height = 120;
   thumb.getContext('2d').drawImage(canvas, 0, 0, 88, 120);
@@ -683,7 +683,7 @@ async function handleFileUpload(event) {
       const temp = document.createElement('canvas');
       temp.width = img.width; temp.height = img.height;
       temp.getContext('2d').drawImage(img, 0, 0);
-      const compressed = compressCanvasToDataUrl(temp, 1200, 0.75);
+      const compressed = compressCanvasToDataUrl(temp, 1600, 0.85);
       const thumb = document.createElement('canvas');
       thumb.width = 88; thumb.height = 120;
       thumb.getContext('2d').drawImage(img, 0, 0, 88, 120);
@@ -1048,7 +1048,7 @@ async function handleRescan(event) {
     const temp = document.createElement('canvas');
     temp.width = img.width; temp.height = img.height;
     temp.getContext('2d').drawImage(img, 0, 0);
-    const compressed = compressCanvasToDataUrl(temp, 1200, 0.75);
+    const compressed = compressCanvasToDataUrl(temp, 1600, 0.85);
     const base64 = compressed.split(',')[1];
 
     const thumbCanvas = document.createElement('canvas');
@@ -1647,7 +1647,7 @@ function lkCapture() {
   lkCanvas.width  = lkVideo.videoWidth;
   lkCanvas.height = lkVideo.videoHeight;
   lkCanvas.getContext('2d').drawImage(lkVideo, 0, 0);
-  const compressed = compressCanvasToDataUrl(lkCanvas, 1200, 0.75);
+  const compressed = compressCanvasToDataUrl(lkCanvas, 1600, 0.85);
   lkBase64 = compressed.split(',')[1];
   lkPreview.src = compressed;
   lkPreview.style.display = 'block';
@@ -1681,7 +1681,7 @@ async function lkHandleUpload(event) {
     const temp    = document.createElement('canvas');
     temp.width = img.width; temp.height = img.height;
     temp.getContext('2d').drawImage(img, 0, 0);
-    const compressed = compressCanvasToDataUrl(temp, 1200, 0.75);
+    const compressed = compressCanvasToDataUrl(temp, 1600, 0.85);
     lkBase64 = compressed.split(',')[1];
     lkPreview.src = compressed;
     lkPreview.style.display = 'block';

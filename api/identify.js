@@ -36,6 +36,11 @@ ${SCHEMA}
 
 === IDENTIFICATION ===
 - Read ALL text on the cover: title, issue number, volume, publisher logo, cover date, price box.
+- ISSUE NUMBER — READ IT PRECISELY, digit by digit, from the number actually PRINTED on the cover (usually near the title, the top corner, or the price/indicia box). This is the most-misread field, so be careful:
+   • Do NOT guess, round, or assume a sequential number. Report exactly what is printed.
+   • Watch out for commonly-confused digits: 6 vs 8, 1 vs 7, 3 vs 8, 0 vs 6, 5 vs 6. Zoom in mentally and check each digit.
+   • Each image is independent — never copy an issue number from a previous comic or infer it from the art/story.
+   • If a digit is genuinely ambiguous, give your best read but set confidence to "Medium" or "Low" so the user can double-check.
 - Identify publisher from logo even if partially obscured.
 - Year: use cover date printed on comic. Do not adjust — collectors use the printed cover date.
 - confidence: "High" if title+issue clearly visible, "Medium" if partially visible or inferred, "Low" if guessing.
