@@ -520,6 +520,7 @@ async function scanAndAdd() {
 
   const batch = [...pendingPhotos];
   let added = 0;
+  let failed = 0;
   showProgress(0, batch.length);
   let uploadErrorMsg = '';
 
@@ -546,7 +547,15 @@ async function scanAndAdd() {
       }
 
       showStatus('scan-status', 'info', `<span class="spin">⟳</span> Identifying comic ${i + 1} of ${batch.length}...`);
-      const identified = await identifyComic(photo.base64, override);
+      let identified;
+      try {
+        identified = await identifyComic(photo.base64, override);
+      } catch (firstErr) {
+        // One retry for transient AI errors (timeouts, truncation, quota blips)
+        showStatus('scan-status', 'info', `<span class="spin">⟳</span> Retrying comic ${i + 1} of ${batch.length}...`);
+        await new Promise(r => setTimeout(r, 1000));
+        identified = await identifyComic(photo.base64, override);
+      }
 
       const finalCondition = conditionChoice === 'Auto'
         ? (identified.condition || 'Unknown')
@@ -607,6 +616,7 @@ async function scanAndAdd() {
       fetchEbayPrice(comic);
     } catch (e) {
       console.error(e);
+      failed++;
       showStatus('scan-status', 'warn', `Comic ${i + 1} failed: ${escapeHtml(e.message)}`);
     }
     showProgress(i + 1, batch.length);
@@ -619,7 +629,8 @@ async function scanAndAdd() {
   if (added > 0) {
     saveInventory();
     const dupCount = comics.slice(0, added).filter(c => c.possibleDuplicate).length;
-    const dupNote = dupCount > 0 ? ` · ⚠ ${dupCount} possible duplicate${dupCount > 1 ? 's' : ''} flagged` : '';
+    const failNote = failed > 0 ? ` · ⚠ ${failed} couldn't be read — re-upload ${failed === 1 ? 'it' : 'them'}` : '';
+    const dupNote = (dupCount > 0 ? ` · ⚠ ${dupCount} possible duplicate${dupCount > 1 ? 's' : ''} flagged` : '') + failNote;
     if (uploadErrorMsg) {
       showStatus('scan-status', 'warn', `⚠ ${added} comic${added === 1 ? '' : 's'} added but photo upload failed: ${uploadErrorMsg}. Use the 📷 button on each card to retry.`);
     } else {
@@ -632,7 +643,9 @@ async function scanAndAdd() {
     }
     if (isMobile()) { showMobToast(`✓ ${added} Comic${added === 1 ? '' : 's'} Saved${dupNote}`); setTimeout(() => switchMobileTab('inventory'), 1200); }
   } else {
-    showStatus('scan-status', 'error', '✗ No comics were added.');
+    showStatus('scan-status', 'error', failed > 0
+      ? `✗ Couldn't read ${failed} image${failed === 1 ? '' : 's'} — try clearer, well-lit photos or upload them one at a time.`
+      : '✗ No comics were added.');
   }
 }
 

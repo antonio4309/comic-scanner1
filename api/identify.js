@@ -272,7 +272,7 @@ export default async function handler(req, res) {
         }],
         generationConfig: {
           temperature: 0.1,
-          maxOutputTokens: 2000,
+          maxOutputTokens: 4096,
           responseMimeType: 'application/json'
         }
       })
@@ -298,8 +298,14 @@ export default async function handler(req, res) {
     if (!text) return res.status(502).json({ error: 'Gemini returned empty response' });
 
     let parsed;
-    try { parsed = JSON.parse(text.replace(/```json|```/g, '').trim()); } catch {
-      return res.status(502).json({ error: 'Could not parse comic data from AI response' });
+    const cleaned = text.replace(/```json|```/g, '').trim();
+    try {
+      parsed = JSON.parse(cleaned);
+    } catch {
+      // Salvage: extract the outermost { ... } in case of stray prose/truncation
+      const s = cleaned.indexOf('{'), e = cleaned.lastIndexOf('}');
+      if (s !== -1 && e > s) { try { parsed = JSON.parse(cleaned.slice(s, e + 1)); } catch {} }
+      if (!parsed) return res.status(502).json({ error: 'Could not parse comic data from AI response' });
     }
 
     const title = parsed.title || 'Unknown';
@@ -313,6 +319,7 @@ export default async function handler(req, res) {
       variant:         parsed.variant         || '',
       isVariant:       !!parsed.isVariant,
       variantDetails:  parsed.variantDetails  || '',
+      coverArtist:     parsed.coverArtist     || '',
       edition:         parsed.edition         || 'Unknown',
       isSlabbed:       !!parsed.isSlabbed,
       slabCompany:     parsed.slabCompany     || '',
@@ -330,6 +337,7 @@ export default async function handler(req, res) {
       conditionGrade:  parsed.conditionGrade  || '',
       conditionReason: parsed.conditionReason || '',
       photoAdvice:     parsed.photoAdvice     || '',
+      marketInsight:   parsed.marketInsight   || '',
       searchQuery:     parsed.searchQuery     || `${title} ${issue}`.trim()
     });
 
