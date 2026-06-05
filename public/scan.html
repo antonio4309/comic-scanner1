@@ -1995,6 +1995,17 @@
 #main-app .card-actions .del-btn:hover { color: var(--cc-red); }
 #main-app .btn-edit-price { color: var(--cc-text3); }
 #main-app .btn-edit-price:hover { color: var(--cc-amber); }
+/* Bundle cards: show the merged multi-line key info readably */
+#main-app .comic-card .comic-range { white-space: pre-line; }
+
+/* Bundle suggestion banner (atop the archive) */
+#main-app .bundle-suggest { grid-column: 1 / -1; display: flex; align-items: center; gap: 12px; background: var(--cc-amber-bg); border: 1px solid var(--cc-border2); border-radius: 12px; padding: 11px 14px; margin-bottom: 6px; }
+#main-app .bundle-suggest-ic { font-size: 18px; flex-shrink: 0; }
+#main-app .bundle-suggest-txt { flex: 1; min-width: 0; font-size: 13px; color: var(--cc-text2); line-height: 1.4; }
+#main-app .bundle-suggest-txt strong { color: var(--cc-text); font-weight: 700; }
+#main-app .bundle-suggest-range { font-family: 'Space Mono', monospace; font-size: 11px; color: var(--cc-amber); }
+#main-app .bundle-suggest-btn { flex-shrink: 0; padding: 8px 16px; border-radius: 10px !important; border: 1px solid var(--cc-amber); background: var(--cc-amber); color: #fff; font-family: 'Space Mono', monospace; font-size: 11px; font-weight: 700; cursor: pointer; }
+#main-app .bundle-suggest-btn:hover { background: var(--cc-amber-d); }
 
 /* ════════════════════════════════════════════════════════════════
    STOCK ROOM

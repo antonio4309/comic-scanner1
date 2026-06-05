@@ -880,6 +880,41 @@ function toggleSelect(id) {
   renderList();
 }
 
+// Build a smart bundle title — "Title #295–300 (6 issues)" for a run, else a list.
+function makeBundleTitle(selected) {
+  const titlesSet = new Set(selected.map(c => (c.title || '').trim()));
+  const issuesNum = selected.map(c => parseInt(c.issue, 10)).filter(n => !isNaN(n));
+  if (titlesSet.size === 1 && issuesNum.length === selected.length && issuesNum.length >= 2) {
+    const sorted = [...issuesNum].sort((a, b) => a - b);
+    const min = sorted[0], max = sorted[sorted.length - 1];
+    const consecutive = (max - min === sorted.length - 1) &&
+      new Set(sorted).size === sorted.length;
+    const title = [...titlesSet][0];
+    if (consecutive) return `${title} #${min}–${max} (${sorted.length} issues)`;
+    return `${title} #${sorted.join(', #')}`.slice(0, 90);
+  }
+  const labels = selected.map(c => `${c.title}${c.issue !== 'Unknown' ? ' #' + c.issue : ''}`.trim());
+  return labels.length <= 2 ? labels.join(' + ') : `${labels[0]} + ${labels.length - 1} others`;
+}
+
+// Merge each cover's key info into a readable bundle description.
+function makeBundleDescription(selected) {
+  // sort by issue number when possible
+  const sorted = [...selected].sort((a, b) => {
+    const x = parseInt(a.issue, 10), y = parseInt(b.issue, 10);
+    if (!isNaN(x) && !isNaN(y)) return x - y;
+    return 0;
+  });
+  const lines = sorted.map(c => {
+    const num = c.issue && c.issue !== 'Unknown' ? `#${c.issue}` : c.title;
+    const note = c.firstAppearance || c.keyInfo || c.conditionReason || c.condition || '';
+    return note ? `• ${num} — ${note}` : `• ${num}`;
+  });
+  const keyCount = sorted.filter(c => c.isKeyIssue || c.firstAppearance).length;
+  const head = `Lot of ${sorted.length} comics${keyCount ? ` (${keyCount} key issue${keyCount > 1 ? 's' : ''})` : ''}:`;
+  return `${head}\n${lines.join('\n')}`;
+}
+
 function bundleSelected() {
   if (selectedIds.size < 2) return;
   const selected = comics.filter(c => selectedIds.has(c.id));
@@ -889,9 +924,8 @@ function bundleSelected() {
   const hasCost = selected.some(c => c.costPrice != null);
 
   const titles = selected.map(c => `${c.title}${c.issue !== 'Unknown' ? ' #' + c.issue : ''}`.trim());
-  const bundleTitle = titles.length <= 2
-    ? titles.join(' + ')
-    : `${titles[0]} + ${titles.length - 1} others`;
+  const bundleTitle = makeBundleTitle(selected);
+  const bundleDesc = makeBundleDescription(selected);
 
   const bundleComic = {
     id: Date.now(),
@@ -903,8 +937,8 @@ function bundleSelected() {
     isVariant: false, variantDetails: '',
     isSlabbed: false, slabCompany: '', slabGrade: '',
     hasSig: false, sigDetails: '',
-    keyInfo: `Bundle of ${selected.length} comics`, firstAppearance: '',
-    isKeyIssue: false, lowPrintRun: false, printRunNote: '',
+    keyInfo: bundleDesc, firstAppearance: '',
+    isKeyIssue: selected.some(c => c.isKeyIssue || c.firstAppearance), lowPrintRun: false, printRunNote: '',
     importantCharacters: '',
     condition: 'Various', conditionGrade: '', conditionReason: '',
     confidence: 'High',
@@ -933,6 +967,50 @@ function bundleSelected() {
   saveInventory();
   renderList();
   updateStats();
+}
+
+// ── Smart bundle suggestions (runs of the same title) ─────────────────────────
+function getBundleSuggestions() {
+  const groups = {};
+  comics.forEach(c => {
+    if (c.isBundle || c.sold) return;
+    const t = (c.title || '').trim();
+    if (!t || t === 'Unknown') return;
+    (groups[t] = groups[t] || []).push(c);
+  });
+  return Object.entries(groups)
+    .filter(([, arr]) => arr.length >= 2)
+    .map(([title, arr]) => {
+      const nums = arr.map(c => parseInt(c.issue, 10)).filter(n => !isNaN(n)).sort((a, b) => a - b);
+      let range = '';
+      if (nums.length === arr.length && nums.length >= 2) {
+        const min = nums[0], max = nums[nums.length - 1];
+        range = (max - min === nums.length - 1 && new Set(nums).size === nums.length)
+          ? `#${min}–${max}` : `#${nums.join(', #')}`;
+      }
+      return { title, count: arr.length, range, value: arr.reduce((s, c) => s + (getWhatnotPrice(c) || 0), 0) };
+    })
+    .sort((a, b) => b.count - a.count);
+}
+
+// One-tap: select every (unsold, non-bundle) issue of a title, then bundle.
+function bundleRun(title) {
+  const ids = comics.filter(c => !c.isBundle && !c.sold && (c.title || '').trim() === title).map(c => c.id);
+  if (ids.length < 2) return;
+  selectedIds = new Set(ids);
+  bundleSelected();
+}
+
+// HTML banner(s) shown atop the archive when bundleable runs exist.
+function bundleBannerHtml() {
+  const sugg = getBundleSuggestions();
+  if (!sugg.length) return '';
+  return sugg.slice(0, 3).map(s => `
+    <div class="bundle-suggest">
+      <span class="bundle-suggest-ic">📦</span>
+      <div class="bundle-suggest-txt"><strong>${escapeHtml(s.title)}</strong>${s.range ? ` <span class="bundle-suggest-range">${escapeHtml(s.range)}</span>` : ''} · ${s.count} issues${s.value ? ` · est. £${Math.round(s.value)}` : ''}</div>
+      <button class="bundle-suggest-btn" data-t="${escapeHtml(s.title)}" onclick="bundleRun(this.dataset.t)">Bundle</button>
+    </div>`).join('');
 }
 
 // ── Re-scan ───────────────────────────────────────────────────────────────────
@@ -1226,6 +1304,9 @@ function renderList() {
       </div>
     </div>`;
   }).join('');
+
+  // Prepend bundle suggestions (runs of the same title) above the cards.
+  if (!selectMode) list.innerHTML = bundleBannerHtml() + list.innerHTML;
 
   updateStats();
   updateMobBadge();
