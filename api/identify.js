@@ -24,6 +24,7 @@ const SCHEMA = `{
   "conditionGrade": "",
   "conditionReason": "",
   "photoAdvice": "",
+  "marketInsight": "",
   "searchQuery": "Unknown"
 }`;
 
@@ -161,6 +162,12 @@ VARIANT-SPECIFIC photo advice (use when it would change the appraisal):
   - If the cover looks like it MIGHT have a foil/metallic/holographic finish but you can't be sure from this image: "Possible foil/holo cover — tilt the comic under a light so the shine shows, then rescan to confirm the variant."
   - If there appears to be a small artist signature on the artwork that you cannot read clearly: "Looks like an artist-signed variant — get a close-up of the signature so the variant artist can be identified."
   - If a corner box / price box / ratio text appears present but is too small or blurry to read: "Get a sharper shot of the bottom corners and price box — that's where edition and variant markings live."
+
+=== COLLECTOR / MARKET INSIGHT ===
+marketInsight: One or two factual sentences a professional collector would note about THIS specific issue — its significance, what drives demand, grading/slabbing advice, or edition/variant nuances (e.g. newsstand scarcity, key first appearance, McFarlane-era demand).
+- Base it on the book's known importance and the visible condition/edition.
+- Do NOT invent specific prices, CGC population numbers, or dated sales — those come from live data, not you.
+- Keep it concise, useful and confident. Empty string "" if there is genuinely nothing notable.
 
 === SEARCH QUERY ===
 Build the most effective eBay UK sold-listing search query:

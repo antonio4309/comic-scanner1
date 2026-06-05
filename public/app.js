@@ -580,6 +580,7 @@ async function scanAndAdd() {
         conditionGrade:  identified.conditionGrade  || '',
         conditionReason: identified.conditionReason || '',
         photoAdvice:     identified.photoAdvice     || '',
+        marketInsight:   identified.marketInsight   || '',
         confidence:      identified.confidence      || 'Low',
         qty,
         customPrice,
@@ -1664,6 +1665,33 @@ function cgcGradeNote(grade) {
 
 // ── Lookup result render ──────────────────────────────────────────────────────
 
+// Format an eBay endDate (ISO) → "DD/MM/YY"; '' if unparseable.
+function fmtSaleDate(d) {
+  if (!d) return '';
+  const dt = new Date(d);
+  if (isNaN(dt)) return '';
+  const p = n => String(n).padStart(2, '0');
+  return `${p(dt.getDate())}/${p(dt.getMonth() + 1)}/${String(dt.getFullYear()).slice(2)}`;
+}
+
+// Compute a price trend from dated eBay results. Returns null if not enough data.
+function computeTrend(results) {
+  const dated = (results || [])
+    .filter(r => r.price > 0 && r.endDate && !isNaN(new Date(r.endDate)))
+    .map(r => ({ price: Number(r.price), t: new Date(r.endDate).getTime() }))
+    .sort((a, b) => a.t - b.t);
+  if (dated.length < 4) return null;
+  const half = Math.floor(dated.length / 2);
+  const older = dated.slice(0, half);
+  const newer = dated.slice(dated.length - half);
+  const avg = arr => arr.reduce((s, x) => s + x.price, 0) / arr.length;
+  const o = avg(older), n = avg(newer);
+  if (!o) return null;
+  const pct = ((n - o) / o) * 100;
+  const dir = pct > 3 ? 'BULLISH' : pct < -3 ? 'BEARISH' : 'STABLE';
+  return { pct: Math.round(pct * 10) / 10, dir };
+}
+
 function renderLookupResult(c, ebay, thumbSrc) {
   const badges = [
     c.isKeyIssue || c.firstAppearance ? `<span class="cbadge cbadge-key">⭐ Key Issue</span>` : '',
@@ -1710,6 +1738,40 @@ function renderLookupResult(c, ebay, thumbSrc) {
   if (c.conditionGrade) bento.push(`<div class="lkd-stat"><span class="lkd-stat-lbl">Est. Grade</span><span class="lkd-stat-val">${escapeHtml(c.conditionGrade)}${cgcInfo ? ` <small>${escapeHtml(cgcInfo.label)}</small>` : ''}</span></div>`);
   else if (condVal) bento.push(`<div class="lkd-stat"><span class="lkd-stat-lbl">Condition</span><span class="lkd-stat-val sm">${escapeHtml(condVal)}</span></div>`);
   if (ebay && ebay.found) bento.push(`<div class="lkd-stat"><span class="lkd-stat-lbl">UK ${isActiveListing ? 'Listings' : 'Sales'}</span><span class="lkd-stat-val">${ebay.count}</span></div>`);
+
+  // Trend index (computed from dated eBay sales)
+  const trend = computeTrend(ebay && ebay.results);
+  if (trend) {
+    const tc = trend.dir === 'BULLISH' ? 'green' : trend.dir === 'BEARISH' ? 'red' : '';
+    const arrow = trend.dir === 'BULLISH' ? '↗' : trend.dir === 'BEARISH' ? '↘' : '→';
+    bento.push(`<div class="lkd-stat"><span class="lkd-stat-lbl">Trend (eBay)</span><span class="lkd-stat-val sm ${tc}">${arrow} ${trend.pct > 0 ? '+' : ''}${trend.pct}% <small>${trend.dir}</small></span></div>`);
+  }
+  // CGC population — no free API, so link to the official census instead of a fake number
+  bento.push(`<a class="lkd-stat lkd-stat-link" href="${escapeHtml(censusUrl)}" target="_blank" rel="noopener"><span class="lkd-stat-lbl">CGC Population</span><span class="lkd-stat-val sm">View Census →</span></a>`);
+
+  // UK market history (real dated eBay rows)
+  const history = ((ebay && ebay.results) || [])
+    .filter(r => r.price > 0 && r.endDate && !isNaN(new Date(r.endDate)))
+    .sort((a, b) => new Date(b.endDate) - new Date(a.endDate))
+    .slice(0, 6);
+  const historyHtml = history.length ? `
+      <section class="lkd-section">
+        <h3 class="lkd-h3">UK Market History</h3>
+        <div class="lkd-table">
+          <div class="lkd-tr lkd-th"><span>Date</span><span>Platform</span><span>Type</span><span class="r">Price</span></div>
+          ${history.map(r => `<a class="lkd-tr" href="${escapeHtml(r.url || soldUrl)}" target="_blank" rel="noopener"><span>${fmtSaleDate(r.endDate)}</span><span>eBay UK</span><span>${r.sold ? 'Sold' : 'Listed'}</span><span class="r">£${Math.round(r.price)}</span></a>`).join('')}
+        </div>
+      </section>` : '';
+
+  // Pro collector insight (AI-generated, clearly labelled)
+  const insightHtml = c.marketInsight ? `
+      <section class="lkd-section">
+        <h3 class="lkd-h3">Pro Collector Insights</h3>
+        <div class="lkd-insight">
+          <p>${escapeHtml(c.marketInsight)}</p>
+          <span class="lkd-insight-tag">✦ AI insight</span>
+        </div>
+      </section>` : '';
 
   // Technical spec rows from available fields
   const specRows = [
@@ -1770,6 +1832,10 @@ function renderLookupResult(c, ebay, thumbSrc) {
         </div>
         <a class="lkd-link" href="${escapeHtml(soldUrl)}" target="_blank" rel="noopener">View ${ebay.count} ${isActiveListing ? 'listings' : 'sold listings'} on eBay →</a>
       </section>` : ''}
+
+      ${historyHtml}
+
+      ${insightHtml}
 
       ${notes ? `<section class="lkd-section">
         <h3 class="lkd-h3">Collector Notes</h3>
