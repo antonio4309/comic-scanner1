@@ -1536,12 +1536,21 @@ function buildCSV() {
 
   for (const c of comics) {
     const title = `${c.title || 'Unknown'}${c.issue && c.issue !== 'Unknown' ? ' #' + c.issue : ''}`.trim();
-    const descParts = [
-      c.keyInfo && c.keyInfo !== 'Unknown' ? c.keyInfo : '',
+    // Listing description = info about the COMIC only.
+    // No eBay/market prices, no grade/condition reasoning (those have their
+    // own places). If it's a key issue, lead with what the key is.
+    const keyText = (c.firstAppearance && c.firstAppearance !== 'Unknown')
+      ? c.firstAppearance
+      : ((c.keyInfo && c.keyInfo !== 'Unknown') ? c.keyInfo : '');
+    const pubYear = [
       c.publisher && c.publisher !== 'Unknown' ? c.publisher : '',
-      c.year && c.year !== 'Unknown' ? c.year : '',
-      c.conditionReason ? `Condition note: ${c.conditionReason}` : '',
-      c.ebayPrice ? `eBay UK market ref: £${c.ebayPrice.toFixed(2)}` : ''
+      c.year && c.year !== 'Unknown' ? c.year : ''
+    ].filter(Boolean).join(' ');
+    const descParts = [
+      keyText,
+      c.isVariant && c.variantDetails ? c.variantDetails : '',
+      pubYear,
+      c.importantCharacters && c.importantCharacters !== 'Unknown' ? `Features ${c.importantCharacters}` : ''
     ].filter(Boolean).join(' · ') || 'Comic book listing';
 
     const price = c.listingType === 'Auction' && c.startingBid != null
