@@ -55,6 +55,46 @@
 }
 
 /* ════════════════════════════════════════════════════════════════
+   DARK MODE  —  follows the device/browser theme automatically.
+   The whole app is token-driven, so flipping :root flips the app.
+   Light mode (default) keeps the clean dashboard above; dark mode
+   restores the warm coal command-center look.
+════════════════════════════════════════════════════════════════ */
+@media (prefers-color-scheme: dark) {
+  :root {
+    --cc-bg:       #080403;
+    --cc-bg1:      #0e0a07;
+    --cc-bg2:      #14100c;
+    --cc-bg3:      #1c1611;
+    --cc-bg4:      #231c15;
+    --cc-border:   rgba(255,142,62,0.10);
+    --cc-border2:  rgba(255,142,62,0.20);
+    --cc-border3:  rgba(255,142,62,0.35);
+    --cc-text:     #f0ebe6;
+    --cc-text2:    #b8a89e;
+    --cc-text3:    #6e5e56;
+    --cc-amber:    #ff8e3e;
+    --cc-amber-d:  #c96820;
+    --cc-amber-bg: rgba(255,142,62,0.08);
+    --cc-amber-glow: rgba(255,142,62,0.22);
+    --cc-green:    #05df72;
+    --cc-green-bg: rgba(5,223,114,0.08);
+    --cc-cyan:     #00d3bd;
+    --cc-red:      #ff5d6c;
+    /* Sidebar as a subtly elevated panel on the near-black background */
+    --cc-side:     #100b08;
+    --cc-side2:    #1c1611;
+    --cc-side-bd:  rgba(255,142,62,0.12);
+    --cc-side-tx:  rgba(240,235,230,0.80);
+    --cc-side-tx2: rgba(240,235,230,0.42);
+  }
+  /* Soften the light drop-shadows that are invisible/incorrect on dark */
+  #main-app .comic-card,
+  #main-app .pg-stat, #main-app .pg-quick,
+  #main-app .sr-stat, #main-app .sr-box-card { box-shadow: none; }
+}
+
+/* ════════════════════════════════════════════════════════════════
    MAIN APP SHELL
 ════════════════════════════════════════════════════════════════ */
 #main-app {
@@ -2132,6 +2172,11 @@
   #main-app #pane-lookup { flex-direction: column !important; overflow-y: auto; }
   #main-app #lk-cam-col, #main-app #lk-result-col { width: 100% !important; flex: none !important; }
   #main-app .lk-intel-cols { grid-template-columns: 1fr !important; }
+  /* Let the lookup camera column flow so Activate/Capture/Upload are clear */
+  #main-app #lk-cam-col .lk-section:first-child { flex: none !important; }
+  #main-app #lk-video-wrap { height: 240px !important; flex: none !important; min-height: 0 !important; aspect-ratio: auto !important; }
+  #main-app .lk-btn-row { flex-wrap: wrap; margin-top: 12px; }
+  #main-app .lk-btn { min-height: 40px; }
 }
 </style>
 </head>

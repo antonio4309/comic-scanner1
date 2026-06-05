@@ -1795,7 +1795,7 @@ function switchMobileTab(tab) {
 
   if (tab === 'lookup') {
     switchTab('lookup');
-    if (typeof lkStartCamera === 'function' && !lkStream) lkStartCamera();
+    // Do NOT auto-start the camera — let the user choose Activate or Upload.
     return;
   }
   if (tab === 'stock') {
@@ -1804,8 +1804,8 @@ function switchMobileTab(tab) {
   }
   // 'scan' and 'inventory' both live in the export pane; CSS shows the
   // camera tool for 'scan' and the archive for 'inventory'.
+  // Camera is started only when the user taps Activate.
   switchTab('export');
-  if (tab === 'scan' && !stream) startCamera();
 }
 
 function openMobMore() {
