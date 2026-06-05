@@ -273,13 +273,14 @@ export default async function handler(req, res) {
       }],
       generationConfig: {
         temperature: 0.1,
-        maxOutputTokens: 4096,
+        maxOutputTokens: 8192,   // room for 2.5 Pro's thinking + the JSON
         responseMimeType: 'application/json'
       }
     });
 
     const candidateModels = [...new Set([
-      process.env.GEMINI_MODEL || 'gemini-2.5-flash',
+      process.env.GEMINI_MODEL || 'gemini-2.5-pro',
+      'gemini-2.5-pro',
       'gemini-2.5-flash',
       'gemini-2.0-flash',
       'gemini-1.5-flash',
