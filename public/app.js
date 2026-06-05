@@ -1781,19 +1781,40 @@ let activeMobileTab = 'scan';
 
 function switchMobileTab(tab) {
   if (!isMobile()) return;
+
+  // "More" opens a bottom sheet, doesn't change the screen.
+  if (tab === 'more') { openMobMore(); return; }
+
   activeMobileTab = tab;
-  ['scan', 'inventory', 'lookup'].forEach(t => {
+  const app = document.getElementById('main-app');
+  if (app) app.dataset.mobtab = tab;   // CSS uses this to show the right screen
+
+  ['scan', 'inventory', 'stock', 'lookup'].forEach(t => {
     document.getElementById('mnav-' + t)?.classList.toggle('active', t === tab);
   });
+
   if (tab === 'lookup') {
     switchTab('lookup');
-    if (!lkStream) lkStartCamera();
-  } else {
-    switchTab('export');
-    document.querySelector('.sidebar')?.classList.toggle('mob-active', tab === 'scan');
-    document.querySelector('.main')?.classList.toggle('mob-active', tab === 'inventory');
-    if (tab === 'scan' && !stream) startCamera();
+    if (typeof lkStartCamera === 'function' && !lkStream) lkStartCamera();
+    return;
   }
+  if (tab === 'stock') {
+    switchTab('stock');
+    return;
+  }
+  // 'scan' and 'inventory' both live in the export pane; CSS shows the
+  // camera tool for 'scan' and the archive for 'inventory'.
+  switchTab('export');
+  if (tab === 'scan' && !stream) startCamera();
+}
+
+function openMobMore() {
+  const m = document.getElementById('mob-more-sheet');
+  if (m) m.style.display = 'flex';
+}
+function closeMobMore() {
+  const m = document.getElementById('mob-more-sheet');
+  if (m) m.style.display = 'none';
 }
 
 function updateMobBadge() {

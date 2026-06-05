@@ -1625,19 +1625,23 @@
    MOBILE NAV
 ════════════════════════════════════════════════════════════════ */
 #mobile-nav { display: none; position: fixed; bottom: 0; left: 0; right: 0; background: rgba(8,4,3,0.97); backdrop-filter: blur(20px); border-top: 1px solid var(--cc-border); padding: 8px 0 max(8px, env(safe-area-inset-bottom)); z-index: 200; }
-@media (max-width: 768px) {
-  #cmd-sidebar { display: none !important; }
-  #cmd-right { display: none !important; }
-  #mobile-nav { display: flex !important; }
-  #main-app { padding-bottom: 64px; }
-  #pane-fees { flex-direction: column; padding: 12px; }
-  #fees-input-col { width: 100%; }
-}
+/* Mobile reflow lives at the very end of this stylesheet (search MOBILE REFLOW)
+   so it overrides the desktop pane rules on a phone. */
 .mobile-nav-btn { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 6px 4px; border: none; background: transparent; color: var(--cc-text3); font-family: 'Space Mono', monospace; font-size: 8px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; cursor: pointer; transition: color 0.12s; position: relative; }
 .mobile-nav-btn svg { width: 20px; height: 20px; }
 .mobile-nav-btn.active { color: var(--cc-amber); }
 .mob-count { position: absolute; top: 2px; right: 50%; transform: translateX(12px); background: var(--cc-amber); color: #1a0800; font-size: 8px; font-weight: 800; min-width: 14px; height: 14px; border-radius: 99px; display: flex; align-items: center; justify-content: center; padding: 0 3px; }
 #mob-toast { position: fixed; bottom: 80px; left: 50%; transform: translateX(-50%); background: var(--cc-bg2); border: 1px solid var(--cc-border2); border-radius: 6px; padding: 8px 16px; font-size: 12px; font-family: 'Space Mono', monospace; color: var(--cc-text); z-index: 300; pointer-events: none; opacity: 0; transition: opacity 0.2s; }
+
+/* Mobile "More" bottom sheet */
+#mob-more-sheet { position: fixed; inset: 0; z-index: 250; background: rgba(20,14,9,0.45); backdrop-filter: blur(2px); display: flex; align-items: flex-end; }
+.mob-sheet-card { width: 100%; background: var(--cc-bg1); border-top-left-radius: 18px; border-top-right-radius: 18px; padding: 8px 14px max(20px, env(safe-area-inset-bottom)); box-shadow: 0 -20px 50px rgba(0,0,0,0.3); }
+.mob-sheet-handle { width: 38px; height: 4px; border-radius: 99px; background: var(--cc-border3); margin: 8px auto 12px; }
+.mob-sheet-item { display: flex; align-items: center; gap: 12px; width: 100%; padding: 14px 12px; border: none; background: transparent; color: var(--cc-text); font-family: 'Inter', sans-serif; font-size: 15px; font-weight: 500; text-align: left; cursor: pointer; border-radius: 10px !important; }
+.mob-sheet-item span { width: 24px; text-align: center; color: var(--cc-amber); font-family: 'Space Mono', monospace; }
+.mob-sheet-item:active { background: var(--cc-bg2); }
+.mob-sheet-item.danger { color: var(--cc-red); }
+.mob-sheet-item.danger span { color: var(--cc-red); }
 
 /* Scrollbar */
 #main-app ::-webkit-scrollbar { width: 4px; height: 4px; }
@@ -2059,6 +2063,75 @@
 
 @media (max-width: 900px) {
   .sr-stat-grid { grid-template-columns: repeat(2, 1fr); }
+}
+
+/* ════════════════════════════════════════════════════════════════
+   MOBILE REFLOW  —  phone layout (placed last so it wins the cascade)
+   One DOM, auto-detected: on phones the desktop chrome is hidden and
+   each pane stacks; the bottom nav + data-mobtab drive which screen
+   is shown.
+════════════════════════════════════════════════════════════════ */
+@media (max-width: 768px) {
+  /* Hide desktop chrome, show mobile nav */
+  #cmd-sidebar { display: none !important; }
+  #mobile-nav { display: flex !important; }
+  #main-app { padding-bottom: 58px; }
+
+  /* SCANNING pane → stacked */
+  #main-app #pane-export { flex-direction: column; }
+  #main-app #scan-topbar { flex-wrap: wrap; overflow: visible; }
+  #main-app #scan-topbar .st-divider { display: none; }
+  #main-app .st-group { width: 100%; padding: 10px 14px; }
+  #main-app .st-stats { flex-wrap: wrap; }
+  #main-app .st-stat { flex: 1 1 70px; min-width: 70px; }
+  #main-app .st-log .rs-filter-row { flex-wrap: wrap; }
+
+  #main-app #scan-main { flex-direction: column; overflow-y: auto; -webkit-overflow-scrolling: touch; }
+  #main-app #scan-tool { width: 100%; flex: none; border-right: none; border-bottom: 1px solid var(--cc-border); overflow: visible; }
+  #main-app #scan-tool #video-wrap { aspect-ratio: 4 / 5; }
+  #main-app .cc-cam-controls { flex-wrap: wrap; }
+  #main-app #scan-archive { overflow: visible; }
+  #main-app .scan-archive-head { display: none; }
+  #main-app .scan-archive-body { padding: 12px; overflow: visible; }
+  #main-app .scan-archive-body #comic-list { grid-template-columns: 1fr; }
+  #main-app #scan-bottombar { flex-wrap: wrap; gap: 10px; }
+  #main-app .sb-export-actions { width: 100%; }
+  #main-app .sb-export-btn { flex: 1; }
+
+  /* Which screen shows, driven by the active mobile tab */
+  #main-app[data-mobtab="scan"] #scan-archive,
+  #main-app[data-mobtab="scan"] #scan-bottombar,
+  #main-app[data-mobtab="scan"] .st-stats,
+  #main-app[data-mobtab="scan"] .st-log,
+  #main-app:not([data-mobtab]) #scan-archive,
+  #main-app:not([data-mobtab]) #scan-bottombar,
+  #main-app:not([data-mobtab]) .st-stats,
+  #main-app:not([data-mobtab]) .st-log { display: none; }
+  #main-app[data-mobtab="inventory"] #scan-tool,
+  #main-app[data-mobtab="inventory"] .st-workspace { display: none; }
+
+  /* Page panes (Home / Stock / Settings) single-column */
+  #main-app .pg-wrap { padding: 18px 14px 32px; }
+  #main-app .pg-h1 { font-size: 22px; }
+  #main-app .pg-stat-grid { grid-template-columns: repeat(2, 1fr); }
+  #main-app .pg-quick-grid { grid-template-columns: 1fr; }
+
+  /* Stock Room */
+  #main-app .sr-stat-grid { grid-template-columns: repeat(2, 1fr); }
+  #main-app .sr-box-grid { grid-template-columns: 1fr; }
+  #main-app .sr-detail-stats { gap: 14px 18px; }
+  #main-app .sr-row-move { display: none !important; }
+  #main-app .sr-row-price { width: 64px; }
+
+  /* Fee / Profit stack */
+  #main-app #pane-fees { flex-direction: column; padding: 12px; overflow-y: auto; gap: 12px; }
+  #main-app #fees-input-col { width: 100%; min-width: 0; }
+  #main-app #fees-result-col { width: 100%; }
+
+  /* Lookup stack */
+  #main-app #pane-lookup { flex-direction: column !important; overflow-y: auto; }
+  #main-app #lk-cam-col, #main-app #lk-result-col { width: 100% !important; flex: none !important; }
+  #main-app .lk-intel-cols { grid-template-columns: 1fr !important; }
 }
 </style>
 </head>
@@ -2770,11 +2843,30 @@
     <span class="mob-count" id="mob-count">0</span>
     LOG
   </button>
+  <button class="mobile-nav-btn" id="mnav-stock" onclick="switchMobileTab('stock')">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+    STOCK
+  </button>
   <button class="mobile-nav-btn" id="mnav-lookup" onclick="switchMobileTab('lookup')">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
     LOOKUP
   </button>
+  <button class="mobile-nav-btn" id="mnav-more" onclick="switchMobileTab('more')">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="5" cy="12" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="19" cy="12" r="1.6"/></svg>
+    MORE
+  </button>
 </nav>
+
+<!-- ── MOBILE "MORE" SHEET ─────────────────────────────────────── -->
+<div id="mob-more-sheet" onclick="if(event.target===this)closeMobMore()" style="display:none">
+  <div class="mob-sheet-card" onclick="event.stopPropagation()">
+    <div class="mob-sheet-handle"></div>
+    <button class="mob-sheet-item" onclick="closeMobMore();switchTab('home')"><span>⌂</span> Home</button>
+    <button class="mob-sheet-item" onclick="closeMobMore();switchTab('fees')"><span>$</span> Fee / Profit</button>
+    <button class="mob-sheet-item" onclick="closeMobMore();switchTab('settings')"><span>⚙</span> Settings</button>
+    <button class="mob-sheet-item danger" onclick="closeMobMore();logout()"><span>⏏</span> Sign out</button>
+  </div>
+</div>
 
 <div id="mob-toast"></div>
 
