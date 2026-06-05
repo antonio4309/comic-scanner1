@@ -261,37 +261,53 @@ export default async function handler(req, res) {
   if (!base64) return res.status(400).json({ error: 'No image provided' });
 
   try {
-    // Model can be overridden in Vercel env (GEMINI_MODEL) without a code change.
-    const GEMINI_MODEL = process.env.GEMINI_MODEL || 'gemini-2.5-flash';
-    const url = `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${GEMINI_KEY}`;
-
-    const response = await fetch(url, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        contents: [{
-          parts: [
-            { text: buildPrompt(override) },
-            { inline_data: { mime_type: 'image/jpeg', data: base64 } }
-          ]
-        }],
-        generationConfig: {
-          temperature: 0.1,
-          maxOutputTokens: 4096,
-          responseMimeType: 'application/json'
-        }
-      })
+    // Try the configured model first, then fall back to known-good models.
+    // This self-heals if GEMINI_MODEL (env) or the default points at a model
+    // id that doesn't exist on the account (e.g. a typo'd "gemini-3-flash").
+    const requestBody = JSON.stringify({
+      contents: [{
+        parts: [
+          { text: buildPrompt(override) },
+          { inline_data: { mime_type: 'image/jpeg', data: base64 } }
+        ]
+      }],
+      generationConfig: {
+        temperature: 0.1,
+        maxOutputTokens: 4096,
+        responseMimeType: 'application/json'
+      }
     });
 
-    const rawText = await response.text();
+    const candidateModels = [...new Set([
+      process.env.GEMINI_MODEL || 'gemini-2.5-flash',
+      'gemini-2.5-flash',
+      'gemini-2.0-flash',
+      'gemini-1.5-flash',
+    ].filter(Boolean))];
 
-    if (!response.ok) {
+    let response, rawText, lastErr = 'AI request failed';
+    for (const model of candidateModels) {
+      const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${GEMINI_KEY}`;
+      response = await fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: requestBody });
+      rawText = await response.text();
+      if (response.ok) break;
+
       let message = rawText;
       try { message = JSON.parse(rawText).error?.message || rawText; } catch {}
-      if (response.status === 429 || message.includes('quota') || message.includes('Too Many Requests')) {
+      lastErr = message;
+      // Quota → stop and report immediately (a different model won't help).
+      if (response.status === 429 || /quota|Too Many Requests/i.test(message)) {
         return res.status(429).json({ error: 'AI quota reached. Please wait 1 minute and try again.' });
       }
-      return res.status(502).json({ error: message.slice(0, 300) });
+      // Model not found / unsupported → try the next candidate.
+      if (response.status === 404 || response.status === 400 || /not found|not supported|unknown name|invalid/i.test(message)) {
+        continue;
+      }
+      // Other server error → try next as a last resort.
+    }
+
+    if (!response || !response.ok) {
+      return res.status(502).json({ error: ('AI model error — ' + lastErr).slice(0, 300) });
     }
 
     let data;
