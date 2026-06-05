@@ -2207,6 +2207,58 @@ a.lkd-tr:active { background: var(--cc-bg2); }
 .lkd-note-v { font-size: 14px; line-height: 1.5; color: var(--cc-text2); }
 
 /* ════════════════════════════════════════════════════════════════
+   SCANNING PAGE v2  —  archive-first, slim header, slide-in Scan panel
+════════════════════════════════════════════════════════════════ */
+#sx-header { flex-shrink: 0; display: flex; align-items: center; gap: 16px; padding: 12px 20px; background: var(--cc-bg1); border-bottom: 1px solid var(--cc-border); }
+.sx-head-main { display: flex; align-items: center; gap: 18px; }
+.sx-title { font-family: 'Outfit', sans-serif; font-size: 20px; font-weight: 800; letter-spacing: -0.01em; color: var(--cc-text); }
+.sx-box { display: flex; align-items: center; gap: 8px; }
+.sx-box-lbl { font-family: 'Space Mono', monospace; font-size: 9px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--cc-text3); white-space: nowrap; }
+.sx-box select { min-width: 170px; width: auto !important; }
+.sx-head-stats { display: flex; align-items: center; gap: 16px; font-size: 13px; color: var(--cc-text2); }
+.sx-head-stats .sx-stat b { color: var(--cc-text); font-weight: 700; }
+.sx-head-stats .sx-green b { color: var(--cc-green); }
+.sx-head-actions { margin-left: auto; display: flex; align-items: center; gap: 8px; }
+.sx-scan-btn { display: flex; align-items: center; gap: 6px; padding: 9px 18px; border-radius: 11px !important; border: 1px solid var(--cc-amber); background: var(--cc-amber); color: #fff; font-family: 'Inter', sans-serif; font-size: 14px; font-weight: 700; cursor: pointer; transition: background 0.12s; }
+.sx-scan-btn:hover { background: var(--cc-amber-d); }
+.sx-scan-plus { font-size: 17px; line-height: 1; }
+
+#sx-toolbar { flex-shrink: 0; display: flex; align-items: center; gap: 10px; padding: 10px 20px; background: var(--cc-bg); border-bottom: 1px solid var(--cc-border); flex-wrap: wrap; }
+.sx-search { flex: 1; min-width: 180px; max-width: 360px; display: flex; align-items: center; gap: 8px; background: var(--cc-bg1); border: 1px solid var(--cc-border2); border-radius: 10px; padding: 0 12px; }
+.sx-search-ic { color: var(--cc-text3); flex-shrink: 0; }
+.sx-search input { flex: 1; border: none !important; background: transparent !important; padding: 9px 0 !important; }
+.sx-select { width: auto !important; min-width: 120px; font-size: 12px; }
+.sx-chips { display: flex; gap: 5px; }
+
+#sx-archive { flex: 1; min-height: 0; overflow-y: auto; padding: 18px 20px; background: var(--cc-bg); }
+#sx-archive .comic-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 14px; align-content: start; }
+#sx-archive .empty-state, #sx-archive .empty-state-onboard, #sx-archive .bundle-suggest { grid-column: 1 / -1; }
+
+#sx-footer { flex-shrink: 0; display: flex; align-items: center; gap: 16px; padding: 10px 20px; background: var(--cc-bg1); border-top: 1px solid var(--cc-border); }
+.sx-foot-session { display: flex; flex-direction: column; gap: 2px; }
+.sx-foot-lbl { font-family: 'Space Mono', monospace; font-size: 8px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: var(--cc-text3); }
+.sx-foot-val { font-family: 'Outfit', sans-serif; font-size: 18px; font-weight: 700; color: var(--cc-green); line-height: 1; }
+.sx-foot-actions { margin-left: auto; display: flex; gap: 8px; }
+
+/* Slide-in Scan panel (camera + classification) */
+#scan-panel { position: fixed; inset: 0; z-index: 300; display: none; background: rgba(20,14,9,0.5); backdrop-filter: blur(2px); }
+#scan-panel.open { display: flex; justify-content: flex-end; }
+.sx-panel-card { width: 440px; max-width: 94vw; height: 100%; background: var(--cc-bg1); border-left: 1px solid var(--cc-border2); display: flex; flex-direction: column; box-shadow: -24px 0 60px rgba(0,0,0,0.3); animation: sxslide .22s cubic-bezier(0.16,1,0.3,1); }
+@keyframes sxslide { from { transform: translateX(40px); opacity: 0; } to { transform: none; opacity: 1; } }
+.sx-panel-head { flex-shrink: 0; display: flex; align-items: center; justify-content: space-between; padding: 16px 18px; border-bottom: 1px solid var(--cc-border); }
+.sx-panel-title { font-family: 'Outfit', sans-serif; font-size: 18px; font-weight: 700; color: var(--cc-text); }
+.sx-panel-sub { font-size: 12px; color: var(--cc-text3); margin-top: 2px; }
+.sx-panel-sub b { color: var(--cc-amber); }
+.sx-panel-close { width: 34px; height: 34px; border-radius: 9px !important; border: 1px solid var(--cc-border2); background: var(--cc-bg2); color: var(--cc-text2); font-size: 20px; cursor: pointer; line-height: 1; flex-shrink: 0; }
+.sx-panel-close:hover { color: var(--cc-amber); border-color: var(--cc-amber); }
+.sx-panel-body { flex: 1; overflow-y: auto; display: flex; flex-direction: column; }
+.sx-panel-body .cc-camera-panel { flex: none; border: none; border-radius: 0; }
+.sx-panel-body #video-wrap { aspect-ratio: 4 / 5; flex: none; min-height: 0; height: auto; }
+.sx-panel-body .cc-classify-panel { width: auto; flex: none; border-top: 1px solid var(--cc-border); }
+.sx-panel-body .cc-cam-controls { flex-wrap: wrap; }
+.sx-panel-body .cc-panel-body { overflow: visible; }
+
+/* ════════════════════════════════════════════════════════════════
    MOBILE REFLOW  —  phone layout (placed last so it wins the cascade)
    One DOM, auto-detected: on phones the desktop chrome is hidden and
    each pane stacks; the bottom nav + data-mobtab drive which screen
@@ -2218,38 +2270,22 @@ a.lkd-tr:active { background: var(--cc-bg2); }
   #mobile-nav { display: flex !important; }
   #main-app { padding-bottom: 58px; }
 
-  /* SCANNING pane → stacked */
-  #main-app #pane-export { flex-direction: column; }
-  #main-app #scan-topbar { flex-wrap: wrap; overflow: visible; }
-  #main-app #scan-topbar .st-divider { display: none; }
-  #main-app .st-group { width: 100%; padding: 10px 14px; }
-  #main-app .st-stats { flex-wrap: wrap; }
-  #main-app .st-stat { flex: 1 1 70px; min-width: 70px; }
-  #main-app .st-log .rs-filter-row { flex-wrap: wrap; }
-
-  #main-app #scan-main { flex-direction: column; overflow-y: auto; -webkit-overflow-scrolling: touch; }
-  #main-app #scan-tool { width: 100%; flex: none; border-right: none; border-bottom: 1px solid var(--cc-border); overflow: visible; }
-  #main-app #scan-tool #video-wrap { aspect-ratio: 4 / 5; }
-  #main-app .cc-cam-controls { flex-wrap: wrap; }
-  #main-app #scan-archive { overflow: visible; }
-  #main-app .scan-archive-head { display: none; }
-  #main-app .scan-archive-body { padding: 12px; overflow: visible; }
-  #main-app .scan-archive-body #comic-list { grid-template-columns: 1fr; }
-  #main-app #scan-bottombar { flex-wrap: wrap; gap: 10px; }
-  #main-app .sb-export-actions { width: 100%; }
-  #main-app .sb-export-btn { flex: 1; }
-
-  /* Which screen shows, driven by the active mobile tab */
-  #main-app[data-mobtab="scan"] #scan-archive,
-  #main-app[data-mobtab="scan"] #scan-bottombar,
-  #main-app[data-mobtab="scan"] .st-stats,
-  #main-app[data-mobtab="scan"] .st-log,
-  #main-app:not([data-mobtab]) #scan-archive,
-  #main-app:not([data-mobtab]) #scan-bottombar,
-  #main-app:not([data-mobtab]) .st-stats,
-  #main-app:not([data-mobtab]) .st-log { display: none; }
-  #main-app[data-mobtab="inventory"] #scan-tool,
-  #main-app[data-mobtab="inventory"] .st-workspace { display: none; }
+  /* SCANNING pane v2 → stacked */
+  #main-app #sx-header { flex-wrap: wrap; gap: 10px 12px; padding: 10px 14px; }
+  #main-app .sx-head-main { gap: 12px; flex: 1; }
+  #main-app .sx-box select { min-width: 110px; }
+  #main-app .sx-head-stats { width: 100%; order: 3; font-size: 12px; gap: 12px; }
+  #main-app .sx-head-actions { margin-left: auto; }
+  #main-app #sx-toolbar { padding: 10px 14px; gap: 8px; }
+  #main-app .sx-search { max-width: none; }
+  #main-app .sx-select { flex: 1; }
+  #main-app #sx-archive { padding: 14px; }
+  #main-app #sx-archive .comic-list { grid-template-columns: 1fr; }
+  #main-app #sx-footer { flex-wrap: wrap; padding: 10px 14px; gap: 10px; }
+  #main-app .sx-foot-actions { width: 100%; }
+  #main-app .sx-foot-actions .sb-export-btn { flex: 1; }
+  /* Scan panel = full-screen sheet on mobile */
+  #main-app .sx-panel-card { width: 100%; max-width: 100%; border-left: none; }
 
   /* Page panes (Home / Stock / Settings) single-column */
   #main-app .pg-wrap { padding: 18px 14px 32px; }
@@ -2466,79 +2502,98 @@ a.lkd-tr:active { background: var(--cc-bg2); }
   <!-- ── PANE: SCANNING COMMAND CENTER ──────────────────────── -->
   <div id="pane-export" style="display:flex;flex-direction:column;flex:1;overflow:hidden">
 
-    <!-- ═══ TOP TOOLBAR: Workspace · Stats · Scan-log controls ═══ -->
-    <div id="scan-topbar">
-
-      <div class="st-group st-workspace">
-        <div class="st-group-label">Active Box <span style="color:var(--cc-text3);font-weight:400">· new scans go here</span></div>
-        <div class="rs-select-wrap">
+    <!-- ═══ SLIM HEADER ═══ -->
+    <div id="sx-header">
+      <div class="sx-head-main">
+        <div class="sx-title">Scanning</div>
+        <div class="sx-box">
+          <span class="sx-box-lbl">Active box</span>
           <select id="active-box-select" onchange="onActiveBoxChange()"></select>
         </div>
-        <div class="st-ws-actions">
-          <button class="rs-btn" id="btn-select" onclick="toggleSelectMode()" title="Select to bundle">☐ SELECT</button>
-          <button class="rs-btn danger" onclick="clearAll()">✕ PURGE</button>
-        </div>
       </div>
-
-      <div class="st-divider"></div>
-
-      <div class="st-group st-stats">
-        <div class="st-stat">
-          <div class="st-stat-val amber" id="stat-count">0</div>
-          <div class="st-stat-lbl">Comics</div>
-        </div>
-        <div class="st-stat">
-          <div class="st-stat-val green" id="stat-total">£0</div>
-          <div class="st-stat-lbl">Total Value</div>
-        </div>
-        <div class="st-stat">
-          <div class="st-stat-val" id="stat-avg">£0</div>
-          <div class="st-stat-lbl" id="stat-avg-label">Avg Price</div>
-        </div>
-        <div class="st-stat" onclick="applyFilter('key')" style="cursor:pointer">
-          <div class="st-stat-val amber" id="stat-keys">0</div>
-          <div class="st-stat-lbl">Key Issues</div>
-        </div>
-        <div class="st-stat st-top">
-          <div class="st-stat-lbl">Top Comic</div>
-          <div class="st-top-val" id="stat-top">—</div>
-        </div>
+      <div class="sx-head-stats">
+        <span class="sx-stat"><b id="stat-count">0</b> comics</span>
+        <span class="sx-stat sx-green"><b id="stat-total">£0</b></span>
+        <span class="sx-stat"><b id="stat-keys">0</b> keys</span>
       </div>
-
-      <div class="st-divider"></div>
-
-      <div class="st-group st-log">
-        <div class="st-group-label">
-          Recent Scan Log
-          <span class="rs-badge" id="scan-log-count">0 ITEMS</span>
-        </div>
-        <div class="st-log-controls">
-          <select id="sort-mode" onchange="applySort()">
-            <option value="newest">Newest First</option>
-            <option value="price-desc">Price: High → Low</option>
-            <option value="price-asc">Price: Low → High</option>
-            <option value="title">Title A–Z</option>
-          </select>
-          <select id="publisher-filter" onchange="applyPublisherFilter()">
-            <option value="">All</option>
-          </select>
-        </div>
-        <div class="rs-filter-row">
-          <button class="chip active" id="chip-all" onclick="applyFilter('all')">ALL</button>
-          <button class="chip" id="chip-key" onclick="applyFilter('key')">KEY</button>
-          <button class="chip" id="chip-news" onclick="applyFilter('news')">NEWS</button>
-          <button class="chip" id="chip-slab" onclick="applyFilter('slab')">SLAB</button>
-          <button class="chip" id="chip-noprice" onclick="applyFilter('noprice')">NO$</button>
-        </div>
+      <div class="sx-head-actions">
+        <button class="cmd-icon-btn" onclick="refetchAllPrices()" title="Refresh prices">↻</button>
+        <button class="cmd-icon-btn" onclick="showSettings()" title="Settings">⚙</button>
+        <button class="sx-scan-btn" onclick="openScanPanel()"><span class="sx-scan-plus">＋</span> Scan</button>
       </div>
+      <!-- stat fields app.js still updates but we don't surface here -->
+      <div style="display:none"><span id="stat-avg"></span><span id="stat-avg-label"></span><span id="stat-top"></span><span id="scan-log-count"></span></div>
+    </div>
 
-    </div><!-- /scan-topbar -->
+    <!-- ═══ ARCHIVE TOOLBAR: search · sort · filter chips ═══ -->
+    <div id="sx-toolbar">
+      <div class="sx-search">
+        <span class="sx-search-ic">⌕</span>
+        <input type="search" id="mob-search" placeholder="Search your archive…" oninput="applyMobileSearch()" autocomplete="off" />
+      </div>
+      <select id="sort-mode" class="sx-select" onchange="applySort()">
+        <option value="newest">Newest First</option>
+        <option value="price-desc">Price: High → Low</option>
+        <option value="price-asc">Price: Low → High</option>
+        <option value="title">Title A–Z</option>
+      </select>
+      <select id="publisher-filter" class="sx-select" onchange="applyPublisherFilter()">
+        <option value="">All publishers</option>
+      </select>
+      <div class="sx-chips">
+        <button class="chip active" id="chip-all" onclick="applyFilter('all')">ALL</button>
+        <button class="chip" id="chip-key" onclick="applyFilter('key')">KEY</button>
+        <button class="chip" id="chip-news" onclick="applyFilter('news')">NEWS</button>
+        <button class="chip" id="chip-slab" onclick="applyFilter('slab')">SLAB</button>
+        <button class="chip" id="chip-noprice" onclick="applyFilter('noprice')">NO$</button>
+      </div>
+      <button class="rs-btn" id="btn-select" onclick="toggleSelectMode()" title="Select to bundle">☐ Select</button>
+      <button class="rs-btn danger" onclick="clearAll()" title="Clear all">Purge</button>
+    </div>
 
-    <!-- ═══ MAIN ROW: Camera tool (left) · Archive (center) ═══ -->
-    <div id="scan-main">
+    <!-- Bundle bar (select mode) -->
+    <div id="bundle-bar">
+      <span><strong id="bundle-count">0</strong> selected</span>
+      <button onclick="bundleSelected()" style="padding:4px 10px;border-radius:4px;border:none;background:var(--cc-amber);color:#fff;font-size:9px;font-weight:700;font-family:'Space Mono',monospace;cursor:pointer;letter-spacing:0.06em">BUNDLE</button>
+      <button onclick="toggleSelectMode()" style="background:none;border:none;color:var(--cc-text3);cursor:pointer;font-size:12px">✕</button>
+    </div>
 
-      <!-- LEFT TOOL COLUMN: Camera + Classification -->
-      <div id="scan-tool">
+    <!-- ═══ ARCHIVE (hero) ═══ -->
+    <div id="sx-archive">
+      <div class="comic-list" id="comic-list"></div>
+    </div>
+
+    <!-- ═══ SLIM FOOTER: session total + export ═══ -->
+    <div id="sx-footer">
+      <div class="sx-foot-session">
+        <span class="sx-foot-lbl">Session total</span>
+        <span class="sx-foot-val" id="stat-session-val">£0.00</span>
+      </div>
+      <div class="sx-foot-actions">
+        <button class="sb-export-btn ghost" onclick="exportInventoryCSV()">⬇ Inventory CSV</button>
+        <button class="sb-export-btn" onclick="exportCSV()">⬇ Session Manifest</button>
+      </div>
+      <div style="display:none">
+        <select id="price-type">
+          <option value="whatnot">Whatnot price (fees added)</option>
+          <option value="ebay">eBay UK price</option>
+          <option value="custom">Custom price only</option>
+        </select>
+        <pre id="csv-preview"></pre>
+      </div>
+    </div>
+
+    <!-- ═══ SCAN PANEL (slide-in) — camera + classification ═══ -->
+    <div id="scan-panel" onclick="if(event.target===this)closeScanPanel()">
+      <div class="sx-panel-card">
+        <div class="sx-panel-head">
+          <div>
+            <div class="sx-panel-title">Add Comics</div>
+            <div class="sx-panel-sub">New scans go to <b id="sx-panel-boxname">no box</b></div>
+          </div>
+          <button class="sx-panel-close" onclick="closeScanPanel()">×</button>
+        </div>
+        <div class="sx-panel-body">
 
         <!-- Camera Panel -->
         <div class="cc-camera-panel">
@@ -2687,57 +2742,9 @@ a.lkd-tr:active { background: var(--cc-bg2); }
           </div>
         </div>
 
-      </div><!-- /scan-tool -->
-
-      <!-- CENTER: Archive (scanned comics) -->
-      <div id="scan-archive">
-        <div class="scan-archive-head">
-          <span class="cmd-breadcrumb-icon">▣▣</span>
-          <span class="cmd-breadcrumb-path">COMMAND CENTER / <span>LIVE_SCAN</span></span>
-          <div class="cmd-header-search" style="margin-left:auto;max-width:320px">
-            <span class="cmd-header-search-icon">⌕</span>
-            <input type="search" id="mob-search" placeholder="Search archive..." oninput="applyMobileSearch()" autocomplete="off" />
-          </div>
-          <button class="cmd-icon-btn" onclick="refetchAllPrices()" title="Refresh prices">↻</button>
-          <button class="cmd-icon-btn" onclick="showSettings()" title="Settings">⚙</button>
-        </div>
-
-        <!-- Bundle bar (select mode) -->
-        <div id="bundle-bar">
-          <span><strong id="bundle-count">0</strong> selected</span>
-          <button onclick="bundleSelected()" style="padding:4px 10px;border-radius:4px;border:none;background:var(--cc-amber);color:#fff;font-size:9px;font-weight:700;font-family:'Space Mono',monospace;cursor:pointer;letter-spacing:0.06em">BUNDLE</button>
-          <button onclick="toggleSelectMode()" style="background:none;border:none;color:var(--cc-text3);cursor:pointer;font-size:12px">✕</button>
-        </div>
-
-        <!-- Archive grid (scanned comics) -->
-        <div class="scan-archive-body">
-          <div class="comic-list" id="comic-list"></div>
-        </div>
-
-      </div><!-- /scan-archive -->
-
-    </div><!-- /scan-main -->
-
-    <!-- ═══ BOTTOM BAR: Session total + export ═══ -->
-    <div id="scan-bottombar">
-      <div class="sb-session">
-        <span class="sb-session-label">Session Total Value</span>
-        <span class="sb-session-value" id="stat-session-val">£0.00</span>
-      </div>
-      <!-- Hidden export controls (kept for app.js) -->
-      <div style="display:none">
-        <select id="price-type">
-          <option value="whatnot">Whatnot price (fees added)</option>
-          <option value="ebay">eBay UK price</option>
-          <option value="custom">Custom price only</option>
-        </select>
-        <pre id="csv-preview"></pre>
-      </div>
-      <div class="sb-export-actions">
-        <button class="sb-export-btn ghost" onclick="exportInventoryCSV()">⬇ INVENTORY CSV</button>
-        <button class="sb-export-btn" onclick="exportCSV()">⬇ EXPORT SESSION MANIFEST</button>
-      </div>
-    </div><!-- /scan-bottombar -->
+        </div><!-- /sx-panel-body -->
+      </div><!-- /sx-panel-card -->
+    </div><!-- /scan-panel -->
 
   </div><!-- /pane-export -->
 
@@ -3288,6 +3295,7 @@ a.lkd-tr:active { background: var(--cc-bg2); }
         // Per-tab refresh hooks
         if (tab === 'stock' && typeof renderStockRoom === 'function') renderStockRoom();
         if (tab === 'export' && typeof renderBoxSelector === 'function') renderBoxSelector();
+        if (tab !== 'export' && typeof closeScanPanel === 'function') closeScanPanel();
       };
     }, 300);
   });

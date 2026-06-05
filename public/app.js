@@ -263,7 +263,7 @@ async function activateApp(session) {
   renderList();
   renderBoxSelector();
   updateStats();
-  if (isMobile()) { switchMobileTab('scan'); initMobileSwipe(); initHaptic(); }
+  if (isMobile()) { switchMobileTab('inventory'); initMobileSwipe(); initHaptic(); }
 
   // If we have a server token, pull the authoritative inventory in the background
   if (session.token) {
@@ -2015,10 +2015,25 @@ function switchMobileTab(tab) {
     switchTab('stock');
     return;
   }
-  // 'scan' and 'inventory' both live in the export pane; CSS shows the
-  // camera tool for 'scan' and the archive for 'inventory'.
-  // Camera is started only when the user taps Activate.
+  // Archive-first scanning: both Scan and Log show the export pane (the
+  // archive). "Scan" opens the slide-in camera panel; "Log" closes it.
   switchTab('export');
+  if (tab === 'scan') openScanPanel();
+  else closeScanPanel();
+}
+
+// ── Scan panel (slide-in camera + classification) ─────────────────────────────
+function openScanPanel() {
+  const p = document.getElementById('scan-panel');
+  if (!p) return;
+  const sel = document.getElementById('active-box-select');
+  const bn = document.getElementById('sx-panel-boxname');
+  if (bn) bn.textContent = (sel && sel.options[sel.selectedIndex]) ? sel.options[sel.selectedIndex].text : 'no box';
+  p.classList.add('open');
+}
+function closeScanPanel() {
+  const p = document.getElementById('scan-panel');
+  if (p) p.classList.remove('open');
 }
 
 function openMobMore() {
