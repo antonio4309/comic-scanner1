@@ -1,3 +1,6 @@
+import { dHash } from '../lib/imageHash.js';
+import { getSql } from '../lib/db.js';
+
 const SCHEMA = `{
   "title": "Unknown",
   "issue": "Unknown",
@@ -260,6 +263,28 @@ export default async function handler(req, res) {
   const { base64, override } = req.body || {};
   if (!base64) return res.status(400).json({ error: 'No image provided' });
 
+  // ── Scan cache (perceptual hash) — skip Gemini on a near-identical cover ──
+  // Best-effort: any failure (no DB, hash error, query error) falls through to
+  // live identification. An explicit override means "re-identify", so skip cache.
+  let phash = null;
+  const cacheSql = getSql();
+  if (!override && cacheSql) {
+    try {
+      phash = await dHash(Buffer.from(base64, 'base64'));
+      const rows = await cacheSql`
+        SELECT id, result, bit_count((phash # ${phash.toString()}::bigint)::bit(64)) AS distance
+        FROM scan_cache ORDER BY distance ASC LIMIT 1`;
+      if (rows.length && Number(rows[0].distance) <= 6) {
+        try { await cacheSql`UPDATE scan_cache SET hit_count = hit_count + 1 WHERE id = ${rows[0].id}`; } catch {}
+        console.log(`[scan-cache] HIT id=${rows[0].id} distance=${rows[0].distance} — skipping Gemini`);
+        return res.status(200).json({ ...rows[0].result, cached: true });
+      }
+      console.log(`[scan-cache] MISS (nearest distance=${rows[0]?.distance ?? 'none'}) — calling Gemini`);
+    } catch (e) {
+      console.warn('[scan-cache] lookup skipped:', e.message);
+    }
+  }
+
   try {
     // Try the configured model first, then fall back to known-good models.
     // This self-heals if GEMINI_MODEL (env) or the default points at a model
@@ -332,7 +357,7 @@ export default async function handler(req, res) {
     const title = parsed.title || 'Unknown';
     const issue = parsed.issue || 'Unknown';
 
-    return res.status(200).json({
+    const result = {
       title,
       issue,
       publisher:       parsed.publisher       || 'Unknown',
@@ -360,7 +385,23 @@ export default async function handler(req, res) {
       photoAdvice:     parsed.photoAdvice     || '',
       marketInsight:   parsed.marketInsight   || '',
       searchQuery:     parsed.searchQuery     || `${title} ${issue}`.trim()
-    });
+    };
+
+    // Store this identification keyed by the cover's perceptual hash, so a
+    // repeat scan of the same cover hits the cache and skips Gemini.
+    // Awaited so the write actually commits before the serverless fn returns.
+    if (phash !== null && cacheSql) {
+      try {
+        await cacheSql`
+          INSERT INTO scan_cache (phash, result)
+          VALUES (${phash.toString()}::bigint, ${JSON.stringify(result)}::jsonb)`;
+        console.log('[scan-cache] stored new identification');
+      } catch (e) {
+        console.warn('[scan-cache] insert failed:', e.message);
+      }
+    }
+
+    return res.status(200).json({ ...result, cached: false });
 
   } catch (err) {
     return res.status(502).json({ error: 'AI request failed: ' + err.message });

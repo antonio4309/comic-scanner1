@@ -603,6 +603,7 @@ async function scanAndAdd() {
         imageUrl,
         searchQuery: identified.searchQuery || `${newTitle} ${newIssue} ${identified.publisher || ''} ${identified.year || ''}`.trim(),
         possibleDuplicate: checkDuplicate(newTitle, newIssue),
+        scanCached: identified.cached === true,   // served from the scan cache (no Gemini call)
         // ── Stock Room fields ──
         boxId: (typeof activeBoxId !== 'undefined' ? activeBoxId : null),
         sold: false,
@@ -766,6 +767,7 @@ async function fetchEbayPrice(comic, forceRefresh = false) {
       issue: comic.issue || '',
       year: comic.year || '',
       edition: comic.edition || '',
+      publisher: comic.publisher || '',
       isSlabbed: comic.isSlabbed ? '1' : '0',
       slabCompany: comic.slabCompany || '',
       slabGrade: comic.slabGrade || '',
@@ -1305,6 +1307,7 @@ function renderList() {
         ${c.ebayLastSold ? formatLastSoldBox(c.ebayLastSold) : ''}
         ${c.searchQuery ? `<div class="comic-range"><a href="${escapeHtml(buildEbaySoldUrl(c.searchQuery))}" target="_blank" rel="noopener" class="ebay-link">🔗 eBay sold</a>${c.isSlabbed ? `&ensp;<a href="${escapeHtml(buildCGCCensusUrl(c.title, c.issue))}" target="_blank" rel="noopener" class="cgc-link">📊 CGC Census</a>` : ''}</div>` : (c.isSlabbed ? `<div class="comic-range"><a href="${escapeHtml(buildCGCCensusUrl(c.title, c.issue))}" target="_blank" rel="noopener" class="cgc-link">📊 CGC Census</a></div>` : '')}
         <div class="comic-badges">
+          ${c.scanCached ? `<span class="cbadge cbadge-instant" title="Recognised from cache — no AI scan needed">⚡ Instant</span>` : ''}
           ${c.isKeyIssue || c.firstAppearance ? `<span class="cbadge cbadge-key" title="${escapeHtml(c.keyInfo)}">⭐ Key Issue</span>` : ''}
           ${c.firstAppearance ? `<span class="cbadge cbadge-first" title="${escapeHtml(c.firstAppearance)}">1st ${escapeHtml(c.firstAppearance.replace(/^First (full )?appearance of /i,''))}</span>` : ''}
           ${c.isSlabbed ? `<span class="cbadge cbadge-slab" title="${escapeHtml(c.slabCompany + ' ' + c.slabGrade)}">${escapeHtml(c.slabCompany || 'Slabbed')}${c.slabGrade ? ' ' + escapeHtml(c.slabGrade) : ''}</span>` : ''}
@@ -1774,6 +1777,7 @@ async function lookupScan() {
       issue: identified.issue || '',
       year: identified.year || '',
       edition: identified.edition || '',
+      publisher: identified.publisher || '',
       isSlabbed: identified.isSlabbed ? '1' : '0',
       slabCompany: identified.slabCompany || '',
       slabGrade: identified.slabGrade || '',
@@ -1953,6 +1957,7 @@ function renderLookupResult(c, ebay, thumbSrc) {
         <a class="lkd-btn" href="${escapeHtml(censusUrl)}" target="_blank" rel="noopener">CGC Census</a>
       </div>
 
+      ${(c.cached || (ebay && ebay.cached)) ? `<span class="lkd-instant">⚡ Instant${c.cached && ebay && ebay.cached ? ' · scan + price cached' : c.cached ? ' · scan cached' : ' · price cached'}</span>` : ''}
       ${chips ? `<div class="lkd-chips">${chips}</div>` : ''}
       <h1 class="lkd-title">${escapeHtml(c.title)}${issueStr}</h1>
       ${description ? `<p class="lkd-desc">${escapeHtml(description)}</p>` : ''}

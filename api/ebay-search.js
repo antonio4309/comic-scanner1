@@ -1,3 +1,6 @@
+import { bookKey } from '../lib/imageHash.js';
+import { getCachedPrice } from '../lib/priceCache.js';
+
 // ── LISTING CLASSIFICATION ────────────────────────────────────────────────────
 
 function classifyListing(title = '') {
@@ -280,7 +283,7 @@ export default async function handler(req, res) {
     return res.status(500).json({ error: 'eBay OAuth credentials not configured (EBAY_CLIENT_ID / EBAY_CLIENT_SECRET)' });
   }
 
-  const { q, title, issue, year, edition, isSlabbed, slabCompany, slabGrade } = req.query;
+  const { q, title, issue, year, edition, isSlabbed, slabCompany, slabGrade, publisher } = req.query;
   if (!q && !title) return res.status(400).json({ error: 'Missing search query' });
 
   const params = {
@@ -292,12 +295,37 @@ export default async function handler(req, res) {
     isSlabbed: isSlabbed === '1' || isSlabbed === 'true',
     slabCompany: slabCompany || '',
     slabGrade: slabGrade || '',
+    publisher: publisher || '',
   };
 
+  // Build a cache key from book identity + grade context (raw vs CGC 9.8 vs
+  // newsstand price very differently, so they must cache separately).
+  const gradeCtx = params.isSlabbed
+    ? `slab:${(params.slabCompany || 'cgc').toLowerCase()} ${params.slabGrade || ''}`.trim()
+    : (params.edition && params.edition !== 'Unknown' ? `ed:${params.edition.toLowerCase()}` : 'raw');
+  const hasIdent = params.title && params.title !== 'Unknown' && params.issue && params.issue !== 'Unknown';
+  const cacheKey = (hasIdent
+    ? bookKey(params.title, params.issue, params.publisher)
+    : 'q|' + String(params.q || '').toLowerCase().replace(/[^\w\s]/g, '').replace(/\s+/g, ' ').trim()
+  ) + '|' + gradeCtx;
+
+  try {
+    const payload = await getCachedPrice(cacheKey, () => liveLookup(params));
+    if (payload.cached) console.log('[price-cache] HIT', cacheKey, '— zero eBay calls');
+    return res.status(200).json(payload);
+  } catch (err) {
+    console.error('[ebay] handler error:', err.message);
+    return res.status(502).json({ error: 'eBay fetch failed: ' + err.message });
+  }
+}
+
+// ── LIVE eBay LOOKUP (called on cache miss) ───────────────────────────────────
+// Returns the price payload object (found:false or found:true). No caching here.
+async function liveLookup(params) {
   const queries = buildQueries(params);
   const primaryType = queries[0]?.type || 'RAW';
 
-  try {
+  {
     let bestResults = [];
     let usedQuery = '';
     let isSoldData = false;
@@ -325,22 +353,22 @@ export default async function handler(req, res) {
     const stats = calculateStats(bestResults);
 
     if (!stats) {
-      return res.status(200).json({
+      return {
         found: false,
-        query: q || '',
+        query: params.q || '',
         usedQuery,
         gradeBucket: primaryType,
         source: 'No usable eBay results',
         results: [],
-      });
+      };
     }
 
     // Cap confidence for active-listing estimates (asking price ≠ sold price)
     const confidence = isSoldData ? stats.confidence : Math.min(stats.confidence, 30);
 
-    return res.status(200).json({
+    return {
       found: true,
-      query: q || '',
+      query: params.q || '',
       usedQuery,
       gradeBucket: primaryType,
       source: isSoldData ? 'eBay UK sold listings' : 'eBay UK active listings (estimate)',
@@ -378,10 +406,6 @@ export default async function handler(req, res) {
         shippingCost: r.shippingCost,
         sold:         r.sold,
       })),
-    });
-
-  } catch (err) {
-    console.error('[ebay] handler error:', err.message);
-    return res.status(502).json({ error: 'eBay fetch failed: ' + err.message });
+    };
   }
 }
