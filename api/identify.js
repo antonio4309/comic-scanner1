@@ -7,6 +7,10 @@ const SCHEMA = `{
   "publisher": "Unknown",
   "year": "Unknown",
   "variant": "",
+  "isComic": true,
+  "notComicReason": "",
+  "confidenceScore": 0.0,
+  "alternatives": [],
   "isVariant": false,
   "variantDetails": "",
   "coverArtist": "",
@@ -47,6 +51,26 @@ ${SCHEMA}
 - Identify publisher from logo even if partially obscured.
 - Year: use cover date printed on comic. Do not adjust — collectors use the printed cover date.
 - confidence: "High" if title+issue clearly visible, "Medium" if partially visible or inferred, "Low" if guessing.
+
+=== IS THIS A COMIC? ===
+- isComic: true if the image shows a comic book (single issue), graphic novel, or trade paperback cover — even if blurry, partial, bagged, slabbed, or a textless "virgin" art variant.
+- Set isComic: false ONLY if the image is clearly NOT a comic cover at all — e.g. a person/selfie, a pet, a landscape, food, a screenshot, a random household object, a trading card, a magazine, or a blank/black frame.
+- When isComic is false: write a short, friendly notComicReason (e.g. "That looks like a photo of a coffee mug, not a comic cover."), set confidenceScore to 0, and leave the other fields at their defaults. Do NOT invent a comic.
+- When genuinely unsure whether it's a comic, prefer isComic: true and lower confidenceScore — a real comic wrongly rejected is worse than a borderline one let through.
+
+=== CONFIDENCE SCORE (numeric 0..1) ===
+confidenceScore: your numeric confidence in the TITLE + ISSUE identification.
+  • 0.85–1.0: title and issue both clearly legible and unambiguous.
+  • 0.6–0.85: mostly legible but one element inferred, slightly blurry, or a digit that could be misread.
+  • 0.3–0.6: significant guessing — blurry, partial trade dress, or relying mainly on art recognition.
+  • below 0.3: barely identifiable.
+Keep confidenceScore consistent with the string "confidence" field (High ≈ 0.85+, Medium ≈ 0.6, Low ≈ 0.4 or less).
+
+=== ALTERNATIVES ===
+alternatives: up to 2 OTHER plausible identifications, most-likely first, for when you are not certain.
+  • Each item: { "title": "...", "issue": "...", "publisher": "...", "year": "..." }.
+  • Provide them whenever confidenceScore < 0.85 and a realistic different read exists (e.g. an ambiguous issue digit that could be 3 or 8, or a different series the art could belong to).
+  • If you are certain, return an empty array [].
 
 === TEXTLESS / VIRGIN COVERS — IMPORTANT ===
 Some modern variants have NO logo, NO title, NO issue number, NO price box and NO barcode — just full-bleed artwork. These are VIRGIN variants and you must NOT give up just because there is no text to read. Instead:
@@ -239,6 +263,62 @@ async function checkRateLimit(ip) {
   }
 }
 
+// ── Single Gemini call for one model, with self-healing model fallback ────────
+// Tries `primaryModel` first, then known-good ids if it's missing/invalid, and
+// parses the JSON the model returns (stripping code fences, salvaging truncated
+// output). Returns { ok, parsed, servedModel, quota, error }; parsed is null
+// when no attempt produced parseable JSON.
+async function callGemini(primaryModel, requestBody, key) {
+  const candidates = [...new Set([
+    primaryModel,
+    'gemini-2.5-flash',
+    'gemini-2.0-flash',
+    'gemini-1.5-flash',
+  ].filter(Boolean))];
+
+  let lastErr = 'AI request failed';
+  for (const model of candidates) {
+    const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${key}`;
+    let response, rawText;
+    try {
+      response = await fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: requestBody });
+      rawText = await response.text();
+    } catch (e) {
+      lastErr = e.message;
+      continue;
+    }
+
+    if (!response.ok) {
+      let message = rawText;
+      try { message = JSON.parse(rawText).error?.message || rawText; } catch {}
+      lastErr = message;
+      // Quota → stop everything; a different model won't help.
+      if (response.status === 429 || /quota|Too Many Requests/i.test(message)) {
+        return { quota: true, error: 'AI quota reached. Please wait 1 minute and try again.' };
+      }
+      // Model not found / unsupported / other server error → try next candidate.
+      continue;
+    }
+
+    let data;
+    try { data = JSON.parse(rawText); } catch { lastErr = 'Gemini response was not valid JSON'; continue; }
+    const textOut = data.candidates?.[0]?.content?.parts?.[0]?.text || '';
+    if (!textOut) { lastErr = 'Gemini returned empty response'; continue; }
+
+    const cleaned = textOut.replace(/```json|```/g, '').trim();
+    let parsed = null;
+    try {
+      parsed = JSON.parse(cleaned);
+    } catch {
+      // Salvage: extract the outermost { ... } in case of stray prose/truncation.
+      const s = cleaned.indexOf('{'), e = cleaned.lastIndexOf('}');
+      if (s !== -1 && e > s) { try { parsed = JSON.parse(cleaned.slice(s, e + 1)); } catch {} }
+    }
+    return { ok: true, parsed, servedModel: model, error: parsed ? null : 'Could not parse comic data from AI response' };
+  }
+  return { ok: false, error: lastErr };
+}
+
 export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
@@ -246,6 +326,26 @@ export default async function handler(req, res) {
 
   if (req.method === 'OPTIONS') return res.status(200).end();
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
+
+  // ── Correction: a user fixed an identification → teach the scan cache ──
+  // The corrected fields overlay the stored result for this cover's hash, so the
+  // next scan of the same photo returns the corrected identity. Cheap DB write,
+  // no AI call, so it runs before the rate limit / API-key checks.
+  if (req.body && req.body.correction) {
+    const { id, fields } = req.body.correction;
+    const sql = getSql();
+    if (sql && id != null && fields && typeof fields === 'object') {
+      try {
+        await sql`UPDATE scan_cache SET result = result || ${JSON.stringify(fields)}::jsonb WHERE id = ${id}`;
+        console.log('[scan-cache] learned correction for id=' + id);
+        return res.status(200).json({ ok: true });
+      } catch (e) {
+        console.warn('[scan-cache] correction failed:', e.message);
+        return res.status(200).json({ ok: false, error: e.message });
+      }
+    }
+    return res.status(200).json({ ok: false }); // no DB / bad input → harmless no-op
+  }
 
   // Rate limit check
   const ip = req.headers['x-forwarded-for']?.split(',')[0].trim() || req.socket?.remoteAddress || 'unknown';
@@ -281,7 +381,7 @@ export default async function handler(req, res) {
       if (rows.length && Number(rows[0].distance) <= MAX_DIST) {
         try { await cacheSql`UPDATE scan_cache SET hit_count = hit_count + 1 WHERE id = ${rows[0].id}`; } catch {}
         console.log(`[scan-cache] HIT id=${rows[0].id} distance=${rows[0].distance} (≤${MAX_DIST}) — skipping Gemini`);
-        return res.status(200).json({ ...rows[0].result, cached: true });
+        return res.status(200).json({ ...rows[0].result, scanCacheId: rows[0].id, cached: true });
       }
       console.log(`[scan-cache] MISS (nearest distance=${rows[0]?.distance ?? 'none'}, threshold=${MAX_DIST}) — calling Gemini`);
     } catch (e) {
@@ -307,59 +407,73 @@ export default async function handler(req, res) {
       }
     });
 
-    const candidateModels = [...new Set([
-      process.env.GEMINI_MODEL || 'gemini-2.5-flash',
-      'gemini-2.5-flash',
-      'gemini-2.0-flash',
-      'gemini-1.5-flash',
-    ].filter(Boolean))];
+    // ── Model routing: cheapest model first, escalate on low confidence ──
+    // The cheap (Flash-Lite) tier handles the easy majority; anything it can't
+    // parse or returns unsure about (confidenceScore < threshold) is retried once
+    // on the stronger Flash tier. Both tiers are env-overridable.
+    const CHEAP  = process.env.GEMINI_MODEL_CHEAP || 'gemini-2.5-flash-lite';
+    const STRONG = process.env.GEMINI_MODEL       || 'gemini-2.5-flash';
+    const ESCALATE_BELOW = Math.max(0, Math.min(1, Number(process.env.GEMINI_ESCALATE_CONFIDENCE) || 0.7));
 
-    let response, rawText, lastErr = 'AI request failed';
-    for (const model of candidateModels) {
-      const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${GEMINI_KEY}`;
-      response = await fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: requestBody });
-      rawText = await response.text();
-      if (response.ok) break;
+    const scoreOf = (p) => {
+      const n = Number(p?.confidenceScore);
+      return Number.isFinite(n) ? Math.max(0, Math.min(1, n)) : null;
+    };
 
-      let message = rawText;
-      try { message = JSON.parse(rawText).error?.message || rawText; } catch {}
-      lastErr = message;
-      // Quota → stop and report immediately (a different model won't help).
-      if (response.status === 429 || /quota|Too Many Requests/i.test(message)) {
-        return res.status(429).json({ error: 'AI quota reached. Please wait 1 minute and try again.' });
+    const cheap = await callGemini(CHEAP, requestBody, GEMINI_KEY);
+    if (cheap.quota) return res.status(429).json({ error: cheap.error });
+
+    let parsed    = cheap.parsed;
+    let modelUsed = cheap.servedModel || CHEAP;
+    let escalated = false;
+    const cheapScore = scoreOf(parsed);
+
+    // Escalate once if the cheap pass failed to parse or came back unsure.
+    if ((!parsed || cheapScore === null || cheapScore < ESCALATE_BELOW) && STRONG !== modelUsed) {
+      const strong = await callGemini(STRONG, requestBody, GEMINI_KEY);
+      if (strong.quota) {
+        if (!parsed) return res.status(429).json({ error: strong.error });
+      } else if (strong.parsed) {
+        const strongScore = scoreOf(strong.parsed);
+        // Take the stronger result unless the cheap one was actually more confident.
+        if (!parsed || strongScore === null || cheapScore === null || strongScore >= cheapScore) {
+          parsed = strong.parsed;
+          modelUsed = strong.servedModel || STRONG;
+          escalated = true;
+        }
       }
-      // Model not found / unsupported → try the next candidate.
-      if (response.status === 404 || response.status === 400 || /not found|not supported|unknown name|invalid/i.test(message)) {
-        continue;
-      }
-      // Other server error → try next as a last resort.
     }
 
-    if (!response || !response.ok) {
-      return res.status(502).json({ error: ('AI model error — ' + lastErr).slice(0, 300) });
+    if (!parsed) {
+      return res.status(502).json({ error: ('AI model error — ' + (cheap.error || 'no result')).slice(0, 300) });
     }
 
-    let data;
-    try { data = JSON.parse(rawText); } catch {
-      return res.status(502).json({ error: 'Gemini response was not valid JSON: ' + rawText.slice(0, 200) });
-    }
+    const finalScore = scoreOf(parsed);
+    console.log(`[identify] model=${modelUsed} escalated=${escalated} confidenceScore=${finalScore ?? 'n/a'} isComic=${parsed.isComic !== false}`);
 
-    const text = data.candidates?.[0]?.content?.parts?.[0]?.text || '';
-    if (!text) return res.status(502).json({ error: 'Gemini returned empty response' });
-
-    let parsed;
-    const cleaned = text.replace(/```json|```/g, '').trim();
-    try {
-      parsed = JSON.parse(cleaned);
-    } catch {
-      // Salvage: extract the outermost { ... } in case of stray prose/truncation
-      const s = cleaned.indexOf('{'), e = cleaned.lastIndexOf('}');
-      if (s !== -1 && e > s) { try { parsed = JSON.parse(cleaned.slice(s, e + 1)); } catch {} }
-      if (!parsed) return res.status(502).json({ error: 'Could not parse comic data from AI response' });
+    // ── Not a comic? Friendly rejection — never fabricate data or cache it. ──
+    if (parsed.isComic === false) {
+      console.log(`[identify] rejected as non-comic: ${parsed.notComicReason || ''}`);
+      return res.status(200).json({
+        notComic: true,
+        reason: parsed.notComicReason || "That doesn't look like a comic cover.",
+        modelUsed,
+        cached: false,
+      });
     }
 
     const title = parsed.title || 'Unknown';
     const issue = parsed.issue || 'Unknown';
+
+    // Up to 2 sanitised alternative identifications for the confirm/correct UI.
+    const alternatives = Array.isArray(parsed.alternatives)
+      ? parsed.alternatives.slice(0, 2).map(a => ({
+          title:     String(a?.title     || '').slice(0, 120),
+          issue:     String(a?.issue     || '').slice(0, 40),
+          publisher: String(a?.publisher || '').slice(0, 80),
+          year:      String(a?.year      || '').slice(0, 12),
+        })).filter(a => a.title)
+      : [];
 
     const result = {
       title,
@@ -388,24 +502,33 @@ export default async function handler(req, res) {
       conditionReason: parsed.conditionReason || '',
       photoAdvice:     parsed.photoAdvice     || '',
       marketInsight:   parsed.marketInsight   || '',
-      searchQuery:     parsed.searchQuery     || `${title} ${issue}`.trim()
+      searchQuery:     parsed.searchQuery     || `${title} ${issue}`.trim(),
+      // ── Reliability fields (Brief 2) ──
+      confidenceScore: finalScore == null ? 0.8 : finalScore,
+      alternatives,
+      isComic:         true,
+      modelUsed,
     };
 
     // Store this identification keyed by the cover's perceptual hash, so a
-    // repeat scan of the same cover hits the cache and skips Gemini.
-    // Awaited so the write actually commits before the serverless fn returns.
+    // repeat scan of the same cover hits the cache and skips Gemini. Awaited so
+    // the write commits before the serverless fn returns. RETURNING id lets the
+    // client tie a later correction back to this cache row.
+    let scanCacheId = null;
     if (phash !== null && cacheSql) {
       try {
-        await cacheSql`
+        const ins = await cacheSql`
           INSERT INTO scan_cache (phash, result)
-          VALUES (${phash.toString()}::bigint, ${JSON.stringify(result)}::jsonb)`;
-        console.log('[scan-cache] stored new identification');
+          VALUES (${phash.toString()}::bigint, ${JSON.stringify(result)}::jsonb)
+          RETURNING id`;
+        scanCacheId = ins?.[0]?.id ?? null;
+        console.log('[scan-cache] stored new identification id=' + scanCacheId);
       } catch (e) {
         console.warn('[scan-cache] insert failed:', e.message);
       }
     }
 
-    return res.status(200).json({ ...result, cached: false });
+    return res.status(200).json({ ...result, scanCacheId, cached: false });
 
   } catch (err) {
     return res.status(502).json({ error: 'AI request failed: ' + err.message });

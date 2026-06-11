@@ -522,6 +522,8 @@ async function scanAndAdd() {
   const batch = [...pendingPhotos];
   let added = 0;
   let failed = 0;
+  let rejected = 0;              // photos that weren't comic covers
+  const rejectedReasons = [];
   showProgress(0, batch.length);
   let uploadErrorMsg = '';
 
@@ -558,12 +560,21 @@ async function scanAndAdd() {
         identified = await identifyComic(photo.base64, override);
       }
 
+      // Non-comic / garbage input → friendly skip, never fabricate a comic.
+      if (identified && identified.notComic) {
+        rejected++;
+        if (identified.reason) rejectedReasons.push(identified.reason);
+        showProgress(i + 1, batch.length);
+        continue;
+      }
+
       const finalCondition = conditionChoice === 'Auto'
         ? (identified.condition || 'Unknown')
         : conditionChoice;
 
       const newTitle = identified.title || 'Unknown';
       const newIssue = identified.issue || 'Unknown';
+      const confScore = typeof identified.confidenceScore === 'number' ? identified.confidenceScore : 1;
 
       const comic = {
         id: Date.now() + i,
@@ -604,6 +615,11 @@ async function scanAndAdd() {
         searchQuery: identified.searchQuery || `${newTitle} ${newIssue} ${identified.publisher || ''} ${identified.year || ''}`.trim(),
         possibleDuplicate: checkDuplicate(newTitle, newIssue),
         scanCached: identified.cached === true,   // served from the scan cache (no Gemini call)
+        // ── Reliability fields (Brief 2) ──
+        confidenceScore: confScore,
+        alternatives: Array.isArray(identified.alternatives) ? identified.alternatives.slice(0, 2) : [],
+        scanCacheId: identified.scanCacheId ?? null,
+        confirmed: confScore >= 0.8,   // high-confidence scans need no confirmation
         // ── Stock Room fields ──
         boxId: (typeof activeBoxId !== 'undefined' ? activeBoxId : null),
         sold: false,
@@ -628,11 +644,15 @@ async function scanAndAdd() {
   hideProgress();
   document.getElementById('scan-btn').disabled = true;
 
+  const rejectNote = rejected > 0
+    ? ` · 🚫 ${rejected} photo${rejected === 1 ? " didn't" : "s didn't"} look like a comic cover — skipped`
+    : '';
+
   if (added > 0) {
     saveInventory();
     const dupCount = comics.slice(0, added).filter(c => c.possibleDuplicate).length;
     const failNote = failed > 0 ? ` · ⚠ ${failed} couldn't be read — re-upload ${failed === 1 ? 'it' : 'them'}` : '';
-    const dupNote = (dupCount > 0 ? ` · ⚠ ${dupCount} possible duplicate${dupCount > 1 ? 's' : ''} flagged` : '') + failNote;
+    const dupNote = (dupCount > 0 ? ` · ⚠ ${dupCount} possible duplicate${dupCount > 1 ? 's' : ''} flagged` : '') + failNote + rejectNote;
     if (uploadErrorMsg) {
       showStatus('scan-status', 'warn', `⚠ ${added} comic${added === 1 ? '' : 's'} added but photo upload failed: ${uploadErrorMsg}. Use the 📷 button on each card to retry.`);
     } else {
@@ -644,9 +664,14 @@ async function scanAndAdd() {
       }
     }
     if (isMobile()) { showMobToast(`✓ ${added} Comic${added === 1 ? '' : 's'} Saved${dupNote}`); setTimeout(() => switchMobileTab('inventory'), 1200); }
+  } else if (rejected > 0 && failed === 0) {
+    // Everything was a non-comic — friendly, not an error.
+    const why = rejectedReasons[0] ? ` ${escapeHtml(rejectedReasons[0])}` : '';
+    showStatus('scan-status', 'warn',
+      `🚫 ${rejected === 1 ? "That photo doesn't" : `Those ${rejected} photos don't`} look like ${rejected === 1 ? 'a comic cover' : 'comic covers'}.${why} Point the camera at a comic and try again.`);
   } else {
     showStatus('scan-status', 'error', failed > 0
-      ? `✗ Couldn't read ${failed} image${failed === 1 ? '' : 's'} — try clearer, well-lit photos or upload them one at a time.`
+      ? `✗ Couldn't read ${failed} image${failed === 1 ? '' : 's'} — try clearer, well-lit photos or upload them one at a time.${rejectNote}`
       : '✗ No comics were added.');
   }
 }
@@ -1064,6 +1089,15 @@ async function handleRescan(event) {
 
     const identified = await identifyComic(base64, '');
 
+    // Re-scanned photo isn't a comic → keep the existing comic, just warn.
+    if (identified && identified.notComic) {
+      comic.ebayStatus = comic.ebayPrice != null ? 'ok' : 'notfound';
+      renderList();
+      showStatus('scan-status', 'warn', `🚫 That photo doesn't look like a comic cover — kept the original details.`);
+      event.target.value = '';
+      return;
+    }
+
     comic.title = identified.title || comic.title;
     comic.issue = identified.issue || comic.issue;
     comic.publisher = identified.publisher || comic.publisher;
@@ -1087,6 +1121,11 @@ async function handleRescan(event) {
     comic.photoAdvice     = identified.photoAdvice     || '';
     comic.confidence = identified.confidence || 'Low';
     comic.searchQuery = identified.searchQuery || comic.searchQuery;
+    // Reliability fields refreshed by the re-scan
+    comic.confidenceScore = typeof identified.confidenceScore === 'number' ? identified.confidenceScore : 1;
+    comic.alternatives = Array.isArray(identified.alternatives) ? identified.alternatives.slice(0, 2) : [];
+    comic.scanCacheId = identified.scanCacheId ?? comic.scanCacheId ?? null;
+    comic.confirmed = comic.confidenceScore >= 0.8;
 
     try {
       const imageUrl = await uploadImageToBlob(base64);
@@ -1300,6 +1339,7 @@ function renderList() {
           </div>
         </div>` : `
         <div class="comic-title">${escapeHtml(c.title)}${c.issue && c.issue !== 'Unknown' ? ' #' + escapeHtml(c.issue) : ''}<button class="btn-edit-meta" onclick="editComicMeta(${c.id})" title="Fix title / issue number">✎</button></div>`}
+        ${editingMetaId === c.id ? '' : confirmStripHtml(c)}
         <div class="comic-sub">${escapeHtml(sub)}</div>
         ${c.keyInfo && c.keyInfo !== 'Unknown' && c.keyInfo ? `<div class="comic-range">${escapeHtml(c.keyInfo)}</div>` : ''}
         ${c.conditionReason ? `<div class="comic-range">Condition${c.conditionGrade ? ' ~' + escapeHtml(c.conditionGrade) : ''}: ${escapeHtml(c.conditionReason)}</div>` : ''}
@@ -1466,11 +1506,101 @@ function saveComicMeta(id) {
   c.searchQuery = [c.title, c.issue !== 'Unknown' ? c.issue : '', c.publisher !== 'Unknown' ? c.publisher : '', c.year !== 'Unknown' ? c.year : '']
     .filter(Boolean).join(' ').trim();
   c.possibleDuplicate = checkDuplicate(c.title, c.issue);
+  c.confirmed = true;             // user has vouched for these details
+  c.confidenceScore = 1;
   editingMetaId = null;
+  if (changed) learnCorrection(c); // teach the scan cache the corrected identity
   saveInventory();
   // Re-fetch the price for the corrected comic (issue number affects value)
   if (changed && !c.isBundle) { c.ebayStatus = 'loading'; renderList(); fetchEbayPrice(c, true); }
   else renderList();
+}
+
+// ── Confirm / correct flow (Brief 2) ─────────────────────────────────────────
+// Shows under a card whenever the AI wasn't sure (confidenceScore < 0.8) and the
+// user hasn't yet confirmed. >=0.8 scans are confirmed automatically and never
+// show this. The 0.5–0.8 band offers the top guess + tappable alternatives;
+// below 0.5 (or no usable title) it's a "couldn't read it" prompt to enter
+// details manually. Both reuse editComicMeta → searchQuery rebuild → re-price.
+function confirmStripHtml(c) {
+  if (c.isBundle || c.confirmed) return '';
+  const score = typeof c.confidenceScore === 'number' ? c.confidenceScore : 1;
+  if (score >= 0.8) return '';
+
+  const lowRead = score < 0.5 || !c.title || c.title === 'Unknown';
+  if (lowRead) {
+    return `<div class="confirm-strip confirm-low">
+      <div class="confirm-q">⚠ Couldn't read this clearly — please check it.</div>
+      <div class="confirm-actions">
+        <button class="confirm-manual" onclick="editComicMeta(${c.id})">✎ Enter details</button>
+        <button class="confirm-yes" onclick="confirmComic(${c.id})">Looks right ✓</button>
+      </div>
+    </div>`;
+  }
+
+  const alts = Array.isArray(c.alternatives) ? c.alternatives : [];
+  const altChips = alts.map((a, i) => {
+    const label = `${a.title || ''}${a.issue ? ' #' + a.issue : ''}`.trim();
+    if (!label) return '';
+    return `<button class="alt-chip" onclick="applyAlternative(${c.id}, ${i})" title="Use this instead">${escapeHtml(label)}</button>`;
+  }).filter(Boolean).join('');
+
+  return `<div class="confirm-strip">
+    <div class="confirm-q">Is this right?</div>
+    <div class="confirm-actions">
+      <button class="confirm-yes" onclick="confirmComic(${c.id})">Yes ✓</button>
+      ${altChips}
+      <button class="confirm-manual" onclick="editComicMeta(${c.id})">None of these</button>
+    </div>
+  </div>`;
+}
+
+// User vouched for the current guess: clear the prompt and let the cache learn it.
+function confirmComic(id) {
+  const c = comics.find(x => x.id === id);
+  if (!c) return;
+  c.confirmed = true;
+  c.confidenceScore = 1;
+  learnCorrection(c);
+  saveInventory();
+  renderList();
+}
+
+// User picked one of the AI's alternative reads → adopt it, re-price, teach cache.
+function applyAlternative(id, idx) {
+  const c = comics.find(x => x.id === id);
+  if (!c) return;
+  const alt = (c.alternatives || [])[idx];
+  if (!alt) return;
+  if (alt.title) c.title = alt.title;
+  if (alt.issue) c.issue = alt.issue; else if (c.issue === 'Unknown') c.issue = 'Unknown';
+  if (alt.publisher) c.publisher = alt.publisher;
+  if (alt.year) c.year = alt.year;
+  c.searchQuery = [c.title, c.issue !== 'Unknown' ? c.issue : '', c.publisher !== 'Unknown' ? c.publisher : '', c.year !== 'Unknown' ? c.year : '']
+    .filter(Boolean).join(' ').trim();
+  c.possibleDuplicate = checkDuplicate(c.title, c.issue);
+  c.confirmed = true;
+  c.confidenceScore = 1;
+  learnCorrection(c);
+  saveInventory();
+  if (!c.isBundle) { c.ebayStatus = 'loading'; renderList(); fetchEbayPrice(c, true); }
+  else renderList();
+}
+
+// Push a corrected identification back to the scan cache so the next scan of the
+// same cover returns the corrected details. Best-effort, fire-and-forget.
+function learnCorrection(c) {
+  if (!c || c.scanCacheId == null) return;
+  try {
+    fetch('/api/identify', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ correction: { id: c.scanCacheId, fields: {
+        title: c.title, issue: c.issue, publisher: c.publisher, year: c.year,
+        searchQuery: c.searchQuery, confidence: 'High', confidenceScore: 1, alternatives: []
+      } } })
+    }).catch(() => {});
+  } catch {}
 }
 
 function normKey(title, issue) {
