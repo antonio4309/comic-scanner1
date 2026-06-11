@@ -268,18 +268,22 @@ export default async function handler(req, res) {
   // live identification. An explicit override means "re-identify", so skip cache.
   let phash = null;
   const cacheSql = getSql();
+  // Match tolerance: dHash is image-based, so a different photo of the same
+  // comic has a larger distance. Tunable via env; higher = more cross-photo
+  // hits but more risk of matching a different look-alike cover.
+  const MAX_DIST = Math.max(0, Math.min(20, Number(process.env.SCAN_CACHE_MAX_DISTANCE) || 10));
   if (!override && cacheSql) {
     try {
       phash = await dHash(Buffer.from(base64, 'base64'));
       const rows = await cacheSql`
         SELECT id, result, bit_count((phash # ${phash.toString()}::bigint)::bit(64)) AS distance
         FROM scan_cache ORDER BY distance ASC LIMIT 1`;
-      if (rows.length && Number(rows[0].distance) <= 6) {
+      if (rows.length && Number(rows[0].distance) <= MAX_DIST) {
         try { await cacheSql`UPDATE scan_cache SET hit_count = hit_count + 1 WHERE id = ${rows[0].id}`; } catch {}
-        console.log(`[scan-cache] HIT id=${rows[0].id} distance=${rows[0].distance} — skipping Gemini`);
+        console.log(`[scan-cache] HIT id=${rows[0].id} distance=${rows[0].distance} (≤${MAX_DIST}) — skipping Gemini`);
         return res.status(200).json({ ...rows[0].result, cached: true });
       }
-      console.log(`[scan-cache] MISS (nearest distance=${rows[0]?.distance ?? 'none'}) — calling Gemini`);
+      console.log(`[scan-cache] MISS (nearest distance=${rows[0]?.distance ?? 'none'}, threshold=${MAX_DIST}) — calling Gemini`);
     } catch (e) {
       console.warn('[scan-cache] lookup skipped:', e.message);
     }
