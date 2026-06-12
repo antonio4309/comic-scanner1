@@ -1,5 +1,6 @@
 import { dHash } from '../lib/imageHash.js';
 import { getSql } from '../lib/db.js';
+import { getAuthSession, meterScan, readTrialCount, makeTrialCookie, ANON_TRIAL_LIMIT } from '../lib/session.js';
 
 const SCHEMA = `{
   "title": "Unknown",
@@ -362,6 +363,37 @@ export default async function handler(req, res) {
 
   const { base64, override } = req.body || {};
   if (!base64) return res.status(400).json({ error: 'No image provided' });
+
+  // ── Scan metering (server-enforced quota) ──
+  // Logged-in: per-tier monthly quota, incremented atomically in Postgres.
+  // Logged-out: up to ANON_TRIAL_LIMIT trial scans via a signed cookie.
+  // The client only DISPLAYS remaining scans — this block is the real gate.
+  // Counted up front (cache hits and override re-scans included) so the cap is
+  // predictable and can't be bypassed; not refunded if Gemini later errors.
+  const meterSession = await getAuthSession(req);
+  if (meterSession?.user?.id) {
+    const tier = meterSession.user.tier || 'free';
+    const meter = await meterScan(meterSession.user.id, tier);
+    if (!meter.ok) {
+      return res.status(402).json({
+        error: `You've used all ${meter.limit} scans on the ${tier} plan this month.`,
+        overQuota: true, tier, used: meter.used, limit: meter.limit, upgradeUrl: '/pricing',
+      });
+    }
+    res.setHeader('X-Scans-Used', String(meter.used));
+    res.setHeader('X-Scans-Limit', String(meter.limit));
+  } else {
+    const trial = readTrialCount(req);
+    if (trial >= ANON_TRIAL_LIMIT) {
+      return res.status(402).json({
+        error: `You've used your ${ANON_TRIAL_LIMIT} free trial scans. Create a free account for 25 scans every month.`,
+        trial: true, overQuota: true, used: trial, limit: ANON_TRIAL_LIMIT, upgradeUrl: '/pricing',
+      });
+    }
+    res.setHeader('Set-Cookie', makeTrialCookie(trial + 1));
+    res.setHeader('X-Scans-Used', String(trial + 1));
+    res.setHeader('X-Scans-Limit', String(ANON_TRIAL_LIMIT));
+  }
 
   // ── Scan cache (perceptual hash) — skip Gemini on a near-identical cover ──
   // Best-effort: any failure (no DB, hash error, query error) falls through to

@@ -9,6 +9,57 @@ function getSession() {
 }
 function saveSession(s) { localStorage.setItem('lbl_session', JSON.stringify(s)); }
 
+// ── Better Auth client (Brief 3) ───────────────────────────────────────────────
+// Auth is cookie-based and the server is the source of truth — the localStorage
+// session above is only a UI cache (name/email/tier) for instant render. Every
+// API call sends the cookie via credentials:'include'; the server re-validates.
+const AUTH_BASE = '/api/auth';
+async function baFetch(path, body) {
+  const res = await fetch(AUTH_BASE + path, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    credentials: 'include',
+    body: body ? JSON.stringify(body) : undefined,
+  });
+  let data = null; try { data = await res.json(); } catch {}
+  return { ok: res.ok, status: res.status, data };
+}
+const baSignIn  = (email, password)       => baFetch('/sign-in/email', { email, password });
+const baSignUp  = (name, email, password) => baFetch('/sign-up/email', { name, email, password });
+const baSignOut = ()                      => baFetch('/sign-out', {});
+const baChangePassword = (currentPassword, newPassword) =>
+  baFetch('/change-password', { currentPassword, newPassword, revokeOtherSessions: false });
+const baDeleteUser = () => baFetch('/delete-user', {});
+
+// Per-user feature selection is a UI-only concept (not in Better Auth) — cache it.
+function getUserFeatures(userId) {
+  try { const f = JSON.parse(localStorage.getItem('lbl_feat_' + userId) || 'null'); if (Array.isArray(f) && f.length) return f; } catch {}
+  return ['export', 'lookup'];
+}
+function setUserFeatures(userId, features) {
+  try { localStorage.setItem('lbl_feat_' + userId, JSON.stringify(features)); } catch {}
+}
+
+// Read the live session from the auth cookie. Returns a normalized session
+// (the app's shape) or null. This is the real gate, run on every page load.
+async function baGetSession() {
+  try {
+    const res = await fetch(AUTH_BASE + '/get-session', { credentials: 'include', headers: { 'Content-Type': 'application/json' } });
+    if (!res.ok) return null;
+    const data = await res.json();
+    if (!data || !data.user) return null;
+    const u = data.user;
+    return {
+      userId: u.id,
+      email: u.email,
+      name: u.name || (u.email ? u.email.split('@')[0] : 'You'),
+      tier: u.tier || 'free',
+      plan: (u.tier && u.tier !== 'free') ? 'pro' : 'free',
+      features: getUserFeatures(u.id),
+    };
+  } catch { return null; }
+}
+
 function hashPw(pw) {
   return btoa(unescape(encodeURIComponent(pw + '_lbl_2026')));
 }
@@ -41,7 +92,11 @@ function updateUserFeatures(userId, features) {
   if (u) { u.features = features; saveUsers(users); }
 }
 
-function logout() { localStorage.removeItem('lbl_session'); location.reload(); }
+async function logout() {
+  try { await baSignOut(); } catch {}
+  localStorage.removeItem('lbl_session');
+  location.reload();
+}
 
 // ── Inventory Persistence ──────────────────────────────────────────────────────
 
@@ -53,12 +108,10 @@ function getInventoryKey(uid) { return 'lbl_inv_' + uid; }
 function saveInventory() {
   if (!currentUserId) return;
   try { localStorage.setItem(getInventoryKey(currentUserId), JSON.stringify(comics)); } catch(e) {}
-  // Debounced server sync (3s after last change)
-  const session = getSession();
-  if (session?.token) {
-    clearTimeout(syncTimer);
-    syncTimer = setTimeout(() => syncInventoryToServer(session.token), 3000);
-  }
+  // Debounced server sync (3s after last change). Auth is via cookie now, so no
+  // token needed — the server scopes to the session user.
+  clearTimeout(syncTimer);
+  syncTimer = setTimeout(() => syncInventoryToServer(), 3000);
 }
 
 function loadInventory() {
@@ -138,42 +191,18 @@ async function doLogin() {
   const btn = document.querySelector('#auth-form-login .auth-submit');
   btn.disabled = true; btn.textContent = '⟳ Signing in...';
   try {
-    const res = await fetch('/api/auth', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ action: 'login', email, password: pw })
-    });
-    const data = await res.json();
-    if (!res.ok) {
-      // Server doesn't know this account yet — try local and auto-migrate
-      const local = authLogin(email, pw);
-      if (local.ok) {
-        const regRes = await fetch('/api/auth', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ action: 'register', name: local.session.name, email, password: pw })
-        });
-        if (regRes.ok) {
-          const reg = await regRes.json();
-          const session = { userId: reg.userId, email: reg.email, name: reg.name, features: local.session.features, plan: reg.plan, token: reg.token };
-          saveSession(session);
-          // Migrate local inventory under old userId to server under new userId
-          const oldInv = JSON.parse(localStorage.getItem(getInventoryKey(local.session.userId)) || '[]');
-          if (oldInv.length) { currentUserId = reg.userId; comics = oldInv; saveInventory(); syncInventoryToServer(reg.token); }
-          activateApp(session);
-          return;
-        }
-      }
-      showAuthErr('login-error', data.error || 'Login failed'); return;
+    const { ok, data } = await baSignIn(email, pw);
+    if (!ok) {
+      showAuthErr('login-error', (data && (data.message || data.error)) || 'Incorrect email or password.');
+      return;
     }
-    const session = { userId: data.userId, email: data.email, name: data.name, features: data.features, plan: data.plan, token: data.token };
+    // Cookie is set by the server; read the authoritative session back.
+    const session = await baGetSession();
+    if (!session) { showAuthErr('login-error', 'Could not start your session. Please try again.'); return; }
     saveSession(session);
     activateApp(session);
   } catch (e) {
-    // Offline fallback — use local auth
-    const local = authLogin(email, pw);
-    if (local.ok) { activateApp(local.session); }
-    else { showAuthErr('login-error', 'Connection error. Check your internet and try again.'); }
+    showAuthErr('login-error', 'Connection error. Check your internet and try again.');
   } finally {
     btn.disabled = false; btn.textContent = '→ Authenticate';
   }
@@ -187,28 +216,21 @@ async function doRegister() {
   if (!name || !email || !pw) { showAuthErr('reg-error', 'Please fill in all fields.'); return; }
   if (pw !== confirm) { showAuthErr('reg-error', 'Passwords do not match.'); return; }
   if (pw.length < 6) { showAuthErr('reg-error', 'Password must be at least 6 characters.'); return; }
+  if (pw.length < 8) { showAuthErr('reg-error', 'Password must be at least 8 characters.'); return; }
   const btn = document.querySelector('#auth-form-register .auth-submit');
   btn.disabled = true; btn.textContent = '⟳ Creating account...';
   try {
-    const res = await fetch('/api/auth', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ action: 'register', name, email, password: pw })
-    });
-    const data = await res.json();
-    if (!res.ok) { showAuthErr('reg-error', data.error || 'Registration failed'); return; }
-    pendingUser = { id: data.userId, name: data.name, email: data.email, token: data.token, plan: data.plan };
+    const { ok, data } = await baSignUp(name, email, pw);
+    if (!ok) { showAuthErr('reg-error', (data && (data.message || data.error)) || 'Registration failed'); return; }
+    // autoSignIn sets the cookie; read the session back for the feature step.
+    const session = await baGetSession();
+    if (!session) { showAuthErr('reg-error', 'Account created — please sign in.'); switchAuthMode('login'); return; }
+    pendingUser = { id: session.userId, name: session.name, email: session.email, plan: session.plan };
     selectedFeatures = new Set(['export', 'lookup']);
     renderFeatureCards();
     switchAuthMode('features');
   } catch (e) {
-    // Offline fallback — create local-only account
-    const r = authRegister(name, email, pw);
-    if (!r.ok) { showAuthErr('reg-error', r.error); return; }
-    pendingUser = r.user;
-    selectedFeatures = new Set(['export', 'lookup']);
-    renderFeatureCards();
-    switchAuthMode('features');
+    showAuthErr('reg-error', 'Connection error. Check your internet and try again.');
   } finally {
     btn.disabled = false; btn.textContent = '→ Continue';
   }
@@ -228,8 +250,8 @@ function renderFeatureCards() {
 function doSelectFeatures() {
   if (!selectedFeatures.size) { showAuthErr('feat-error', 'Please select at least one option.'); return; }
   const features = Array.from(selectedFeatures);
-  updateUserFeatures(pendingUser.id, features);
-  const session = { userId: pendingUser.id, email: pendingUser.email, name: pendingUser.name, features, plan: pendingUser.plan || 'free', token: pendingUser.token || null };
+  setUserFeatures(pendingUser.id, features);
+  const session = { userId: pendingUser.id, email: pendingUser.email, name: pendingUser.name, features, plan: pendingUser.plan || 'free' };
   saveSession(session);
   activateApp(session);
 }
@@ -265,37 +287,85 @@ async function activateApp(session) {
   updateStats();
   if (isMobile()) { switchMobileTab('inventory'); initMobileSwipe(); initHaptic(); }
 
-  // If we have a server token, pull the authoritative inventory in the background
-  if (session.token) {
-    try {
-      const res = await fetch('/api/sync', { headers: { 'Authorization': `Bearer ${session.token}` } });
-      if (res.ok) {
-        const { inventory: serverInv } = await res.json();
-        if (serverInv.length > 0) {
-          // Restore local thumbnails where we have them
-          const localMap = new Map(comics.map(c => [c.id, c]));
-          comics = serverInv.map(sc => {
-            const lc = localMap.get(sc.id);
-            return lc?.thumb ? { ...sc, thumb: lc.thumb } : sc;
-          });
-          saveInventory();
-          renderList(); updateStats();
-        }
+  // Pull the authoritative inventory (cookie-scoped) in the background.
+  let serverInv = null;
+  try {
+    const res = await fetch('/api/inventory', { credentials: 'include' });
+    if (res.ok) {
+      serverInv = (await res.json()).inventory || [];
+      if (serverInv.length > 0) {
+        const localMap = new Map(comics.map(c => [c.id, c]));
+        comics = serverInv.map(sc => {
+          const lc = localMap.get(sc.id);          // restore local thumbnails
+          return lc?.thumb ? { ...sc, thumb: lc.thumb } : sc;
+        });
+        saveInventory();
+        renderList(); updateStats();
       }
-    } catch (_) { /* offline — use local cache */ }
-  }
+    }
+  } catch (_) { /* offline — use local cache */ }
+
+  // First login with an empty server collection but local comics from before →
+  // offer a one-time import. The flag + empty-server check prevent re-importing.
+  maybeOfferImport(serverInv);
+
+  // Usage meter (display only).
+  refreshUsage();
 }
 
 let syncTimer = null;
-async function syncInventoryToServer(token) {
+async function syncInventoryToServer() {
   try {
     const toStore = comics.map(({ thumb, ...rest }) => rest);
-    await fetch('/api/sync', {
+    await fetch('/api/inventory', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
-      body: JSON.stringify({ inventory: toStore })
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
+      body: JSON.stringify({ inventory: toStore }),
     });
   } catch (_) { /* silently ignore — localStorage is the fallback */ }
+}
+
+// ── One-time localStorage → server import (Brief 3) ────────────────────────────
+function importedFlagKey(uid) { return 'lbl_imported_' + uid; }
+function maybeOfferImport(serverInv) {
+  if (!currentUserId) return;
+  if (localStorage.getItem(importedFlagKey(currentUserId))) return;  // already handled
+  if (Array.isArray(serverInv) && serverInv.length > 0) {            // server already has data
+    localStorage.setItem(importedFlagKey(currentUserId), '1');
+    return;
+  }
+  // Gather comics from any local inventory keys (including pre-cutover accounts).
+  const local = [];
+  const seen = new Set();
+  for (let i = 0; i < localStorage.length; i++) {
+    const k = localStorage.key(i);
+    if (!k || !k.startsWith('lbl_inv_')) continue;
+    try {
+      for (const c of JSON.parse(localStorage.getItem(k) || '[]')) {
+        const id = String(c.id);
+        if (!seen.has(id)) { seen.add(id); local.push(c); }
+      }
+    } catch {}
+  }
+  if (!local.length) { localStorage.setItem(importedFlagKey(currentUserId), '1'); return; }
+  showImportPrompt(local);
+}
+
+function showImportPrompt(local) {
+  const n = local.length;
+  if (!confirm(`Import your existing collection?\n\nWe found ${n} comic${n === 1 ? '' : 's'} saved on this device. Add ${n === 1 ? 'it' : 'them'} to your account?`)) {
+    localStorage.setItem(importedFlagKey(currentUserId), '1'); // declined — don't ask again
+    return;
+  }
+  // Merge into current comics by id (no duplicates), persist + sync.
+  const byId = new Map(comics.map(c => [String(c.id), c]));
+  for (const c of local) if (!byId.has(String(c.id))) { byId.set(String(c.id), c); comics.push(c); }
+  localStorage.setItem(importedFlagKey(currentUserId), '1');
+  saveInventory();
+  syncInventoryToServer();
+  renderList(); updateStats();
+  showStatus('scan-status', 'success', `✓ Imported ${n} comic${n === 1 ? '' : 's'} into your account.`);
 }
 
 function applyFeatureRestrictions(features) {
@@ -327,16 +397,84 @@ function renderHeaderUser(session) {
   if (!el) return;
   const labels = session.features.map(f => f === 'export' ? 'Export' : 'Lookup').join(' + ');
   const userIsPro = session.plan === 'pro';
+  const tier = session.tier || 'free';
   el.innerHTML = `
+    <span id="usage-meter" class="usage-meter" title="Scans used this month" onclick="showSettings()"></span>
     <button class="user-chip-btn" onclick="showSettings()">
       <span style="color:var(--amber)">◆</span>
       ${escapeHtml(session.name)}
-      ${userIsPro ? '<span class="pro-chip">Pro</span>' : ''}
+      <span class="tier-chip tier-${escapeHtml(tier)}">${escapeHtml(tier)}</span>
       <span style="color:var(--dim)">·</span>
       <span style="color:var(--dim)">${escapeHtml(labels)}</span>
     </button>
     <button class="btn-logout" onclick="logout()">Logout</button>
   `;
+}
+
+// ── Usage meter (Brief 3) — display only; the quota is enforced server-side. ──
+let usageState = null;
+function renderUsageMeter() {
+  const el = document.getElementById('usage-meter');
+  if (!el || !usageState) return;
+  const { used, limit } = usageState;
+  const low = limit - used <= Math.max(3, Math.ceil(limit * 0.1));
+  const over = used >= limit;
+  el.innerHTML = `<span class="um-ic">⚡</span> ${used}/${limit} scans`;
+  el.classList.toggle('um-low', low && !over);
+  el.classList.toggle('um-over', over);
+}
+async function refreshUsage() {
+  try {
+    const res = await fetch('/api/usage', { credentials: 'include' });
+    if (!res.ok) return;
+    usageState = await res.json();
+    renderUsageMeter();
+  } catch {}
+}
+// Optimistically reflect the X-Scans-* headers returned by /api/identify.
+function noteUsageFromHeaders(res) {
+  if (!res || !res.headers) return;
+  const used = Number(res.headers.get('X-Scans-Used'));
+  const limit = Number(res.headers.get('X-Scans-Limit'));
+  if (Number.isFinite(used) && Number.isFinite(limit) && limit > 0) {
+    usageState = { ...(usageState || {}), used, limit };
+    renderUsageMeter();
+  }
+}
+
+// Polite over-quota screen with an upgrade prompt (Brief 3). `info` is the 402
+// body from /api/identify: { tier|trial, used, limit, upgradeUrl }.
+function showOverQuota(info) {
+  document.getElementById('over-quota-modal')?.remove();
+  const isTrial = !!info.trial;
+  const isExport = info.feature === 'export';
+  const limit = info.limit || (isTrial ? 3 : 25);
+  const heading = isExport ? 'Whatnot export is a Seller feature'
+    : isTrial ? "You've used your free trial scans"
+    : "You've hit this month's scan limit";
+  const body = isExport
+    ? `Upgrade to the <strong>Seller</strong> plan to export your collection as a Whatnot bulk-import CSV.`
+    : isTrial
+    ? `Create a free account to get <strong>25 scans every month</strong> — and keep your collection synced across devices.`
+    : `You've used all <strong>${limit}</strong> scans on the <strong>${escapeHtml(info.tier || 'free')}</strong> plan this month. Upgrade for more, or come back next month — your count resets on the 1st.`;
+  const primary = isTrial
+    ? `<button class="oq-primary" onclick="document.getElementById('over-quota-modal').remove(); goToAuth('register')">Create free account</button>`
+    : `<a class="oq-primary" href="${escapeHtml(info.upgradeUrl || '/pricing')}">See plans</a>`;
+  const overlay = document.createElement('div');
+  overlay.id = 'over-quota-modal';
+  overlay.className = 'over-quota-modal';
+  overlay.innerHTML = `
+    <div class="oq-card">
+      <div class="oq-emoji">⚡</div>
+      <h2 class="oq-title">${escapeHtml(heading)}</h2>
+      <p class="oq-body">${body}</p>
+      <div class="oq-actions">
+        ${primary}
+        <button class="oq-dismiss" onclick="document.getElementById('over-quota-modal').remove()">Not now</button>
+      </div>
+    </div>`;
+  overlay.addEventListener('click', (e) => { if (e.target === overlay) overlay.remove(); });
+  document.body.appendChild(overlay);
 }
 
 // ── Main App Init ─────────────────────────────────────────────────────────────
@@ -554,6 +692,7 @@ async function scanAndAdd() {
       try {
         identified = await identifyComic(photo.base64, override);
       } catch (firstErr) {
+        if (firstErr.overQuota) throw firstErr;   // don't retry a hard quota block
         // One retry for transient AI errors (timeouts, truncation, quota blips)
         showStatus('scan-status', 'info', `<span class="spin">⟳</span> Retrying comic ${i + 1} of ${batch.length}...`);
         await new Promise(r => setTimeout(r, 1000));
@@ -633,6 +772,15 @@ async function scanAndAdd() {
       renderList();
       fetchEbayPrice(comic);
     } catch (e) {
+      if (e.overQuota) {
+        // Hit the monthly cap mid-batch → stop, keep what we added, show upgrade.
+        hideProgress();
+        clearPendingPhotos();
+        if (added > 0) { saveInventory(); renderList(); updateStats(); }
+        refreshUsage();
+        showOverQuota(e.quotaInfo || {});
+        return;
+      }
       console.error(e);
       failed++;
       showStatus('scan-status', 'warn', `Comic ${i + 1} failed: ${escapeHtml(e.message)}`);
@@ -680,8 +828,17 @@ async function identifyComic(base64, override) {
   const res = await fetch('/api/identify', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
+    credentials: 'include',
     body: JSON.stringify({ base64, override: override || '' })
   });
+  // Over quota → throw a typed error so the scan loop can stop and show upgrade.
+  if (res.status === 402) {
+    let info = {}; try { info = await res.json(); } catch {}
+    const err = new Error(info.error || 'Scan limit reached.');
+    err.overQuota = true; err.quotaInfo = info;
+    throw err;
+  }
+  noteUsageFromHeaders(res);      // keep the meter fresh
   return await readApiJson(res, 'AI identify API');
 }
 
@@ -1703,16 +1860,37 @@ function buildCSV() {
   return rows.map(row => row.map(csvCell).join(',')).join('\r\n');
 }
 
-function exportCSV() {
+async function exportCSV() {
   if (!comics.length) { alert('No comics to export'); return; }
-  const csv = buildCSV();
-  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8' });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = `whatnot_comics_${new Date().toISOString().slice(0,10)}.csv`;
-  document.body.appendChild(a); a.click();
-  document.body.removeChild(a); URL.revokeObjectURL(url);
+  // Whatnot CSV export is a Seller-tier feature, gated server-side. Sync the
+  // latest inventory first so the server builds the CSV from current data.
+  try {
+    await syncInventoryToServer();
+    const res = await fetch('/api/export-csv', { credentials: 'include' });
+    if (res.status === 403) {
+      const info = await res.json().catch(() => ({}));
+      showOverQuota({ tier: info.tier || 'free', upgradeUrl: info.upgradeUrl || '/pricing',
+        // Reuse the upgrade modal with export-specific copy.
+        feature: 'export' });
+      return;
+    }
+    if (res.status === 401) { alert('Please sign in to export.'); return; }
+    if (!res.ok) {
+      const info = await res.json().catch(() => ({}));
+      alert(info.error || 'Export failed. Please try again.');
+      return;
+    }
+    const csv = await res.text();
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `whatnot_comics_${new Date().toISOString().slice(0, 10)}.csv`;
+    document.body.appendChild(a); a.click();
+    document.body.removeChild(a); URL.revokeObjectURL(url);
+  } catch (e) {
+    alert('Export failed: ' + e.message);
+  }
 }
 
 function togglePreview() {
@@ -2253,12 +2431,22 @@ function clearMobileSearch() {
   if (el) { el.value = ''; applyMobileSearch(); }
 }
 
-window.addEventListener('DOMContentLoaded', () => {
-  const session = getSession();
-  if (session) {
-    activateApp(session);
-  } else {
-    document.getElementById('landing-screen').style.display = 'flex';
+window.addEventListener('DOMContentLoaded', async () => {
+  // Render instantly from the cached session, then confirm against the auth
+  // cookie (the real gate). If the cookie is gone/expired, fall back to landing.
+  const cached = getSession();
+  if (cached) activateApp(cached);
+  else document.getElementById('landing-screen').style.display = 'flex';
+
+  const live = await baGetSession();
+  if (live) {
+    saveSession(live);
+    if (!cached) activateApp(live);
+    else { renderHeaderUser(live); refreshUsage(); }   // refresh tier/meter
+  } else if (cached) {
+    // Stale local cache but no valid cookie → sign out the UI.
+    localStorage.removeItem('lbl_session');
+    location.reload();
   }
 });
 
@@ -2371,38 +2559,21 @@ async function doChangePassword() {
   const oldPw    = document.getElementById('st-pw-old').value;
   const newPw    = document.getElementById('st-pw-new').value;
   const confirm  = document.getElementById('st-pw-confirm').value;
-  const session  = getSession();
-  const users    = getUsers();
-  const user     = users.find(u => u.id === session.userId);
   if (!oldPw || !newPw) { showStMsg('st-pw-error', 'Fill in all password fields.'); return; }
-  if (newPw.length < 6) { showStMsg('st-pw-error', 'New password must be at least 6 characters.'); return; }
+  if (newPw.length < 8) { showStMsg('st-pw-error', 'New password must be at least 8 characters.'); return; }
   if (newPw !== confirm) { showStMsg('st-pw-error', 'New passwords do not match.'); return; }
-  if (user && user.passwordHash !== hashPw(oldPw)) { showStMsg('st-pw-error', 'Current password is incorrect.'); return; }
 
-  // Update server first (authoritative)
-  if (session?.token) {
-    try {
-      const res = await fetch('/api/auth', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${session.token}` },
-        body: JSON.stringify({ action: 'change-password', password: oldPw, newPassword: newPw })
-      });
-      if (!res.ok) {
-        const err = await res.json().catch(() => ({}));
-        showStMsg('st-pw-error', err.error || 'Server rejected password change.');
-        return;
-      }
-    } catch (e) {
-      showStMsg('st-pw-error', 'Network error — password not changed.');
+  try {
+    const { ok, data } = await baChangePassword(oldPw, newPw);
+    if (!ok) {
+      showStMsg('st-pw-error', (data && (data.message || data.error)) || 'Current password is incorrect.');
       return;
     }
+  } catch (e) {
+    showStMsg('st-pw-error', 'Network error — password not changed.');
+    return;
   }
 
-  // Mirror to localStorage cache if the user exists there
-  if (user) {
-    user.passwordHash = hashPw(newPw);
-    saveUsers(users);
-  }
   document.getElementById('st-pw-old').value = '';
   document.getElementById('st-pw-new').value = '';
   document.getElementById('st-pw-confirm').value = '';
@@ -2413,7 +2584,7 @@ function doSaveFeatures() {
   if (!stSelectedFeatures.size) { showStMsg('st-feat-error', 'Select at least one tool.'); return; }
   const session  = getSession();
   const features = Array.from(stSelectedFeatures);
-  updateUserFeatures(session.userId, features);
+  setUserFeatures(session.userId, features);
   const newSession = { ...session, features };
   saveSession(newSession);
   showStMsg('st-feat-ok', '✓ Tools updated. Reloading in 1 second...');
@@ -2421,38 +2592,20 @@ function doSaveFeatures() {
 }
 
 function doUpgrade() {
-  const session = getSession();
-  const users   = getUsers();
-  const user    = users.find(u => u.id === session.userId);
-  if (!user) return;
-  user.plan = 'pro';
-  saveUsers(users);
-  const proSession = { ...session, plan: 'pro' };
-  saveSession(proSession);
-  renderHeaderUser(proSession);
-  renderStPlan(user, proSession);
-  showStMsg('st-name-ok', '✓ Upgraded to Pro! Billing activates when subscriptions launch.');
+  // Tier is server-owned now; real billing arrives with the pricing page.
+  window.location.href = '/pricing';
 }
 
 async function doDeleteAccount() {
   if (!confirm('Permanently delete your account and all data? This cannot be undone.')) return;
   const session = getSession();
-  // Delete from server
-  if (session?.token) {
-    try {
-      await fetch('/api/auth', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${session.token}` },
-        body: JSON.stringify({ action: 'delete-account', email: session.email, password: '' })
-      });
-    } catch (_) {}
-  }
+  try { await baDeleteUser(); } catch (_) {}
   // Clear local data
-  let users = getUsers();
-  users = users.filter(u => u.id !== session.userId);
-  saveUsers(users);
-  localStorage.removeItem(getInventoryKey(session.userId));
-  localStorage.removeItem(getPriceCacheKey(session.userId));
+  if (session?.userId) {
+    localStorage.removeItem(getInventoryKey(session.userId));
+    localStorage.removeItem(getPriceCacheKey(session.userId));
+    localStorage.removeItem(importedFlagKey(session.userId));
+  }
   localStorage.removeItem('lbl_session');
   location.reload();
 }

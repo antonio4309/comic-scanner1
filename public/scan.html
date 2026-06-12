@@ -2036,6 +2036,29 @@
 #main-app .confirm-manual { background: transparent; border: 1px solid var(--cc-border2); color: var(--cc-text3); }
 #main-app .confirm-manual:hover { border-color: var(--cc-text3); color: var(--cc-text2); }
 
+/* Account: usage meter + tier chip (Brief 3) */
+.usage-meter { display: inline-flex; align-items: center; gap: 4px; font-family: 'Space Mono', monospace; font-size: 11px; font-weight: 700; color: var(--cyan, #00d3bd); background: rgba(0,211,189,0.10); border: 1px solid rgba(0,211,189,0.28); padding: 3px 9px; border-radius: 999px; cursor: pointer; white-space: nowrap; }
+.usage-meter .um-ic { font-size: 11px; }
+.usage-meter.um-low  { color: #e8a13d; background: rgba(232,161,61,0.12);  border-color: rgba(232,161,61,0.34); }
+.usage-meter.um-over { color: #ff5a5a; background: rgba(232,42,42,0.12);   border-color: rgba(232,42,42,0.36); }
+.tier-chip { font-family: 'Space Mono', monospace; font-size: 8px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; padding: 2px 6px; border-radius: 5px; margin-left: 5px; }
+.tier-chip.tier-free     { background: rgba(150,150,150,0.16); color: #9aa0a6; }
+.tier-chip.tier-hobbyist { background: rgba(0,211,189,0.14);  color: #00d3bd; }
+.tier-chip.tier-seller   { background: rgba(232,115,29,0.16); color: #ff8e3e; }
+
+/* Over-quota / upgrade modal (Brief 3) — body-level overlay, theme-agnostic */
+.over-quota-modal { position: fixed; inset: 0; z-index: 9999; display: flex; align-items: center; justify-content: center; padding: 24px; background: rgba(8,4,3,0.62); backdrop-filter: blur(3px); }
+.over-quota-modal .oq-card { width: min(440px, 100%); background: #161210; border: 1px solid rgba(255,142,62,0.30); border-radius: 18px; padding: 28px 26px; text-align: center; box-shadow: 0 24px 70px rgba(0,0,0,0.5); }
+.over-quota-modal .oq-emoji { font-size: 40px; line-height: 1; }
+.over-quota-modal .oq-title { margin: 12px 0 8px; font-family: 'Plus Jakarta Sans', sans-serif; font-size: 20px; font-weight: 800; color: #f8f6f2; }
+.over-quota-modal .oq-body { margin: 0 auto 20px; max-width: 340px; font-size: 14px; line-height: 1.55; color: #c8bdb6; }
+.over-quota-modal .oq-body strong { color: #ff8e3e; }
+.over-quota-modal .oq-actions { display: flex; flex-direction: column; gap: 9px; }
+.over-quota-modal .oq-primary { display: inline-flex; align-items: center; justify-content: center; padding: 11px 18px; border-radius: 10px; border: none; background: #e8731d; color: #fff; font-family: 'Plus Jakarta Sans', sans-serif; font-size: 14px; font-weight: 700; cursor: pointer; text-decoration: none; }
+.over-quota-modal .oq-primary:hover { background: #ff8e3e; }
+.over-quota-modal .oq-dismiss { padding: 9px 18px; border-radius: 10px; border: 1px solid rgba(255,255,255,0.14); background: transparent; color: #9aa0a6; font-family: 'Plus Jakarta Sans', sans-serif; font-size: 13px; cursor: pointer; }
+.over-quota-modal .oq-dismiss:hover { color: #c8bdb6; border-color: rgba(255,255,255,0.28); }
+
 /* Bundle suggestion banner (atop the archive) */
 #main-app .bundle-suggest { grid-column: 1 / -1; display: flex; align-items: center; gap: 12px; background: var(--cc-amber-bg); border: 1px solid var(--cc-border2); border-radius: 12px; padding: 11px 14px; margin-bottom: 6px; }
 #main-app .bundle-suggest-ic { font-size: 18px; flex-shrink: 0; }
