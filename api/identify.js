@@ -2,6 +2,7 @@ import { dHash } from '../lib/imageHash.js';
 import { getSql } from '../lib/db.js';
 import { requireSession } from '../lib/session.js';
 import { checkRateLimit } from '../lib/rateLimit.js';
+import { ensureScanCacheSchema, scanCacheExpiresAt } from '../lib/migrateCache.js';
 
 const SCHEMA = `{
   "title": "Unknown",
@@ -311,17 +312,23 @@ export default async function handler(req, res) {
     return res.status(429).json({ error: limited.retry >= 3600 ? 'Daily scan limit reached. Try again tomorrow.' : 'Too many scans — wait a moment and try again.' });
   }
 
+  // One-time, idempotent schema upgrade (user_id + expires_at on
+  // scan_cache). Runs once per cold start; if it fails, the cache paths
+  // below degrade gracefully instead of writing to a half-migrated table.
+  const schemaSql = getSql();
+  if (schemaSql) await ensureScanCacheSchema(schemaSql);
+
   // ── Correction: a user fixed an identification → teach the scan cache ──
   // The corrected fields overlay the stored result for this cover's hash, so the
   // next scan of the same photo returns the corrected identity. Cheap DB write,
   // no AI call. Auth + rate limit have already run above.
+  // Ownership: a row belongs to the user who first scanned it. Rows written
+  // before user_id existed have user_id NULL and stay correctable by anyone
+  // (grandfathered — this was a single-user tool until now); owned rows can
+  // only be corrected by their owner. A successful correction refreshes the
+  // row's expiry, since the owner is actively maintaining it.
   if (req.body && req.body.correction) {
     const { id, fields } = req.body.correction;
-    // Only allow-listed identification fields, length-capped, on a real row
-    // id. Without this anyone could overwrite any cached scan (ids are
-    // sequential) with arbitrary JSON. Full per-user ownership would need
-    // a user_id column on scan_cache — noted as a follow-up, not silently
-    // assumed here.
     const ALLOWED = ['title', 'issue', 'publisher', 'year', 'variant', 'variantDetails', 'coverArtist', 'edition', 'searchQuery', 'confidence', 'confidenceScore', 'alternatives'];
     const clean = {};
     if (Number.isInteger(id) && id > 0 && fields && typeof fields === 'object') {
@@ -340,7 +347,12 @@ export default async function handler(req, res) {
     const sql = getSql();
     if (sql && Object.keys(clean).length) {
       try {
-        await sql`UPDATE scan_cache SET result = result || ${JSON.stringify(clean)}::jsonb WHERE id = ${id}`;
+        const owner = await sql`SELECT user_id FROM scan_cache WHERE id = ${id}`;
+        if (!owner.length) return res.status(404).json({ ok: false, error: 'Unknown scan' });
+        if (owner[0].user_id && owner[0].user_id !== sess.userId) {
+          return res.status(403).json({ ok: false, error: 'That scan belongs to another account.' });
+        }
+        await sql`UPDATE scan_cache SET result = result || ${JSON.stringify(clean)}::jsonb, expires_at = ${scanCacheExpiresAt()} WHERE id = ${id}`;
         console.log('[scan-cache] learned correction for id=' + id);
         return res.status(200).json({ ok: true });
       } catch (e) {
@@ -383,9 +395,12 @@ export default async function handler(req, res) {
   if (!override && cacheSql) {
     try {
       phash = await dHash(imageBuffer);
+      // Only unexpired rows count as hits; expired rows are left for the
+      // daily cleanup sweep. (If the migration hasn't run yet, this query
+      // throws and we fall through to live identification, as before.)
       const rows = await cacheSql`
         SELECT id, result, bit_count((phash # ${phash.toString()}::bigint)::bit(64)) AS distance
-        FROM scan_cache ORDER BY distance ASC LIMIT 1`;
+        FROM scan_cache WHERE expires_at > now() ORDER BY distance ASC LIMIT 1`;
       if (rows.length && Number(rows[0].distance) <= MAX_DIST) {
         try { await cacheSql`UPDATE scan_cache SET hit_count = hit_count + 1 WHERE id = ${rows[0].id}`; } catch {}
         console.log(`[scan-cache] HIT id=${rows[0].id} distance=${rows[0].distance} (≤${MAX_DIST}) — skipping Gemini`);
@@ -521,13 +536,14 @@ export default async function handler(req, res) {
     // Store this identification keyed by the cover's perceptual hash, so a
     // repeat scan of the same cover hits the cache and skips Gemini. Awaited so
     // the write commits before the serverless fn returns. RETURNING id lets the
-    // client tie a later correction back to this cache row.
+    // client tie a later correction back to this cache row. The row is owned
+    // by the scanning user and expires after SCAN_CACHE_TTL_DAYS (default 180).
     let scanCacheId = null;
     if (phash !== null && cacheSql) {
       try {
         const ins = await cacheSql`
-          INSERT INTO scan_cache (phash, result)
-          VALUES (${phash.toString()}::bigint, ${JSON.stringify(result)}::jsonb)
+          INSERT INTO scan_cache (phash, result, user_id, expires_at)
+          VALUES (${phash.toString()}::bigint, ${JSON.stringify(result)}::jsonb, ${sess.userId}, ${scanCacheExpiresAt()})
           RETURNING id`;
         scanCacheId = ins?.[0]?.id ?? null;
         console.log('[scan-cache] stored new identification id=' + scanCacheId);

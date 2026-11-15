@@ -1,5 +1,7 @@
-// Deletes comic images older than 24h from Vercel Blob storage.
-// Called by the Vercel Cron in vercel.json (daily 03:00).
+// Deletes comic images older than 24h from Vercel Blob storage, and sweeps
+// expired cache rows from Neon (scan_cache past its TTL, price_cache
+// older than its 24h TTL). Called by the Vercel Cron in vercel.json
+// (daily 03:00).
 //
 // SECURITY FIX: this used to run for anyone when CRON_SECRET was unset
 // (`if (process.env.CRON_SECRET && ...)`), and CRON_SECRET was never set
@@ -9,6 +11,8 @@
 // token. Set CRON_SECRET in Vercel (Production) to any long random
 // string; Vercel Cron sends it automatically on scheduled runs.
 import { list, del } from '@vercel/blob';
+import { getSql } from '../lib/db.js';
+import { ensureScanCacheSchema } from '../lib/migrateCache.js';
 
 export default async function handler(req, res) {
   if (!process.env.CRON_SECRET) {
@@ -37,7 +41,30 @@ export default async function handler(req, res) {
     cursor = result.cursor;
   } while (cursor);
 
-  return res
-    .status(200)
-    .json({ deleted, message: `Deleted ${deleted} image(s) older than 24h` });
+  // Sweep expired cache rows. Best-effort: blob cleanup above still runs
+  // if the DB is down. The scan_cache columns are ensured first (the
+  // same lazy migration identify.js runs) so a fresh deploy can't sweep
+  // before the table has expires_at.
+  let scanExpired = 0;
+  let priceStale = 0;
+  const sql = getSql();
+  if (sql) {
+    try {
+      await ensureScanCacheSchema(sql);
+      const s = await sql`WITH d AS (DELETE FROM scan_cache WHERE expires_at < now() RETURNING id) SELECT count(*)::int AS n FROM d`;
+      scanExpired = s?.[0]?.n ?? 0;
+      const p = await sql`WITH d AS (DELETE FROM price_cache WHERE fetched_at < now() - interval '24 hours' RETURNING book_key) SELECT count(*)::int AS n FROM d`;
+      priceStale = p?.[0]?.n ?? 0;
+      console.log(`[cleanup] swept ${scanExpired} expired scan_cache row(s), ${priceStale} stale price_cache row(s)`);
+    } catch (e) {
+      console.warn('[cleanup] cache sweep failed (blobs still cleaned):', e.message);
+    }
+  }
+
+  return res.status(200).json({
+    deleted,
+    scanExpired,
+    priceStale,
+    message: `Deleted ${deleted} image(s) older than 24h, ${scanExpired} expired scan-cache row(s), ${priceStale} stale price-cache row(s)`,
+  });
 }
