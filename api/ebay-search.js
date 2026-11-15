@@ -1,5 +1,7 @@
 import { bookKey } from '../lib/imageHash.js';
 import { getCachedPrice } from '../lib/priceCache.js';
+import { requireSession } from '../lib/session.js';
+import { checkRateLimit } from '../lib/rateLimit.js';
 
 // ── LISTING CLASSIFICATION ────────────────────────────────────────────────────
 
@@ -273,11 +275,20 @@ async function searchActive(query) {
 // ── HANDLER ───────────────────────────────────────────────────────────────────
 
 export default async function handler(req, res) {
-  res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+  // Same-origin only: no CORS headers. The scanner runs on this site.
   if (req.method === 'OPTIONS') return res.status(200).end();
   if (req.method !== 'GET') return res.status(405).json({ error: 'Method not allowed' });
+
+  // SECURITY: this proxies Ant's eBay credentials, so it requires a
+  // signed-in session and is rate-limited per user. It previously had
+  // neither — anyone could use it as a free eBay API.
+  const sess = await requireSession(req, res);
+  if (!sess) return;
+  const limited = await checkRateLimit(`ebay:${sess.userId}`, 30, 300);
+  if (limited) {
+    res.setHeader('Retry-After', String(limited.retry));
+    return res.status(429).json({ error: limited.retry >= 3600 ? 'Daily price-lookup limit reached. Try again tomorrow.' : 'Too many price lookups — wait a moment and try again.' });
+  }
 
   if (!process.env.EBAY_CLIENT_ID || !process.env.EBAY_CLIENT_SECRET) {
     return res.status(500).json({ error: 'eBay OAuth credentials not configured (EBAY_CLIENT_ID / EBAY_CLIENT_SECRET)' });

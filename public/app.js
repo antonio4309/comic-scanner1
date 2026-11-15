@@ -1,44 +1,32 @@
 // ── Auth System ────────────────────────────────────────────────────────────────
 
-function getUsers() {
-  try { return JSON.parse(localStorage.getItem('lbl_users') || '[]'); } catch { return []; }
-}
-function saveUsers(u) { localStorage.setItem('lbl_users', JSON.stringify(u)); }
 function getSession() {
   try { return JSON.parse(localStorage.getItem('lbl_session') || 'null'); } catch { return null; }
 }
 function saveSession(s) { localStorage.setItem('lbl_session', JSON.stringify(s)); }
+function authToken() { return getSession()?.token || null; }
 
-function hashPw(pw) {
-  return btoa(unescape(encodeURIComponent(pw + '_lbl_2026')));
+// Server-only auth (Nov 2026 fix). The old code kept a local user store in
+// localStorage with a reversible base64 "hash" (btoa(password + suffix)).
+// That is deleted: accounts live only in /api/auth (PBKDF2, Redis).
+// The helpers below exist ONLY for a one-time migration of a pre-fix local
+// account to the server — they verify the old local record once, create
+// the server account, then delete the local record. Nothing new is ever
+// stored locally.
+function readLocalUsers() {
+  try { return JSON.parse(localStorage.getItem('lbl_users') || '[]'); } catch { return []; }
 }
-
-function authLogin(email, password) {
-  const user = getUsers().find(u => u.email.toLowerCase() === email.toLowerCase());
-  if (!user) return { ok: false, error: 'No account found with that email.' };
-  if (user.passwordHash !== hashPw(password)) return { ok: false, error: 'Incorrect password.' };
-  const session = { userId: user.id, email: user.email, name: user.name, features: user.features };
-  saveSession(session);
-  return { ok: true, session };
+function deleteLocalUser(email) {
+  try {
+    const rest = readLocalUsers().filter(u => u.email.toLowerCase() !== String(email).toLowerCase());
+    if (rest.length) localStorage.setItem('lbl_users', JSON.stringify(rest));
+    else localStorage.removeItem('lbl_users');
+  } catch {}
 }
-
-function authRegister(name, email, password) {
-  const users = getUsers();
-  if (users.find(u => u.email.toLowerCase() === email.toLowerCase()))
-    return { ok: false, error: 'An account with that email already exists.' };
-  const user = {
-    id: Date.now().toString(), name: name.trim(),
-    email: email.toLowerCase().trim(), passwordHash: hashPw(password),
-    features: [], plan: 'free', createdAt: new Date().toISOString()
-  };
-  users.push(user); saveUsers(users);
-  return { ok: true, user };
-}
-
-function updateUserFeatures(userId, features) {
-  const users = getUsers();
-  const u = users.find(u => u.id === userId);
-  if (u) { u.features = features; saveUsers(users); }
+function verifyLocalUser(email, password) {
+  const u = readLocalUsers().find(u => u.email.toLowerCase() === String(email).toLowerCase());
+  if (!u) return null;
+  return u.passwordHash === btoa(unescape(encodeURIComponent(password + '_lbl_2026'))) ? u : null;
 }
 
 function logout() { localStorage.removeItem('lbl_session'); location.reload(); }
@@ -143,37 +131,42 @@ async function doLogin() {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ action: 'login', email, password: pw })
     });
-    const data = await res.json();
-    if (!res.ok) {
-      // Server doesn't know this account yet — try local and auto-migrate
-      const local = authLogin(email, pw);
-      if (local.ok) {
+    const data = await res.json().catch(() => ({}));
+    if (res.ok) {
+      deleteLocalUser(email);
+      const session = { userId: data.userId, email: data.email, name: data.name, features: data.features, plan: data.plan, token: data.token };
+      saveSession(session);
+      activateApp(session);
+      return;
+    }
+    // One-time migration: this email only exists in the old local store
+    // (pre-fix). Verify it locally once, create the server account with
+    // the same password, move the inventory, delete the local record.
+    if (res.status === 401) {
+      const local = verifyLocalUser(email, pw);
+      if (local) {
         const regRes = await fetch('/api/auth', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ action: 'register', name: local.session.name, email, password: pw })
+          body: JSON.stringify({ action: 'register', name: local.name, email, password: pw })
         });
         if (regRes.ok) {
           const reg = await regRes.json();
-          const session = { userId: reg.userId, email: reg.email, name: reg.name, features: local.session.features, plan: reg.plan, token: reg.token };
+          deleteLocalUser(email);
+          const session = { userId: reg.userId, email: reg.email, name: reg.name, features: local.features || ['export', 'lookup'], plan: reg.plan, token: reg.token };
           saveSession(session);
-          // Migrate local inventory under old userId to server under new userId
-          const oldInv = JSON.parse(localStorage.getItem(getInventoryKey(local.session.userId)) || '[]');
+          const oldInv = JSON.parse(localStorage.getItem(getInventoryKey(local.id)) || '[]');
           if (oldInv.length) { currentUserId = reg.userId; comics = oldInv; saveInventory(); syncInventoryToServer(reg.token); }
           activateApp(session);
           return;
         }
       }
-      showAuthErr('login-error', data.error || 'Login failed'); return;
     }
-    const session = { userId: data.userId, email: data.email, name: data.name, features: data.features, plan: data.plan, token: data.token };
-    saveSession(session);
-    activateApp(session);
+    showAuthErr('login-error', data.error || 'Login failed'); return;
   } catch (e) {
-    // Offline fallback — use local auth
-    const local = authLogin(email, pw);
-    if (local.ok) { activateApp(local.session); }
-    else { showAuthErr('login-error', 'Connection error. Check your internet and try again.'); }
+    // No offline login any more: without the server there is no safe way
+    // to verify a password, so sign-in must wait for a connection.
+    showAuthErr('login-error', 'Connection error. Check your internet and try again.');
   } finally {
     btn.disabled = false; btn.textContent = '→ Authenticate';
   }
@@ -202,13 +195,7 @@ async function doRegister() {
     renderFeatureCards();
     switchAuthMode('features');
   } catch (e) {
-    // Offline fallback — create local-only account
-    const r = authRegister(name, email, pw);
-    if (!r.ok) { showAuthErr('reg-error', r.error); return; }
-    pendingUser = r.user;
-    selectedFeatures = new Set(['export', 'lookup']);
-    renderFeatureCards();
-    switchAuthMode('features');
+    showAuthErr('reg-error', 'Connection error. Check your internet and try again.');
   } finally {
     btn.disabled = false; btn.textContent = '→ Continue';
   }
@@ -228,7 +215,6 @@ function renderFeatureCards() {
 function doSelectFeatures() {
   if (!selectedFeatures.size) { showAuthErr('feat-error', 'Please select at least one option.'); return; }
   const features = Array.from(selectedFeatures);
-  updateUserFeatures(pendingUser.id, features);
   const session = { userId: pendingUser.id, email: pendingUser.email, name: pendingUser.name, features, plan: pendingUser.plan || 'free', token: pendingUser.token || null };
   saveSession(session);
   activateApp(session);
@@ -493,10 +479,12 @@ async function readApiJson(response, label) {
 }
 
 async function uploadImageToBlob(base64) {
+  const token = authToken();
+  if (!token) throw new Error('Please sign in again — your session has expired.');
   const blob = dataURLToBlob('data:image/jpeg;base64,' + base64);
   const res = await fetch('/api/upload-image', {
     method: 'POST',
-    headers: { 'content-type': 'image/jpeg', 'x-filename': `comic-${Date.now()}.jpg` },
+    headers: { 'content-type': 'image/jpeg', 'Authorization': `Bearer ${token}` },
     body: blob
   });
   const data = await readApiJson(res, 'Image upload');
@@ -530,10 +518,9 @@ async function scanAndAdd() {
   for (let i = 0; i < batch.length; i++) {
     const photo = batch[i];
 
-    // Free tier limit check
-    const users = getUsers();
-    const activeUser = users.find(u => u.id === currentUserId);
-    const activePlan = activeUser?.plan ?? getSession()?.plan ?? 'free';
+    // Free tier limit check (plan comes from the server session, not a
+    // local user store — see the auth note at the top of this file).
+    const activePlan = getSession()?.plan ?? 'free';
     if (activePlan !== 'pro' && comics.length >= FREE_COMIC_LIMIT) {
       showStatus('scan-status', 'warn', `⚠ Free plan limit (${FREE_COMIC_LIMIT} comics). Upgrade to Pro for unlimited archive.`);
       showUpgradePrompt();
@@ -677,9 +664,11 @@ async function scanAndAdd() {
 }
 
 async function identifyComic(base64, override) {
+  const token = authToken();
+  if (!token) throw new Error('Please sign in again — your session has expired.');
   const res = await fetch('/api/identify', {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
     body: JSON.stringify({ base64, override: override || '' })
   });
   return await readApiJson(res, 'AI identify API');
@@ -797,7 +786,7 @@ async function fetchEbayPrice(comic, forceRefresh = false) {
       slabCompany: comic.slabCompany || '',
       slabGrade: comic.slabGrade || '',
     });
-    const res = await fetch(`/api/ebay-search?${params}`);
+    const res = await fetch(`/api/ebay-search?${params}`, { headers: { 'Authorization': `Bearer ${authToken()}` } });
     const data = await readApiJson(res, 'eBay pricing API');
     if (!data.found) {
       comic.ebayStatus = 'notfound'; comic.ebayPrice = null;
@@ -1594,7 +1583,7 @@ function learnCorrection(c) {
   try {
     fetch('/api/identify', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${authToken()}` },
       body: JSON.stringify({ correction: { id: c.scanCacheId, fields: {
         title: c.title, issue: c.issue, publisher: c.publisher, year: c.year,
         searchQuery: c.searchQuery, confidence: 'High', confidenceScore: 1, alternatives: []
@@ -1912,7 +1901,7 @@ async function lookupScan() {
       slabCompany: identified.slabCompany || '',
       slabGrade: identified.slabGrade || '',
     });
-    const res = await fetch(`/api/ebay-search?${lkParams}`);
+    const res = await fetch(`/api/ebay-search?${lkParams}`, { headers: { 'Authorization': `Bearer ${authToken()}` } });
     ebayData = await readApiJson(res, 'eBay pricing');
   } catch (e) {
     ebayData = { found: false };
@@ -2253,13 +2242,23 @@ function clearMobileSearch() {
   if (el) { el.value = ''; applyMobileSearch(); }
 }
 
-window.addEventListener('DOMContentLoaded', () => {
+window.addEventListener('DOMContentLoaded', async () => {
   const session = getSession();
-  if (session) {
-    activateApp(session);
-  } else {
-    document.getElementById('landing-screen').style.display = 'flex';
+  if (session?.token) {
+    // Verify the token with the server. A token-less or expired session
+    // goes back to the landing screen instead of opening the app — the
+    // old code activated the app for any localStorage session, token or not.
+    try {
+      const res = await fetch('/api/auth', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${session.token}` },
+        body: JSON.stringify({ action: 'verify' })
+      });
+      if (res.ok) { activateApp(session); return; }
+    } catch (_) {}
   }
+  localStorage.removeItem('lbl_session');
+  document.getElementById('landing-screen').style.display = 'flex';
 });
 
 window.addEventListener('resize', () => {
@@ -2277,8 +2276,7 @@ let stSelectedFeatures = new Set();
 function showSettings() {
   const session = getSession();
   if (!session) return;
-  const users = getUsers();
-  const user = users.find(u => u.id === session.userId) || { plan: session.plan || 'free' };
+  const user = { plan: session.plan || 'free' };
 
   document.getElementById('st-name').value = session.name;
   document.getElementById('st-email').value = session.email;
@@ -2356,11 +2354,7 @@ function doSaveName() {
   const name = document.getElementById('st-name').value.trim();
   if (!name) { showStMsg('st-name-error', 'Name cannot be empty.'); return; }
   const session = getSession();
-  const users = getUsers();
-  const user = users.find(u => u.id === session.userId);
-  if (!user) return;
-  user.name = name;
-  saveUsers(users);
+  if (!session) return;
   const newSession = { ...session, name };
   saveSession(newSession);
   renderHeaderUser(newSession);
@@ -2372,12 +2366,9 @@ async function doChangePassword() {
   const newPw    = document.getElementById('st-pw-new').value;
   const confirm  = document.getElementById('st-pw-confirm').value;
   const session  = getSession();
-  const users    = getUsers();
-  const user     = users.find(u => u.id === session.userId);
   if (!oldPw || !newPw) { showStMsg('st-pw-error', 'Fill in all password fields.'); return; }
   if (newPw.length < 6) { showStMsg('st-pw-error', 'New password must be at least 6 characters.'); return; }
   if (newPw !== confirm) { showStMsg('st-pw-error', 'New passwords do not match.'); return; }
-  if (user && user.passwordHash !== hashPw(oldPw)) { showStMsg('st-pw-error', 'Current password is incorrect.'); return; }
 
   // Update server first (authoritative)
   if (session?.token) {
@@ -2398,11 +2389,6 @@ async function doChangePassword() {
     }
   }
 
-  // Mirror to localStorage cache if the user exists there
-  if (user) {
-    user.passwordHash = hashPw(newPw);
-    saveUsers(users);
-  }
   document.getElementById('st-pw-old').value = '';
   document.getElementById('st-pw-new').value = '';
   document.getElementById('st-pw-confirm').value = '';
@@ -2413,7 +2399,6 @@ function doSaveFeatures() {
   if (!stSelectedFeatures.size) { showStMsg('st-feat-error', 'Select at least one tool.'); return; }
   const session  = getSession();
   const features = Array.from(stSelectedFeatures);
-  updateUserFeatures(session.userId, features);
   const newSession = { ...session, features };
   saveSession(newSession);
   showStMsg('st-feat-ok', '✓ Tools updated. Reloading in 1 second...');
@@ -2422,11 +2407,10 @@ function doSaveFeatures() {
 
 function doUpgrade() {
   const session = getSession();
-  const users   = getUsers();
-  const user    = users.find(u => u.id === session.userId);
-  if (!user) return;
-  user.plan = 'pro';
-  saveUsers(users);
+  if (!session) return;
+  // NOTE: this only flips the local session — there is no server-side plan
+  // or payment behind it yet. Do not treat plan:'pro' here as proof of payment.
+  const user = { plan: 'pro' };
   const proSession = { ...session, plan: 'pro' };
   saveSession(proSession);
   renderHeaderUser(proSession);
@@ -2448,9 +2432,7 @@ async function doDeleteAccount() {
     } catch (_) {}
   }
   // Clear local data
-  let users = getUsers();
-  users = users.filter(u => u.id !== session.userId);
-  saveUsers(users);
+  deleteLocalUser(session.email);
   localStorage.removeItem(getInventoryKey(session.userId));
   localStorage.removeItem(getPriceCacheKey(session.userId));
   localStorage.removeItem('lbl_session');
