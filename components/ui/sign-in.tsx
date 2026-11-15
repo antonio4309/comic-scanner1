@@ -28,7 +28,7 @@ const FEATURES = [
   {
     icon: TrendingUp,
     label: 'Live UK eBay Pricing',
-    desc: 'Real sold-listing data pulled fresh every search.',
+    desc: 'Live eBay UK listing prices, pulled fresh every search.',
   },
   {
     icon: FileSpreadsheet,

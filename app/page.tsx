@@ -1,6 +1,5 @@
 "use client";
 
-import { useState, useEffect } from "react";
 import { ContainerScroll } from "@/components/ui/container-scroll-animation";
 import { Features } from "@/components/blocks/features-8";
 import { AnimatedFeatureCard } from "@/components/ui/feature-card-1";
@@ -27,24 +26,6 @@ const TICKER_ITEMS = [
   "X-Men #1 → £8,900",
   "Iron Man #128 → £420",
   "Thor #337 → £290",
-];
-
-const TESTIMONIALS = [
-  {
-    quote: "I scanned 200 comics from a car boot sale in 20 minutes. Walked away knowing exactly which ones to keep.",
-    name: "Marcus T.",
-    tag: "Dealer, Manchester",
-  },
-  {
-    quote: "The CGC slab detection alone is worth it. I used to Google every single barcode. Now it's instant.",
-    name: "Priya S.",
-    tag: "Collector, London",
-  },
-  {
-    quote: "Sold my first Whatnot lot the same day I discovered LongboxLens. The CSV export is genuinely brilliant.",
-    name: "Dan F.",
-    tag: "Seller, Birmingham",
-  },
 ];
 
 /* ─── Sub-components ────────────────────────────────────────────── */
@@ -115,16 +96,6 @@ function AppMockup() {
 /* ─── Page ──────────────────────────────────────────────────────── */
 
 export default function Home() {
-  // "Last sold" date — computed after mount so it always reads as recent
-  // (avoids SSR/client hydration mismatch).
-  const [lastSold, setLastSold] = useState<string>("");
-  useEffect(() => {
-    const d = new Date();
-    d.setDate(d.getDate() - 3); // 3 days ago
-    setLastSold(
-      d.toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" })
-    );
-  }, []);
 
   return (
     <>
@@ -242,7 +213,6 @@ export default function Home() {
           <div className="hidden md:flex gap-5 text-sm text-[#d4c5c1]">
             <a href="#how" className="hover:text-white transition-colors">How it works</a>
             <a href="#features" className="hover:text-white transition-colors">Features</a>
-            <a href="#testimonials" className="hover:text-white transition-colors">Reviews</a>
           </div>
           <a href="/auth"
             className="px-4 py-1.5 rounded-full text-sm font-semibold transition-all hover:opacity-90 active:scale-95"
@@ -361,7 +331,7 @@ export default function Home() {
                 <span className="w-2.5 h-2.5 rounded-full bg-[#05df72]" />
               </div>
               <span className="text-xs lbl-mono text-[#5c4542]">LONGBOXLENS // SCAN ACTIVE</span>
-              <span className="text-xs lbl-mono text-[#ff8e3e]">● LIVE</span>
+              <span className="text-xs lbl-mono text-[#ff8e3e]">● DEMO</span>
             </div>
 
             <div className="grid md:grid-cols-2">
@@ -440,7 +410,7 @@ export default function Home() {
                 <div className="flex items-end gap-3 pt-1">
                   <div className="text-3xl font-extrabold text-[#05df72]">£370.84</div>
                   <div className="text-sm text-[#8c7b78] pb-1">
-                    last sold{lastSold ? ` ${lastSold}` : ""}
+                    Example result
                   </div>
                 </div>
 
@@ -476,7 +446,7 @@ export default function Home() {
             {[
               { index: "001", tag: "Point & Scan",   glyph: "📷", color: "amber" as const, title: "Aim your camera at any comic — raw, slabbed or bagged." },
               { index: "002", tag: "AI Identifies",  glyph: "🔍", color: "cyan"  as const, title: "Title, issue, variant and grade pinpointed instantly." },
-              { index: "003", tag: "Live Valuation", glyph: "💷", color: "green" as const, title: "Real eBay UK sold prices, not guesses." },
+              { index: "003", tag: "Live Valuation", glyph: "💷", color: "green" as const, title: "Live eBay UK prices from active listings." },
               { index: "004", tag: "Export & Sell",  glyph: "📦", color: "amber" as const, title: "One tap to a ready-to-upload Whatnot CSV." },
             ].map((card) => (
               <AnimatedFeatureCard
@@ -520,31 +490,6 @@ export default function Home() {
           <Features />
         </div>
 
-        {/* ── Testimonials ─────────────────────────────────────── */}
-        <section id="testimonials" className="max-w-5xl mx-auto px-6 py-16">
-          <div className="mb-12 text-center">
-            <div className="text-xs lbl-mono text-[#ff8e3e] tracking-widest uppercase mb-3">Real Collectors</div>
-            <h2 className="text-3xl md:text-5xl font-extrabold tracking-tight text-[#f8f6f2]">
-              They know their numbers now.
-            </h2>
-          </div>
-
-          <div className="grid md:grid-cols-3 gap-4">
-            {TESTIMONIALS.map((t, i) => (
-              <div key={i}
-                className="rounded-2xl p-6 border border-white/5 bg-[#100a06] flex flex-col justify-between gap-6">
-                <p className="text-[#d4c5c1] leading-relaxed text-sm">
-                  &ldquo;{t.quote}&rdquo;
-                </p>
-                <div>
-                  <div className="font-bold text-[#f8f6f2] text-sm">{t.name}</div>
-                  <div className="text-xs text-[#5c4542] lbl-mono">{t.tag}</div>
-                </div>
-              </div>
-            ))}
-          </div>
-        </section>
-
         {/* ── Big CTA ──────────────────────────────────────────── */}
         <section className="max-w-5xl mx-auto px-6 py-16 mb-8">
           <div className="relative rounded-3xl overflow-hidden border border-[#ff8e3e]/20 text-center p-16">
@@ -585,7 +530,6 @@ export default function Home() {
             <div className="flex gap-6 text-sm text-[#5c4542]">
               <a href="#how" className="hover:text-[#8c7b78] transition-colors">How it works</a>
               <a href="#features" className="hover:text-[#8c7b78] transition-colors">Features</a>
-              <a href="#testimonials" className="hover:text-[#8c7b78] transition-colors">Reviews</a>
               <a href="/auth" className="hover:text-[#8c7b78] transition-colors">App</a>
             </div>
             <span className="text-xs text-[#5c4542] lbl-mono">© 2025 LONGBOXLENS</span>

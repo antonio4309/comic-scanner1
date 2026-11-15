@@ -104,7 +104,7 @@ export function Features() {
               </div>
               <div className="relative z-10 mt-8 space-y-2 text-center">
                 <h2 className="text-lg font-semibold text-[#f8f6f2]">Live eBay UK Prices</h2>
-                <p className="text-sm text-[#8c7b78]">Real sold-listing data, not estimates. Always current. Always the UK market.</p>
+                <p className="text-sm text-[#8c7b78]">Live eBay UK listing prices, refreshed on every scan. Always the UK market.</p>
               </div>
             </CardContent>
           </Card>
@@ -167,7 +167,6 @@ export function Features() {
                   {[
                     { label: "Total Value",  value: "£11,210", color: "#05df72" },
                     { label: "Top Grade",    value: "9.8 NM/MT", color: "#ff8e3e" },
-                    { label: "Comics Scanned", value: "142",   color: "#f8f6f2" },
                     { label: "eBay Avg",     value: "£1,868",  color: "#d4c5c1" },
                   ].map((stat) => (
                     <div key={stat.label}
