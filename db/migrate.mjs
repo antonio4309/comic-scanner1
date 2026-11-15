@@ -16,10 +16,17 @@ const here = dirname(fileURLToPath(import.meta.url));
 const sql = neon(url);
 
 // The Neon HTTP driver runs one statement per call, so split the file.
+// Strip full-line comments FIRST: the old code filtered chunks starting
+// with '--', which silently dropped the CREATE TABLE scan_cache statement
+// (its chunk began with the file header comment). Splitting on ';' is
+// safe here — no statement contains a semicolon inside a string.
 const statements = readFileSync(join(here, 'schema.sql'), 'utf8')
+  .split('\n')
+  .filter(l => !l.trim().startsWith('--'))
+  .join('\n')
   .split(';')
   .map(s => s.trim())
-  .filter(s => s && !s.startsWith('--'));
+  .filter(Boolean);
 
 try {
   for (const stmt of statements) {

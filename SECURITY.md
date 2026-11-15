@@ -37,9 +37,12 @@
 - Rate limits in `lib/rateLimit.js` use Redis when available and an
   in-memory fallback when it is not. They never silently skip.
 - `/api/identify` corrections accept only allow-listed fields, capped in
-  length, on a valid row id. Note: `scan_cache` has no `user_id` column,
-  so a signed-in user can correct any cached row — acceptable for a
-  single-user tool, but add ownership before opening sign-ups to others.
+  length, on a valid row id — and only by the row's owner. `scan_cache`
+  rows carry `user_id` (the session userId of whoever first scanned the
+  cover); rows written before ownership existed have `user_id` NULL and
+  stay correctable by anyone (grandfathered — this was a single-user
+  tool until now). A correction from another user gets 403. Successful
+  corrections refresh the row's expiry.
 - No API sets a wildcard CORS header. The app is same-origin.
 
 ## Cron cleanup
@@ -48,6 +51,9 @@
   and presented as `Authorization: Bearer <CRON_SECRET>`. Without it the
   endpoint always refuses (503). Set `CRON_SECRET` to a long random
   string in Vercel env vars; Vercel Cron sends it automatically.
+- The same run also sweeps expired `scan_cache` rows (past
+  `expires_at`) and stale `price_cache` rows (older than 24h), and
+  ensures the scan-cache columns exist first (see `lib/migrateCache.js`).
 
 ## Removed
 
@@ -56,7 +62,6 @@
 
 ## Known gaps (not yet fixed)
 
-- `scan_cache` has no TTL / cleanup and no per-user ownership (see above).
 - The "Upgrade to Pro" button in the scanner only flips the local
   session plan — there is no server-side plan or payment behind it.
 - Secrets stay server-side: `GEMINI_API_KEY`, `EBAY_CLIENT_ID` /
