@@ -1,5 +1,7 @@
 import { dHash } from '../lib/imageHash.js';
 import { getSql } from '../lib/db.js';
+import { requireSession } from '../lib/session.js';
+import { checkRateLimit } from '../lib/rateLimit.js';
 
 const SCHEMA = `{
   "title": "Unknown",
@@ -236,33 +238,6 @@ function buildPrompt(override) {
   return BASE_RULES;
 }
 
-// ── Rate limiting (10 scans / minute per IP, 100/day per IP) ─────────────────
-import { Redis } from '@upstash/redis';
-
-async function checkRateLimit(ip) {
-  // Skip rate limiting if Redis is not configured
-  if (!process.env.UPSTASH_REDIS_REST_URL || !process.env.UPSTASH_REDIS_REST_TOKEN) return null;
-  try {
-    const redis = Redis.fromEnv();
-    const minuteKey = `rl:identify:min:${ip}:${Math.floor(Date.now() / 60000)}`;
-    const dayKey    = `rl:identify:day:${ip}:${new Date().toISOString().slice(0, 10)}`;
-
-    const [minCount, dayCount] = await Promise.all([
-      redis.incr(minuteKey),
-      redis.incr(dayKey),
-    ]);
-    // Set TTL on first hit only (incr returns 1)
-    if (minCount === 1) await redis.expire(minuteKey, 90);   // 90s safety margin
-    if (dayCount === 1) await redis.expire(dayKey, 90000);   // 25h safety margin
-
-    if (minCount > 10)  return { error: 'Too many scans — wait a moment and try again.', retry: 60 };
-    if (dayCount > 100) return { error: 'Daily scan limit reached. Try again tomorrow.', retry: 3600 };
-    return null;
-  } catch {
-    return null; // Redis down → fail open, don't block the user
-  }
-}
-
 // ── Single Gemini call for one model, with self-healing model fallback ────────
 // Tries `primaryModel` first, then known-good ids if it's missing/invalid, and
 // parses the JSON the model returns (stripping code fences, salvaging truncated
@@ -320,23 +295,52 @@ async function callGemini(primaryModel, requestBody, key) {
 }
 
 export default async function handler(req, res) {
-  res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+  // Same-origin only: no CORS headers. The scanner runs on this site.
 
   if (req.method === 'OPTIONS') return res.status(200).end();
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
 
+  // SECURITY: scanning spends Gemini credit, so it requires a signed-in
+  // session. Rate limit is per user and never skipped — the shared
+  // limiter falls back to in-memory when Redis is unavailable.
+  const sess = await requireSession(req, res);
+  if (!sess) return;
+  const limited = await checkRateLimit(`identify:${sess.userId}`, 10, 100);
+  if (limited) {
+    res.setHeader('Retry-After', String(limited.retry));
+    return res.status(429).json({ error: limited.retry >= 3600 ? 'Daily scan limit reached. Try again tomorrow.' : 'Too many scans — wait a moment and try again.' });
+  }
+
   // ── Correction: a user fixed an identification → teach the scan cache ──
   // The corrected fields overlay the stored result for this cover's hash, so the
   // next scan of the same photo returns the corrected identity. Cheap DB write,
-  // no AI call, so it runs before the rate limit / API-key checks.
+  // no AI call. Auth + rate limit have already run above.
   if (req.body && req.body.correction) {
     const { id, fields } = req.body.correction;
+    // Only allow-listed identification fields, length-capped, on a real row
+    // id. Without this anyone could overwrite any cached scan (ids are
+    // sequential) with arbitrary JSON. Full per-user ownership would need
+    // a user_id column on scan_cache — noted as a follow-up, not silently
+    // assumed here.
+    const ALLOWED = ['title', 'issue', 'publisher', 'year', 'variant', 'variantDetails', 'coverArtist', 'edition', 'searchQuery', 'confidence', 'confidenceScore', 'alternatives'];
+    const clean = {};
+    if (Number.isInteger(id) && id > 0 && fields && typeof fields === 'object') {
+      for (const k of ALLOWED) {
+        if (fields[k] === undefined) continue;
+        if (k === 'confidenceScore') {
+          const n = Number(fields[k]);
+          if (Number.isFinite(n)) clean[k] = Math.max(0, Math.min(1, n));
+        } else if (k === 'alternatives') {
+          if (Array.isArray(fields[k])) clean[k] = fields[k].slice(0, 2);
+        } else if (typeof fields[k] === 'string') {
+          clean[k] = fields[k].slice(0, 200);
+        }
+      }
+    }
     const sql = getSql();
-    if (sql && id != null && fields && typeof fields === 'object') {
+    if (sql && Object.keys(clean).length) {
       try {
-        await sql`UPDATE scan_cache SET result = result || ${JSON.stringify(fields)}::jsonb WHERE id = ${id}`;
+        await sql`UPDATE scan_cache SET result = result || ${JSON.stringify(clean)}::jsonb WHERE id = ${id}`;
         console.log('[scan-cache] learned correction for id=' + id);
         return res.status(200).json({ ok: true });
       } catch (e) {
@@ -344,15 +348,7 @@ export default async function handler(req, res) {
         return res.status(200).json({ ok: false, error: e.message });
       }
     }
-    return res.status(200).json({ ok: false }); // no DB / bad input → harmless no-op
-  }
-
-  // Rate limit check
-  const ip = req.headers['x-forwarded-for']?.split(',')[0].trim() || req.socket?.remoteAddress || 'unknown';
-  const limited = await checkRateLimit(ip);
-  if (limited) {
-    res.setHeader('Retry-After', String(limited.retry));
-    return res.status(429).json({ error: limited.error });
+    return res.status(400).json({ ok: false, error: 'Invalid correction' });
   }
 
   const GEMINI_KEY = process.env.GEMINI_API_KEY;
@@ -362,6 +358,18 @@ export default async function handler(req, res) {
 
   const { base64, override } = req.body || {};
   if (!base64) return res.status(400).json({ error: 'No image provided' });
+  // Reject oversized images before any AI / hashing work. 3 MB decoded is
+  // generous for a cover photo (the client compresses to ~1200-1600px) and
+  // stays under Vercel's request-body limits.
+  let imageBuffer;
+  try {
+    imageBuffer = Buffer.from(base64, 'base64');
+  } catch {
+    return res.status(400).json({ error: 'Invalid image data' });
+  }
+  if (imageBuffer.length > 3 * 1024 * 1024) {
+    return res.status(413).json({ error: 'Image is too large (max 3 MB).' });
+  }
 
   // ── Scan cache (perceptual hash) — skip Gemini on a near-identical cover ──
   // Best-effort: any failure (no DB, hash error, query error) falls through to
@@ -374,7 +382,7 @@ export default async function handler(req, res) {
   const MAX_DIST = Math.max(0, Math.min(20, Number(process.env.SCAN_CACHE_MAX_DISTANCE) || 10));
   if (!override && cacheSql) {
     try {
-      phash = await dHash(Buffer.from(base64, 'base64'));
+      phash = await dHash(imageBuffer);
       const rows = await cacheSql`
         SELECT id, result, bit_count((phash # ${phash.toString()}::bigint)::bit(64)) AS distance
         FROM scan_cache ORDER BY distance ASC LIMIT 1`;
